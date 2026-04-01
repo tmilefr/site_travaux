@@ -1,0 +1,83 @@
+{
+	"id": {
+		"type": "hidden",
+		"list": true,
+		"search": true,
+		"rules": null,
+		"since": 1,
+		"dbforge": {
+			"type": "INT",
+			"constraint": "11",
+			"unsigned": true,
+			"auto_increment": true
+		}
+	},
+	"id_sen": {
+		"type": "input",
+		"list": false,
+		"search": true,
+		"rules": null,
+		"since": 1,
+		"dbforge": {
+			"type": "VARCHAR",
+			"constraint": "255"
+		}
+	},	
+	"sendstatut": {
+		"type": "select",
+		"list": true,
+		"search": false,
+		"rules": "trim",
+		"since": 1,
+		"values": {
+			"0":"nouveau",
+			"1":"envoyé",
+			"2":"en echec"	
+		},
+		"dbforge": {
+			"type": "VARCHAR",
+			"constraint": "255"
+		}
+	},	
+	"date": {
+		"type": "datetime",
+		"list": true,
+		"search": false,
+		"rules": "trim|required",
+		"since": 1,
+		"dbforge": {
+			"type": "DATETIME"
+		}
+	},
+	"error": {
+		"type": "input",
+		"list": true,
+		"search": true,
+		"rules": "trim",
+		"since": 1,
+		"dbforge": {
+			"type": "VARCHAR",
+			"constraint": "255"
+		}
+	},	
+	"created": {
+		"type": "created",
+		"list": false,
+		"search": false,
+		"rules": null,
+		"since": 1,
+		"dbforge": {
+			"type": "DATETIME"
+		}
+	},
+	"updated": {
+		"type": "updated",
+		"list": false,
+		"search": false,
+		"rules": null,
+		"since": 1,
+		"dbforge": {
+			"type": "DATETIME"
+		}
+	}
+}

@@ -1,0 +1,424 @@
+<?php
+defined('BASEPATH') || exit('No direct script access allowed');
+$lang['Acl_controllers_controller_list'] = 'Gestion des droits';
+$lang['Acl_controllers_controller'] = 'ACL';
+$lang['ADD_Acl_controllers_controller'] = 'Ajouter';
+$lang['EDIT_Acl_controllers_controller'] = 'Valider';
+$lang['LIST_Acl_controllers_controller'] = 'Liste';
+
+$lang['Acl_roles_controller_list'] = 'Gestion des r&ocirc;les';
+$lang['Acl_roles_controller'] = 'R&ocirc;les';
+$lang['ADD_Acl_roles_controller'] = 'Ajouter';
+$lang['EDIT_Acl_roles_controller'] = 'Ajouter';
+$lang['LIST_Acl_roles_controller'] = 'Liste';
+
+$lang['Acl_users_controller_list'] = 'Utilisateurs Syst&egrave;me';
+$lang['Acl_users_controller'] = 'Utilisateurs';
+$lang['ADD_Acl_users_controller'] = 'Ajouter';
+$lang['EDIT_Acl_users_controller'] = 'Valider';
+$lang['LIST_Acl_users_controller'] = 'Liste';
+
+
+$lang['Units_controller_list'] = 'Unit&eacute;s suppl&eacute;mentaires';
+
+$lang['LIST_Units_controller'] = 'Liste';
+$lang['ADD_Units_controller'] = 'Ajout';
+$lang['Units_controller_add'] = 'Ajout d\'unit&eacute;s suppl&eacute;mentaire';
+$lang['Units_controller_subtitle'] = '';
+$lang['unites_id_famille'] = 'Famille';
+$lang['unites_valides'] = 'Nombre d\'unit&eacute;';
+$lang['type_session'] = 'Type de session';
+$lang['unites_date'] = 'Date';
+$lang['unites_heure_debut'] = 'Heure de d&eacute;but';
+$lang['unites_heure_fin'] = 'Heure de fin';
+$lang['unites_desc'] = 'Description';
+$lang['unites_comm'] = 'Commentaire';
+$lang['EDIT_VALID_UNIT'] ='Validation des unités';
+
+$lang['Admwork_controller_list'] =  'Gestion des travaux';
+$lang['work_planned'] =  'Travaux disponibles';
+$lang['work_planned_subtitle'] =  'voici les prochains travaux ';
+$lang['REGISTER_WORK'] = 'S\'inscrire';
+$lang['SEE_YOUR_REGISTRED_WORK'] = 'Votre inscription';
+$lang['MOD_REGISTER_WORK'] = 'D&eacute;tails de votre inscription';
+
+$lang['INFO_NB_UNIT'] = 'Nombre d\'unit&eacute;(s) pour la session : ';
+$lang['INFO_UNIT'] = ' unit&eacute;(s)';
+$lang['PILOT_IS'] = 'Le pilote est : ';
+$lang['PILOT_CONTACT'] = 'Pour le contacter : '; 
+$lang['SEE_WORK'] = 'D&eacute;tails';
+
+$lang['nb_units'] = 'Nombre d\'unit&eacute;';
+$lang['heure_debut_prevue'] = 'Heure de d&eacute;but';
+$lang['heure_fin_prevue'] = 'Heure de fin';
+$lang['type_participant'] = 'Participant';
+$lang['REGISTRED'] = 'Inscrits &agrave; la session';
+$lang['nb_unites_valides'] = 'Unit&eacute;';
+
+$lang['TITRE_TYPE_SESSION'] = 'Session de type ';
+$lang['INFO_TYPE_SESSION'] = 'Quelques explications sur la session';
+$lang['INFO_TYPE_SESSION1'] = 'Le nombre d\'unit&eacute; associative correspond au temps pass&eacute; sur la session';
+$lang['INFO_TYPE_SESSION2'] = 'Le nombre d\'unit&eacute; associative correspond &agrave; un temps d&eacute;fini pour l\'action';
+$lang['INFO_WHO_MANAGE'] = 'Pilote de la session';
+$lang['REGISTRED_NONE'] = 'pas d\'inscrit';
+$lang['DO_PDF'] = 'Imprimer un PDF';
+
+$lang['Home_myaccount_subtitle'] = 'Modifier mes informations';
+
+$lang['INFO_GENE_SESSION'] = '<p class="red">Veuillez noter que pour des raisons de s&eacute;curit&eacute; et d\'assurances, il n\'est plus possible : <br/> - de faire venir les enfants sur le chantier
+<br/> - de faire travailler des enfants mineurs (par exemple en remplacement d\'un des parents) <br /> Merci pour votre compr&eacute;hension</p>';
+
+$lang['INFO_ACCOUNT_FORM_TITLE'] = 'Relation avec Delta Enfance';
+$lang['INFO_ACCOUNT_FORM_BODY'] = 'A chaque connection avec delta enfance, votre mot de passe est mis &agrave; jour dans ce site.';
+$lang['INFO_ACCOUNT_FORM_FOOTER'] = 'Ainsi, si la connection avec delta enfance ne fonctionne plus, vous pouvez utiliser le login local avec le mot de passe de delta enfance';
+
+/* FAMILLE */
+$lang['idfamille'] = 'R&eacute;f&eacute;rence DELTA';
+$lang['e_mail'] = 'E-mail principal (Login delta enfance)';
+$lang['e_mail_comp'] = 'E-mail compl&eacute;mentaire';
+$lang['FAMILY_DATA'] = 'Donn&eacute;es de la famille';
+$lang['FAMILY_MEMBER'] = 'Membres de la famille';
+$lang['DELTA_ENFANCE_DATA'] = 'Donn&eacute;es dans DELTA ENFANCE';
+$lang['MY_FAMILY_EDITION'] = 'Sauver mes modifications';
+
+$lang['YOUR_FAMILY_DATA'] = 'Vos Donn&eacute;es compl&eacute;mentaires';
+$lang['YOUR_FAMILY_MEMBER'] = 'Membres de votre famille';
+$lang['YOUR_DELTA_ENFANCE_DATA'] = 'Donn&eacute;es dans DELTA ENFANCE';
+
+$lang['INFO_FAMILLE_TITLE'] = 'Aidez nous !';
+$lang['INFO_FAMILLE'] = 'Plus nous avons d\'information sur votre famille et plus il nous sera ais&eacute; de remplir notre mission. ';
+$lang['INFO_FAMILLE_FOOTER'] =  'Par exemple, sur la fiche de cantine, tr&eacute;s souvent nous avons un nom qui ne correspond &agrave; rien dans ce site. Merci de votre compr&eacute;hension !';
+
+$lang['SAVED_OK'] = '<div class="alert alert-info">ok</div>';
+
+$lang['INFO_HOME_TITLE'] = 'Premi&egrave;re connection ?';
+$lang['INFO_HOME'] = 'Merci de remplir <a href="Home/myaccount">votre compte sur ce site</a>';
+$lang['INFO_HOME_FOOTER'] = 'Merci !';
+
+$lang['About'] = 'A propos de ce site';
+$lang['CNIL'] = 'Les informations recueillies sur ce formulaire sont enregistr&eacute;es dans un fichier informatis&eacute; par la REGIO ABCM Mulhouse pour bien faire fonctionner le site des unit&eacute;s associative.<br/>
+
+Les donn&eacute;es collect&eacute;es seront communiqu&eacute;es aux seuls destinataires suivants : REGIO ABCM Mulhouse.<br/>
+Les donn&eacute;es sont conserv&eacute;es pendant la dur&eacute; de scolarisation de votre enfant.<br/>
+Vous pouvez acc&eacute;der aux donn&eacute;es vous concernant, les rectifier, demander leur effacement ou exercer votre droit &agrave; la limitation du traitement de vos donn&eacute;es. (en fonction de la base l&eacute;gale du traitement, mentionner &eacute;galement : Vous pouvez retirer &agrave; tout moment votre consentement au traitement de vos donn&eacute;es ; Vous pouvez &eacute;galement vous opposer au traitement de vos donn&eacute;es ; Vous pouvez &eacute;galement exercer votre droit &agrave; la portabilit&eacute; de vos donn&eacute;es)
+Consultez le site cnil.fr pour plus d’informations sur vos droits.<br/>
+Pour exercer ces droits ou pour toute question sur le traitement de vos donn&eacute;es dans ce dispositif, vous pouvez contacter (le cas &eacute;ch&eacute;ant, notre d&eacute;l&eacute;gu&eacute; &agrave; la protection des donn&eacute;es ou le service charg&eacute; de l’exercice de ces droits) : [adresse &eacute;lectronique, postale, coordonn&eacute;es t&eacute;l&eacute;phoniques, etc.] <br/>
+Si vous estimez, apr&egrave;s nous avoir contact&eacute;s, que vos droits « Informatique et Libert&eacute;s » ne sont pas respect&eacute;s, vous pouvez adresser une r&eacute;clamation &agrave; la CNIL.<br/>
+N.B : distinguer dans le formulaire de collecte, par exemple via des ast&eacute;risques, les donn&eacute;es dont la fourniture est obligatoire de celles dont la fourniture est facultative et pr&eacute;cisez les cons&eacute;quences &eacute;ventuelles en cas de non-fourniture des donn&eacute;es.';
+
+$lang['e_mail_comp_AddRow'] = 'Ajouter un e-mail';
+$lang['members_AddRow'] = 'Ajouter un membre &agrave; la famille';
+$lang['Acl_controllers_controller_edit'] = 'Edition utilisateur Syst&egrave;me';
+$lang['Acl_controllers_controller_subtitle'] = 'Les utilisateurs sp&eacute;ciaux du site';
+$lang['Acl_users_controller_edit'] = 'Edition';
+
+$lang['login'] = 'Login (local)';
+$lang['password'] = 'Mot de passe';
+$lang['name'] = 'Nom affich&eacute;';
+$lang['ville'] = 'Ville';
+$lang['nb_enfants'] = 'Nombre d\'enfant';
+$lang['capacity'] = 'Comp&eacute;tences';
+
+$lang['nom_Members_model[]'] = 'Nom';
+$lang['prenom_Members_model[]'] = 'Pr&eacute;nom';
+$lang['members'] = 'Membres de la famille';
+
+$lang['COMING_sys'] = 'Sessions &agrave venir / unit&eacute;s en attente de validation';
+$lang['VALID_sys'] = 'Unit&eacute;s valid&eacute;es sur sessions';
+$lang['ADDED_sys'] = 'Unit&eacute;s compl&eacute;mentaires (hors session)';
+
+$lang['COMING_fam'] = 'Sessions &agrave venir / unit&eacute;s en attente de validation';
+$lang['VALID_fam'] = 'Unit&eacute;s valid&eacute;es sur sessions';
+$lang['ADDED_fam'] = 'Unit&eacute;s compl&eacute;mentaires (hors session)';
+
+$lang['Option_controller'] = 'Options';
+$lang['role_id'] = 'R&ocirc;les';
+$lang['Parameters'] = 'Param&egrave;tres';
+
+$lang['edit_icon'] = 'oi-pencil';
+$lang['edit_class'] = 'btn-warning';
+$lang['add_icon'] = 'oi oi-plus';
+$lang['add_class'] = 'btn-success';
+$lang['delete_icon'] = 'oi-circle-x';
+$lang['delete_class'] = 'btn-danger confirmModalLink';
+$lang['view_icon'] = 'oi-zoom-in';
+$lang['view_class'] = 'btn-success';
+$lang['sendbymail_icon'] = 'oi oi-envelope-closed';
+$lang['sendbymail_class'] = 'btn-danger';
+$lang['recap_icon'] = 'oi oi-grid-three-up';
+$lang['recap_class'] = 'btn-info';
+$lang['set_rules_icon'] = 'oi-grid-three-up';
+$lang['set_rules_class'] = 'btn-info';
+$lang['list_icon'] = 'oi oi-spreadsheet';
+$lang['list_class'] = 'btn-info';
+
+
+$lang['draftvalidation_icon'] = 'oi oi-task';
+$lang['draftvalidation_class'] = 'btn-success confirmModalLink';
+$lang['DRAFTVALIDATION_Admwork_controller'] = 'Publier brouillon';
+
+$lang['featured_icon'] = 'oi oi-eye';
+$lang['featured_class'] = 'btn';
+
+$lang['TITLE_BOX_REGIO'] = 'Site de la régio';
+$lang['TEXT_BOX_REGIO'] = 'Pour avoir des informations sur notre association, vous inscrire sur des sessions ou des commisions, <b>connectez vous</b>';
+$lang['TEXT_BOX_REGIO_CONNECTED'] = 'Pour avoir des informations sur notre association, vous inscrire sur des sessions ou des commisions';
+$lang['TITLE_BOX_DELTA'] = 'Portail Famille';
+$lang['TEXT_BOX_DELTA'] = 'Pour accéder au portail famille pour la présence à la cantine ou au périscolaire de votre (vos) enfant(s),';
+
+$lang['TITLE_BOX_ABCM'] = 'Ecole ABCM';
+$lang['TEXT_BOX_ABCM'] = 'Pour voir le site de l\'ABCM de l\'école de Mulhouse / Lutterbach,';
+
+$lang['TITLE_LINK'] = 'C\'est par ici';
+
+$lang['TITLE_PAGE_LOGIN'] = 'Site de la regio';
+$lang['SUBTITLE_PAGE_LOGIN'] = 'Bienvenu sur le site de l\'association de parent de l\'école ABCM de Mulhouse et Lutterbach';
+
+$lang['Familys_controller_histosys'] = 'Veuillez selectionner une famille';
+$lang['Familys_controller_histosys_subtitle'] =  'Unit&eacute;s associatives';
+$lang['FAMILY'] = 'Famille';
+
+$lang['Familys_controller_skills'] = 'Comp&eacute;tences des familles';
+$lang['Familys_controller_skills_subtitle'] = 'cliquez sur une comp&eacute;tences pour filtrer';
+
+$lang['UNIT_TITLE'] = 'Etat des compteurs';
+$lang['UNIT_TODO'] = 'Unités à faire';
+$lang['UNIT_RAF'] = 'Unités restantes à faire';
+$lang['UNIT_TOVALID'] = 'Unités en attente de validation'; 
+$lang['INFO_UNITS_fam'] = 'Les unités associatives sont à faire entre le 1er juin et le 31 mai. N\'hesitez pas à nous contacter en cas de problème pour les réaliser.';
+$lang['INFO_UNITS_sys'] = 'Les unités associatives sont à faire entre le 1er juin et le 31 mai.'; 
+
+$lang['Familys_controller_histo_fam'] = 'Mes unités'; 
+$lang['Familys_controller_histofam'] = 'Mon  Compte'; 
+$lang['Familys_controller_histofam_subtitle'] = 'Mes unit&eacute;s';
+
+$lang['Admwork_controller_register_fam'] =  'Travaux disponibles';
+$lang['Orgchart_controller_organisation'] =  'Notre association';
+
+$lang['Familys_controller_histo_sys'] =  'Les familles';
+$lang['Admwork_controller_register_sys'] =  'Les travaux';
+$lang['Orgchart_controller_orga'] =  ' Les commissions';
+$lang['Orgchart_controller_orga_subtitle'] = 'commissions - 1 mission : entretenir notre association et notre école avec vous !';
+$lang['Orgchart_controller_orga_title'] = 'L\'organisation de notre association';
+
+
+$lang['ABCM_LINK'] =  'http://mulhouse.abcmzwei.eu/';
+$lang['DELTA_LINK'] =  'https://www.delta-enfance3.fr/ABCMREGIOSCHULEMULHOUSE';
+
+$lang['NEED_YOU'] = 'Nous recherchons';
+$lang['ADM_WORK'] = 'Administration';
+
+$lang['CNX_ME'] = 'Connexion';
+
+$lang['All'] =  'Tous';
+$lang['NotFull'] =  'Place(s) libre(s)';
+$lang['Archived'] =  'Archives';
+
+$lang['TITLE_AGENDA'] = 'AGENDA du Conseil d\'administration';
+
+
+$lang['See'] = 'Voir';
+$lang['password_change'] = 'Cocher pour changer le mot de passe';
+$lang['Home_myaccount'] = 'Mettre &agrave; jour';
+$lang['Familys_controller_histo_subtitle'] = 'Vos travaux &agrave; venir ou valid&eacute;s';
+$lang['recaptchaResponse'] = 'Captcha';
+$lang['Submit'] = 'Valider';
+
+$lang['email_Trombi_model[]'] = 'Email de contact';
+$lang['help_nom_Trombi_model[]'] = 'famille';
+$lang['AddRow'] = '<span class="oi oi-plus" title="Ajouter une ligne">';
+$lang['RemoveRow'] = '<span class="oi oi-circle-x" title="Supprimer une ligne">';
+
+$lang['ADD_Orgchart_controller']        =  'Ajouter';
+$lang['LIST_Orgchart_controller']       =  'Liste des commissions'; 
+$lang['EDIT_Orgchart_controller']        =  'Edition'; 
+$lang['Orgchart_controller_list']       =  'Gestion des commissions';
+$lang['Orgchart_controller_edit']       =  'Editer';
+$lang['Orgchart_controller_add']        = 'Ajouter';
+$lang['Orgchart_controller_subtitle']   =  'un groupe';
+$lang['titleOrgchart'] = 'Titre du groupe';
+$lang['typeOrgchart'] = 'Type';
+$lang['colorOrgchart'] = 'Couleur';
+$lang['acteursOrgchart'] = 'Membres';
+$lang['Orgchart_controller_header_edit'] = 'Groupe';
+
+$lang['GROUP_INFO'] = 'Groupe';
+$lang['GROUP_MEMBER'] = 'Membres';
+$lang['PAGE_ORGA_INTRO'] = 'Les commissions sont des groupes de parents s\'int&eacute;ressant &agrave; diff&eacute;rentes th&eacute;matiques. <b>TOUS</b> les parents sont les bienvenus pour s\'impliquer dans une ou plusieurs commissions, de mani&egrave;re fr&eacute;quente ou ponctuelle.Les t&acirc;ches &agrave; r&eacute;aliser sont nombreuses et vari&eacute;es et peuvent &ecirc;tre valoris&eacute;es sous forme d\'unit&eacute;s associatives. <br/> Si vous avez un peu de temps et des affinit&eacute;s pour une th&eacute;matique, n\'h&eacute;sitez pas &agrave; vous inscrire sur la page de la commission qui vous interesses.';
+
+$lang['ADD_Options_controller']        =  'Ajouter';
+$lang['LIST_Options_controller']       =  'Liste des options'; 
+$lang['EDIT_Options_controller']        =  'Edition'; 
+$lang['Options_controller_list']       =  'Gestion des options';
+$lang['Options_controller_edit']       =  'Editer';
+$lang['Options_controller_add']        = 'Ajouter';
+$lang['Options_controller_subtitle']   =  'une option';
+
+$lang['ADD_Files_controller']        =  'Ajouter';
+$lang['LIST_Files_controller']       =  'Liste des fichiers'; 
+$lang['EDIT_Files_controller']        =  'Edition'; 
+$lang['Files_controller_list']       =  'Gestion des fichiers';
+$lang['Files_controller_edit']       =  'Editer';
+$lang['Files_controller_add']        = 'Ajouter';
+$lang['Files_controller_subtitle']   =  'un fichier';
+
+
+$lang['ADD_Candidatures_controller']        =  'Ajouter';
+$lang['LIST_Candidatures_controller']       =  'Liste des candidatures'; 
+$lang['EDIT_Candidatures_controller']        =  'Edition'; 
+$lang['Candidatures_controller_list']       =  'Gestion des candidatures';
+$lang['Candidatures_controller_edit']       =  'Editer';
+$lang['Candidatures_controller_add']        = 'Ajouter';
+$lang['Candidatures_controller_subtitle']   =  'une candidature';
+$lang['CA_DOCUMENTS'] = 'Les documents disponibles';
+$lang['CA_DOWNLOAD'] = 'Download';
+
+$lang['GESTION_Admwork_controller']    = 'Gestion des sessions';
+$lang['ADD_Admwork_controller']        =  'Ajouter';
+$lang['LIST_Admwork_controller']       =  'Liste des sessions'; 
+$lang['EDIT_Admwork_controller']       =  'Edition d\'une session'; 
+$lang['Admwork_controller_list']       =  'Gestion des sessions';
+$lang['Admwork_controller_edit']       =  'Editer';
+$lang['Admwork_controller_add']        =  'Ajouter';
+$lang['Admwork_controller_subtitle']   =  'une session';
+
+
+$lang['GroupesMembers_controller']            = 'Gestion des membres de commissions';
+$lang['ADD_GroupesMembers_controller']        =  'Ajouter';
+$lang['LIST_GroupesMembers_controller']       =  'Liste des membres'; 
+$lang['EDIT_GroupesMembers_controller']       =  'Edition d\'un membre'; 
+$lang['GroupesMembers_controller_list']       =  'Gestion des membres de commissions';
+$lang['GroupesMembers_controller_edit']       =  'Editer';
+$lang['GroupesMembers_controller_add']        =  'Ajouter';
+$lang['GroupesMembers_controller_subtitle']   =  'les membres des commissions';
+$lang['id_fam'] = 'famille';
+$lang['surname'] = 'prénom';
+$lang['phone'] = 'téléphone';
+$lang['picture'] = 'Image';
+
+
+$lang['REGISTER_CHANGE'] = 'Valider';
+$lang['REGISTER_CANCEL'] = 'Annuler mon inscription';
+$lang['REGISTER_WORK_CLOSED'] = 'Inscription fermée';
+
+$lang['date_travaux'] = 'Date';
+$lang['heure_deb_trav'] = 'Heure de d&eacute;but';
+$lang['heure_fin_trav'] = 'Heure de fin';
+$lang['titre'] = 'Titre';
+$lang['type'] = 'Type';
+$lang['description'] = 'Description';
+$lang['referent_travaux'] = 'R&eacute;f&eacute;rent';
+$lang['ecole'] = 'Ecole';
+$lang['accespar'] = 'Ouvert aux parents de ';
+$lang['nb_inscrits_max'] = 'Nombre maximum';
+
+$lang['ADD_Familys_controller']        =  'Ajouter';
+$lang['LIST_Familys_controller']       =  'Liste des familles'; 
+$lang['EDIT_Familys_controller']       =  'Edition'; 
+$lang['Familys_controller_list']       =  'Gestion des familles';
+$lang['Familys_controller_edit']       =  'Editer';
+$lang['Familys_controller_add']        =  'Ajouter';
+$lang['Familys_controller_subtitle']   =  'une famille';
+
+$lang['ADD_Event_controller']        =  'Ajouter';
+$lang['LIST_Event_controller']       =  'Liste des évènements'; 
+$lang['EDIT_Event_controller']       =  'Edition'; 
+$lang['Event_controller_list']       =  'Gestion des évènements';
+$lang['Event_controller_edit']       =  'Editer';
+$lang['Event_controller_add']        =  'Ajouter';
+$lang['Event_controller_subtitle']   =  'une évènement';
+
+
+$lang['Templates_controller'] = 'Modèle de texte';
+$lang['Templates_controller_list'] = 'Modèle de texte';
+$lang['LIST_Templates_controller'] = 'Liste';
+$lang['ADD_Templates_controller'] = 'Ajout';
+$lang['Templates_controller_add'] = 'Ajout';
+
+$lang['Templates_controller_edit'] = 'Edition';
+$lang['Templates_controller_subtitle'] = 'Modèles de texte';
+
+
+$lang['Sendmail_controller'] = 'Envois d\' e-mails';
+$lang['Sendmail_controller_list'] = 'Envois d\' e-mails';
+$lang['LIST_Sendmail_controller'] = 'Liste';
+$lang['ADD_Sendmail_controller'] = 'Ajouter';
+$lang['Sendmail_controller_edit'] = 'Edition';
+$lang['Sendmail_controller_subtitle'] = 'Envoi d\'e-mail';
+$lang['EDIT_Sendmail_controller'] = 'Editer';
+
+$lang['Identifiant'] = 'Id';
+$lang['reference'] = 'Rèf';
+$lang['email'] = 'E-mail';
+$lang['object'] = 'Objet';
+$lang['statut'] = 'Etat';
+
+$lang['txtmodel'] = 'Modèle de texte';
+
+$lang['Familys_controller_units']      = 'Gestion des Unit&eacute;s';
+
+$lang['Familys_controller_check']      = 'Gestion des Ch&egrave;ques';
+
+
+$lang['Familys_controller_statssys']      = 'Statistisques familles';
+$lang['Familys_controller_statssys_subtitle']      = 'Etats des unités associatives ';
+$lang['_title_family']      = 'Famille';
+$lang['_title_raf']      = 'Reste à faire';
+$lang['_title_tovalid']      = 'A valider';
+$lang['_title_addition']      = 'Unités supplémentaires';
+$lang['_title_valid']      = 'Validés';
+$lang['_title_ecole']      = 'Ecole';
+$lang['Familys_controller_stats']      = 'Synthèse unités';
+$lang['']      = '';
+
+
+
+$lang['id']     =  'Identifiant';
+$lang['cle']    =  'Cl&eacute;';
+$lang['value']  =  'Valeur';
+$lang['filter'] =  'Filtre';
+
+
+$lang['Login_out'] =  'D&eacute;connection';
+$lang['Myaccount'] =  'Mon Compte';
+
+$lang['WRONG_ACCES'] = 'Utilisateur ou mot de passe non valide';
+$lang['WRONG_ACCES_API'] = 'Utilisateur ou mot de passe non valide';
+$lang['NOT_FOUND'] = 'N/A';
+$lang['Units_controller_valid'] = 'Validation des unit&eacute;s sur sessions';
+$lang['Units_controller_valid_subtitle'] = 'veuillez les unités que vous voulez valider';
+
+$lang['Units_controller_valids'] =  'Liste des sessions à valider';
+$lang['Units_controller_valids_subtitle'] = 'Veuillez confirmer les éléments ci-après';
+
+$lang['VALIDS_EDITION'] = 'Valider';
+$lang['ALERT_TEST'] = ' Vous êtes sur le <span class="badge badge-warning">site de test</span> de la régio. Pour le ';
+$lang['PARENT_SITE'] = ' le site parent, c\'est par ici';
+$lang['TOO_MANY_PEOPLE'] = '<div class="alert alert-danger" role="alert">Trop de personne inscrite!</div>';
+
+
+$lang['id_type'] = 'Type';
+$lang['text'] = 'Texte';
+$lang['EDIT_Templates_controller'] = 'Modifier';
+$lang['ADD_Templates_controller'] = 'Ajouter';
+$lang['CANDIDATE'] = 'Participer';
+$lang['EDIT_CANDIDATE'] = 'Modifier ma candidature';
+$lang['CANCEL_CANDIDATE'] = 'Annuler ma candidature';
+$lang['CANDIDATE_SENDED'] = 'Candidature ajoutée / mise à jour';
+$lang['CANDIDATE_COM'] = 'Candidature ';
+
+$lang['COM_TTILE_ACTIONS'] = 'Action de la commission';
+$lang['COM_TTILE_ROLE'] = 'Rôle du responsable';
+$lang['COM_TTILE_NEEDS'] = 'Moyens et besoins';
+$lang['DELETE_CONFIRMATION'] = 'Etes vous sûr de vouloir effacer ?';
+$lang['TXT_DELETE_CONFIRMATION'] = 'Cette action est irreversible';
+$lang['YES'] = 'oui';
+$lang['CANCEL'] = 'non';
+
+$lang['civil_year'] ='Année civile';
+
+$lang['PUBLICS_FILES'] ='Fichiers';
+$lang['PUBLICS_FILES_subtitle'] ='publics';
+$lang['PUBLICS_FILES_TEXT'] = 'Veuillez trouver ici les documents en relation avec ABCM Mulhouse';
+
+?>

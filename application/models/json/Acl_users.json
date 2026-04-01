@@ -1,0 +1,91 @@
+{
+	"id": {
+		"type": "hidden",
+		"list": true,
+		"search": false,
+		"rules": null,
+		"since": 1,
+		"dbforge": {
+			"type": "INT",
+			"constraint": "11",
+			"unsigned": true,
+			"auto_increment": true
+		}
+	},
+	"name": {
+		"type": "input",
+		"list": true,
+		"search": true,
+		"rules": "max_length[255]",
+		"since": 1,
+		"dbforge": {
+			"type": "VARCHAR",
+			"constraint": "255"
+		}
+	},
+	"login": {
+		"type": "input",
+		"list": true,
+		"search": true,
+		"rules": "trim|required|min_length[2]|max_length[255]",
+		"since": 1,
+		"dbforge": {
+			"type": "VARCHAR",
+			"constraint": "255"
+		}
+	},	
+	"password": {
+		"type": "password",
+		"list": true,
+		"search": true,
+		"rules": "trim|required|min_length[2]|max_length[255]",
+		"since": 1,
+		"dbforge": {
+			"type": "VARCHAR",
+			"constraint": "255"
+		}
+	},
+	"role_id": {
+		"type": "select_database",
+		"list": true,
+		"search": true,
+		"rules": null,
+		"since": 2,
+		"param": "distinct(acl_roles,id:role_name)",
+		"values":[],
+		"dbforge": {
+			"type": "INT",
+			"constraint": "5"
+		}
+	},
+	"recaptchaResponse":{
+		"type": "captcha",
+		"list": false,
+		"search": false,
+		"rules": "trim|min_length[2]|max_length[255]",
+		"dbforge": {
+			"type": "VARCHAR",
+			"constraint": "255"
+		}
+	},	
+	"created": {
+		"type": "created",
+		"list": false,
+		"search": false,
+		"rules": null,
+		"since": 1,
+		"dbforge": {
+			"type": "DATETIME"
+		}
+	},
+	"updated": {
+		"type": "updated",
+		"list": false,
+		"search": false,
+		"rules": null,
+		"since": 1,
+		"dbforge": {
+			"type": "DATETIME"
+		}
+	}
+}
