@@ -1,0 +1,108 @@
+{
+	"id": {
+		"type": "hidden",
+		"list": true,
+		"search": true,
+		"rules": null,
+		"since": 1,
+		"dbforge": {
+			"type": "INT",
+			"constraint": "11",
+			"unsigned": true,
+			"auto_increment": true
+		}
+	},
+	"reference": {
+		"type": "input",
+		"list": true,
+		"search": true,
+		"rules": null,
+		"since": 1,
+		"dbforge": {
+			"type": "VARCHAR",
+			"constraint": "255"
+		}
+	},
+	"email": {
+		"type": "input",
+		"list": true,
+		"search": true,
+		"rules": "valid_email|required",
+		"since": 1,
+		"dbforge": {
+			"type": "VARCHAR",
+			"constraint": "255"
+		}
+	},	
+	"object": {
+		"type": "input",
+		"list": true,
+		"search": false,
+		"rules": "trim|required",
+		"since": 1,
+		"dbforge": {
+			"type": "VARCHAR",
+			"constraint": "255"
+		}
+	},	
+	"message": {
+		"type": "input",
+		"list": false,
+		"search": false,
+		"rules": "trim|required",
+		"since": 1,
+		"dbforge": {
+			"type": "LONGTEXT"
+		}
+	},
+	"statut": {
+		"type": "select",
+		"list": true,
+		"search": false,
+		"rules": "trim",
+		"since": 1,
+		"values": {
+			"0":"nouveau",
+			"1":"envoyé",
+			"2":"en echec"	
+		},
+		"dbforge": {
+			"type": "INT",
+			"constraint": "10"
+		}
+	},			
+	"detail_statut": {
+		"type": "table",
+		"list": false,
+		"search": false,
+		"rules": "trim",
+		"since": 1,
+		"model": "Sendmail_statut_model",
+		"ref":"date",
+		"foreignkey":"id_sen",
+		"dbforge": {
+			"type": "INT",
+			"constraint": "11"
+		}
+	},	
+	"created": {
+		"type": "created",
+		"list": false,
+		"search": false,
+		"rules": null,
+		"since": 1,
+		"dbforge": {
+			"type": "DATETIME"
+		}
+	},
+	"updated": {
+		"type": "updated",
+		"list": false,
+		"search": false,
+		"rules": null,
+		"since": 1,
+		"dbforge": {
+			"type": "DATETIME"
+		}
+	}
+}

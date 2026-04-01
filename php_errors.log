@@ -1,0 +1,14 @@
+[30-Apr-2024 14:37:26 Europe/Paris] PHP Fatal error:  Allowed memory size of 134217728 bytes exhausted (tried to allocate 65015808 bytes) in C:\Users\M410111\Documents\StackTechnique\UwAmp\www\site_travaux\application\helpers\tools_helper.php on line 16
+[30-Apr-2024 14:37:28 Europe/Paris] PHP Fatal error:  Allowed memory size of 134217728 bytes exhausted (tried to allocate 65015808 bytes) in C:\Users\M410111\Documents\StackTechnique\UwAmp\www\site_travaux\application\helpers\tools_helper.php on line 16
+[04-Sep-2024 21:46:00 Europe/Paris] PHP Fatal error:  Uncaught ArgumentCountError: Too few arguments to function Render_object::exceptions_error_handler(), 1 passed and exactly 4 expected in C:\Tools\UwAmp\www\site_travaux\application\libraries\Render_object.php:50
+Stack trace:
+#0 [internal function]: Render_object->exceptions_error_handler(Object(Error))
+#1 {main}
+  thrown in C:\Tools\UwAmp\www\site_travaux\application\libraries\Render_object.php on line 50
+[04-Sep-2024 21:46:24 Europe/Paris] PHP Fatal error:  Uncaught TypeError: ErrorException::__construct(): Argument #3 ($severity) must be of type int, Error given in C:\Tools\UwAmp\www\site_travaux\application\libraries\Render_object.php:51
+Stack trace:
+#0 C:\Tools\UwAmp\www\site_travaux\application\libraries\Render_object.php(51): ErrorException->__construct('', 0, Object(Error), '', 0)
+#1 [internal function]: Render_object->exceptions_error_handler(Object(Error))
+#2 {main}
+  thrown in C:\Tools\UwAmp\www\site_travaux\application\libraries\Render_object.php on line 51
+[05-Sep-2024 10:54:49 Europe/Paris] PHP Fatal error:  Access level to Admwork_controller::$_redirect must be protected (as in class MY_Controller) or weaker in C:\Tools\UwAmp\www\site_travaux\application\controllers\Admwork_controller.php on line 12

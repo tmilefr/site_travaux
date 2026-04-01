@@ -1,0 +1,145 @@
+{
+	"id": {
+		"type": "hidden",
+		"list": true,
+		"search": false,
+		"rules": null,
+		"since": 1,
+		"dbforge": {
+			"type": "INT",
+			"constraint": 11,
+			"unsigned": true,
+			"auto_increment": true
+		}
+	},
+	"title": {
+		"type": "input",
+		"list": true,
+		"search": false,
+		"rules": "trim|required",
+		"since": 1,
+		"dbforge": {
+			"type": "VARCHAR",
+			"constraint": "255"
+		}
+	},	
+	"memo": {
+		"type": "memo",
+		"list": true,
+		"search": false,
+		"rules": "",
+		"since": 1,
+		"dbforge": {
+			"type": "VARCHAR",
+			"constraint": "255"
+		}
+	},
+	"date": {
+		"type": "date",
+		"list": true,
+		"search": false,
+		"rules": "trim",
+		"since": 1,
+		"dbforge": {
+			"type": "VARCHAR",
+			"constraint": "255"
+		}
+	}, 
+	"time": {
+		"type": "time",
+		"list": true,
+		"search": false,
+		"rules": "trim",
+		"since": 1,
+		"minTime": "08:00:00",
+		"maxHour": 20,
+		"maxMinutes": 30,
+		"interval": 15,
+		"startTime":8,	
+		"dbforge": {
+			"type": "VARCHAR",
+			"constraint": "255"
+		}
+	}, 	
+	"color":{
+		"type": "select",
+ 		"list": false,
+		"search": false,
+		"rules": null,
+		"since": 2,
+		"values": {
+			"nicdark_bg_blue": "bleu",
+			"nicdark_bg_green": "vert",
+			"nicdark_bg_yellow": "jaune",
+			"nicdark_bg_orange": "orange",
+			"nicdark_bg_red": "rouge"
+		},		
+		"dbforge": {
+			"type": "VARCHAR",
+			"constraint": "255"
+		}
+	},
+	"statut":{
+		"type": "select",
+		"sql" : "ALTER TABLE `files` ADD `statut` VARCHAR(255) NULL AFTER `path`;",
+ 		"list": true,
+		"search": false,
+		"rules": null,
+		"since": 2,
+		"values": {
+			"B": "Brouillon",
+			"P": "Publié",
+			"A": "Archivé"
+		},		
+		"dbforge": {
+			"type": "VARCHAR",
+			"constraint": "255"
+		}
+	},   
+	"type": {
+		"type": "select_database",
+		"list": true,
+		"search": true,
+		"rules": "",
+		"param": "distinct(options,cle:value#filter=event_type)",
+		"values":[],
+		"since": 1,
+		"dbforge": {
+			"type": "VARCHAR",
+			"constraint": "255"
+		}
+    },	
+	"hit":{
+		"sql":"ALTER TABLE `groupes` ADD `hit` INT(11) NULL AFTER `listorder`;",
+		"type": "input",
+		"list": true,
+		"search": false,
+		"rules": "",
+		"since": 1,
+		"dbforge": {
+			"type": "VARCHAR",
+			"constraint": "255"
+		}
+	},
+	"created": {
+		"type": "created",
+		"list": false,
+		"search": false,
+		"rules": null,
+		"since": 1,
+		"dbforge": {
+			"type": "DATETIME"
+		}
+	},
+	"updated": {
+		"type": "updated",
+		"sql":"ALTER TABLE `travaux` ADD `created` DATETIME NULL AFTER `accespar`, ADD `updated` DATETIME NULL AFTER `created`;",
+		"list": false,
+		"search": false,
+		"rules": null,
+		"since": 1,
+		"dbforge": {
+			"type": "DATETIME"
+		}
+	}						
+}

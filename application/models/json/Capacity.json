@@ -1,0 +1,65 @@
+{
+	"id": {
+		"type": "hidden",
+		"sql" : "CREATE TABLE `travaux_v2`.`capacitys` ( `id` INT NOT NULL AUTO_INCREMENT ,  `id_fam` INT(10) NULL ,  `id_cap` VARCHAR(255) NULL ,  `created` DATETIME NOT NULL ,  `updated` DATETIME NOT NULL ,    PRIMARY KEY  (`id`)) ENGINE = InnoDB;",
+		"list": true,
+		"search": false,
+		"rules": null,
+		"since": 1,
+		"dbforge": {
+			"sql":"ALTER TABLE `infos` CHANGE `id_infos` `id` INT(11) NOT NULL AUTO_INCREMENT;",
+			"type": "INT",
+			"constraint": 11,
+			"unsigned": true,
+			"auto_increment": true
+		}
+	},
+	"id_fam": {
+		"type": "select_database",
+		"param":"distinct(famille,id:login@members)",
+		"alternate_field":"nom",
+		"values":[],
+		"list": true,
+		"search": true,
+		"rules": "trim|required",
+		"since": 1,
+		"dbforge": {
+			"type": "INT",
+			"constraint": "11"
+		}
+	},	
+	"id_cap":{
+		"type": "select_database",
+		"param":"distinct(options,cle:value#filter=capacity)",
+		"values":[],
+		"list": true,
+		"search": true,
+		"rules": "trim|required",
+		"since": 1,
+		"dbforge": {
+			"type": "INT",
+			"constraint": "11"
+		}
+	},
+	"created": {
+		"type": "created",
+		"list": false,
+		"search": false,
+		"rules": null,
+		"since": 1,
+		"dbforge": {
+			"type": "DATETIME"
+		}
+	},
+	"updated": {
+		"type": "updated",
+		"sql":"ALTER TABLE `infos` ADD `created` DATETIME NULL AFTER `nb_unites_valides_effectif`, ADD `updated` DATETIME NULL AFTER `created`;",
+		"list": false,
+		"search": false,
+		"rules": null,
+		"since": 1,
+		"dbforge": {
+			"type": "DATETIME"
+		}
+	}						
+}

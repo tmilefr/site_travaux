@@ -1,0 +1,100 @@
+{
+	"id": {
+		"type": "hidden",
+		"list": true,
+		"search": false,
+		"rules": null,
+		"since": 1,
+		"dbforge": {
+			"type": "INT",
+			"constraint": 11,
+			"unsigned": true,
+			"auto_increment": true
+		}
+	},
+	"name": {
+		"type": "input",
+		"list": true,
+		"search": false,
+		"rules": "trim|required",
+		"since": 1,
+		"dbforge": {
+			"type": "VARCHAR",
+			"constraint": "255"
+		}
+	},	
+	"memo": {
+		"type": "memo",
+		"list": true,
+		"search": false,
+		"rules": "",
+		"since": 1,
+		"dbforge": {
+			"type": "VARCHAR",
+			"constraint": "255"
+		}
+	},
+	"path": {
+		"type": "file",
+        "path":"public/files/doc/",
+		"list": false,
+		"search": false,
+		"rules": "",
+		"since": 1,
+		"dbforge": {
+			"type": "VARCHAR",
+			"constraint": "255"
+		}
+	}, 
+	"statut":{
+		"type": "select",
+		"sql" : "ALTER TABLE `files` ADD `statut` VARCHAR(255) NULL AFTER `path`;",
+ 		"list": true,
+		"search": false,
+		"rules": null,
+		"since": 2,
+		"values": {
+			"B": "Brouillon",
+			"P": "Publié",
+			"A": "Archivé"
+		},		
+		"dbforge": {
+			"type": "VARCHAR",
+			"constraint": "255"
+		}
+	},   
+	"type": {
+		"type": "select_database",
+		"list": true,
+		"search": true,
+		"rules": "",
+		"param": "distinct(options,cle:value#filter=filetype)",
+		"values":[],
+		"since": 1,
+		"dbforge": {
+			"type": "VARCHAR",
+			"constraint": "255"
+		}
+    },	
+	"created": {
+		"type": "created",
+		"list": false,
+		"search": false,
+		"rules": null,
+		"since": 1,
+		"dbforge": {
+			"type": "DATETIME"
+		}
+	},
+	"updated": {
+		"type": "updated",
+		"sql":"ALTER TABLE `travaux` ADD `created` DATETIME NULL AFTER `accespar`, ADD `updated` DATETIME NULL AFTER `created`;",
+		"list": false,
+		"search": false,
+		"rules": null,
+		"since": 1,
+		"dbforge": {
+			"type": "DATETIME"
+		}
+	}						
+}

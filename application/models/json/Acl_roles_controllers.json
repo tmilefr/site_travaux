@@ -1,0 +1,59 @@
+{
+	"id": {
+		"type": "hidden",
+		"list": true,
+		"search": false,
+		"rules": null,
+		"since": 1,
+		"dbforge": {
+			"type": "INT",
+			"constraint": 11,
+			"unsigned": true,
+			"auto_increment": true
+		}
+	},
+	"id_role": {
+		"type": "input",
+		"list": true,
+		"search": true,
+		"rules": "trim|required|min_length[5]|max_length[255]",
+		"since": 1,
+		"dbforge": {
+			"type": "INT",
+			"constraint": "11"
+		}
+	},
+	"id_ctrl": {
+		"type": "input",	
+		"list": true,
+		"search": true,
+		"rules": null,
+		"since": 1,
+		"dbforge": {
+			"type": "INT",
+			"constraint": "11"
+		}
+	},
+	"id_act": {
+		"type": "input",	
+		"list": true,
+		"search": true,
+		"rules": null,
+		"since": 1,
+		"dbforge": {
+			"type": "INT",
+			"constraint": "11"
+		}
+	},
+	"allow": {
+		"type": "input",	
+		"list": true,
+		"search": true,
+		"rules": null,
+		"since": 1,
+		"dbforge": {
+			"type": "INT",
+			"constraint": "11"
+		}
+	}
+}

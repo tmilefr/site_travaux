@@ -1,0 +1,121 @@
+{
+	"id": {
+		"type": "hidden",
+		"list": true,
+		"search": false,
+		"rules": null,
+		"since": 1,
+		"dbforge": {
+			"type": "INT",
+			"constraint": 11,
+			"unsigned": true,
+			"auto_increment": true
+		}
+	},
+	"id_fam": {
+		"type": "typeahead",
+		"list": true,
+		"search": false,
+		"rules": "trim|required",
+		"since": 2,
+		"values": null,
+		"query": "SELECT `famille`.`nom`, `famille`.`id` AS id_fam FROM `famille` ORDER BY `nom` DESC", 
+		"id_key": "id_fam",
+		"json_data_key": "nom",
+		"alternate_field":"nom",
+		"data_key":"nom",
+		"dbforge": {
+			"type": "VARCHAR",
+			"constraint": "255"
+		}
+	},
+	"id_grp":{
+		"type": "select_database",
+		"list": true,
+		"search": true,
+		"rules": null,
+		"since": 2,
+		"param": "distinct(groupes,id:title)",
+		"values":[],
+		"dbforge": {
+			"type": "INT",
+			"constraint": "5"
+		}		
+	},
+	"name": {
+		"type": "input",
+		"list": true,
+		"search": true,
+		"rules": "trim|required",
+		"since": 1,
+		"dbforge": {
+			"type": "VARCHAR",
+			"constraint": "255"
+		}
+	},
+	"surname": {
+		"type": "input",
+		"list": true,
+		"search": true,
+		"rules": null,
+		"since": 1,
+		"dbforge": {
+			"type": "VARCHAR",
+			"constraint": "255"
+		}
+	},
+	"email": {
+        "sql":"ALTER TABLE `candidatures` ADD `mail` VARCHAR(255) NULL AFTER `prenom`, ADD `phone` VARCHAR(255) NULL AFTER `mail`, ADD `picture` VARCHAR(255) NULL AFTER `phone`;",
+		"type": "input",
+		"list": true,
+		"search": true,
+		"rules": "trim|valid_email|required",
+		"since": 1,
+		"dbforge": {
+			"type": "VARCHAR",
+			"constraint": "255"
+		}
+	},
+	"phone": {
+		"type": "input",
+		"list": true,
+		"search": true,
+		"rules": null,
+		"since": 1,
+		"dbforge": {
+			"type": "VARCHAR",
+			"constraint": "255"
+		}
+	},
+	"memo": {
+		"type": "memo",
+		"list": false,
+		"search": true,
+		"rules": "trim|required",
+		"since": 1,
+		"dbforge": {
+			"type": "VARCHAR",
+			"constraint": "255"
+		}
+	},            
+	"created": {
+		"type": "created",
+		"list": false,
+		"search": false,
+		"rules": null,
+		"since": 1,
+		"dbforge": {
+			"type": "DATETIME"
+		}
+	},
+	"updated": {
+		"type": "updated",
+		"list": false,
+		"search": false,
+		"rules": null,
+		"since": 1,
+		"dbforge": {
+			"type": "DATETIME"
+		}
+	}						
+}

@@ -1,0 +1,78 @@
+{
+	"id": {
+		"type": "hidden",
+		"list": true,
+		"search": false,
+		"rules": null,
+		"since": 1,
+		"dbforge": {
+			"type": "INT",
+			"constraint": 11,
+			"unsigned": true,
+			"auto_increment": true
+		}
+	},
+	"cle": {
+		"type": "input",
+		"list": true,
+		"search": false,
+		"rules": "trim|required",
+		"since": 1,
+		"dbforge": {
+			"type": "VARCHAR",
+			"constraint": "255"
+		}
+	},	
+	"value": {
+		"type": "input",
+		"list": true,
+		"search": false,
+		"rules": "trim|required",
+		"since": 1,
+		"dbforge": {
+			"type": "VARCHAR",
+			"constraint": "255"
+		}
+	},
+	"filter": {
+		"type": "select",
+		"list": true,
+		"search": false,
+		"rules": "trim|required",
+		"values": {
+			"type": "Type de travail",
+			"color": "Couleur de fond",
+			"classif": "Type d'acteur",
+			"typegroupe":"Type de groupe",
+			"capacity":"Compétences",
+			"filetype":"Type de fichier",
+			"event_type":"Type d'évènement"
+		},
+		"since": 1,
+		"dbforge": {
+			"type": "VARCHAR",
+			"constraint": "255"
+		}
+    },	
+	"created": {
+		"type": "created",
+		"list": false,
+		"search": false,
+		"rules": null,
+		"since": 1,
+		"dbforge": {
+			"type": "DATETIME"
+		}
+	},
+	"updated": {
+		"type": "updated",
+		"sql":"ALTER TABLE `travaux` ADD `created` DATETIME NULL AFTER `accespar`, ADD `updated` DATETIME NULL AFTER `created`;",
+		"list": false,
+		"search": false,
+		"rules": null,
+		"since": 1,
+		"dbforge": {
+			"type": "DATETIME"
+		}
+	}						
+}

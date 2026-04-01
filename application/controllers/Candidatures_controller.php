@@ -1,0 +1,36 @@
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+/**
+ * Sendmail Controller
+ *
+ * @package     WebApp
+ * @subpackage  Core
+ * @category    Factory
+ * @author      Tmile
+ * @link        http://www.24bis.com
+ */
+class Candidatures_controller extends MY_Controller {
+
+	public function __construct(){
+		parent::__construct();
+
+		$this->_set('_debug', FALSE);
+
+		$this->_controller_name = 'Candidatures_controller';  //controller name for routing
+		$this->_model_name 		= 'Candidatures_model';	   //DataModel
+		$this->_edit_view 		= 'edition/Candidatures_form';//template for editing
+		$this->_list_view		= 'unique/Candidatures_view.php';
+		$this->_autorize 		= array('list'=>true,'add'=>true,'edit'=>true,'delete'=>true,'view'=>true);
+		$this->_search 			= false;
+		$this->_bg_color        = 'nicdark_bg_violet';
+		$this->title            .= $this->lang->line('GESTION_'.$this->_controller_name);
+
+		$this->init();
+		//pour dire, on affiche pas les boutons ajout et list dans les listes
+		//$this->render_object->_set('_not_link_list', ['add','list']);
+		
+	}
+
+	
+
+}

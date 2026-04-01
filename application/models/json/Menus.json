@@ -1,0 +1,157 @@
+{
+	"sysmenu": {
+		"type": "dropdown",
+		"icon": "oi-key",
+		"items":[
+			{
+				"url":"Acl_users_controller/list",
+				"name":"Acl_users_controller",
+				"type":"link"
+			},
+			{
+				"url":"Acl_roles_controller/list",
+				"name":"Acl_roles_controller",
+				"type":"link"
+			},
+			{
+				"url":"Acl_controllers_controller/list",
+				"name":"Acl_controllers_controller",
+				"type":"link"
+			},
+			{
+				"url":"Sendmail_controller/list",
+				"name":"Sendmail_controller",
+				"type":"link"
+			}
+		]
+	},
+	"optionmenu":{
+		"type": "dropdown",
+		"icon": "oi-cog",
+		"items":[
+			{
+				"url":"Options_controller/list",
+				"name":"Option_controller",
+				"type":"link"
+			},
+			{
+				"url":"Templates_controller/list",
+				"name":"Templates_controller",
+				"type":"link"
+			},			
+			{
+				"type":"divider"
+			},
+			{
+				"url":"Parameters/list",
+				"name":"Parameters",
+				"type":"link"
+			}			
+		]
+	},
+	"mainmenu":{
+		"type": "li",
+		"items":[
+			{
+				"url" : "Orgchart_controller/organisation",
+				"name" : "Orgchart_controller_organisation",
+				"color" : "green",
+				"noright":false,
+				"opt" : "",
+				"items":[ 
+					{
+						"url":"Orgchart_controller/orga",
+						"name":"Orgchart_controller_orga",
+						"type":"link"
+					},
+					{
+						"url":"Candidatures_controller/list",
+						"name":"Candidatures_controller_list",
+						"type":"link"
+					},					
+					{
+						"url":"Orgchart_controller/list",
+						"name":"Orgchart_controller_list",
+						"type":"link"
+					},									
+					{
+						"url":"GroupesMembers_controller/list",
+						"name":"GroupesMembers_controller_list",
+						"type":"link"
+					},
+					{
+						"url":"Files_controller/list",
+						"name":"Files_controller_list",
+						"type":"link"
+					},
+					{
+						"url":"Event_controller/list",
+						"name":"Event_controller_list",
+						"type":"link"
+					}				
+				]
+			},
+			{
+				"url" : "Familys_controller/histo",
+				"opt" : "sys",
+				"name" : "Familys_controller_histo",
+				"color" : "orange",
+				"noright":false,
+				"items":[
+					{
+						"url":"Familys_controller/list",
+						"name":"Familys_controller_list",
+						"type":"link"
+					},{
+						"url":"Units_controller/valid",
+						"name":"Units_controller_valid",
+						"type":"link"
+					},
+					{
+						"url":"Units_controller/list",
+						"name":"Units_controller_list",
+						"type":"link"
+					},
+					{
+						"url":"Familys_controller/skills",
+						"name":"Familys_controller_skills",
+						"type":"link"
+					},
+					{
+						"url":"Familys_controller/stats",
+						"name":"Familys_controller_stats",
+						"type":"link"
+					}			
+				]
+			},
+			{
+				"url" : "Admwork_controller/register",
+				"name" : "Admwork_controller_register",
+				"opt" : "sys",
+				"color" : "red",
+				"noright":false,
+				"items":[
+					{
+						"url":"Admwork_controller/list",
+						"name":"Admwork_controller_list",
+						"type":"link"
+					},
+					{
+						"url":"Admwork_controller/worker",
+						"name":"Admwork_controller_worker",
+						"type":"link"
+					}						
+				]
+			},
+			{
+				"url" : "",
+				"name" : "",
+				"color" : "grey",
+				"noright":true,
+				"opt" : null,
+				"items":[
+				]
+			}						
+		]
+	}
+}
