@@ -7,69 +7,87 @@ class Api extends MY_Controller {
 	public $dbforge;
 	public $SQL;
 
-	/**
-	 * Liste blanche des modèles autorisés via l'API SetTable
-	 */
-	private const ALLOWED_MODELS = [
-		'Sendmail_model',
-		'Familys_model',
-		'Admwork_model',
-		'Infos_model',
-		'Templates_model',
-		// ajouter ici au besoin
-	];
-
 	public function __construct(){
 		parent::__construct();
 		$this->_api = TRUE; //declaration du mode api sur ce controlleur, impact sur MY_Exceptions.php
 	}
+	
+	/**
+	 * Set response of API
+	 * @param array $AllowMethods 
+	 * @return void 
+	 */
+	private function _SetHeaders($AllowMethods = ['POST','GET','DELETE','PUT','PATCH','OPTIONS']){
+		$notallowed = TRUE;
+		switch($_SERVER['REQUEST_METHOD'])
+		{
+			case 'OPTIONS': //need for js access
+				if (in_array('OPTIONS', $AllowMethods )){
+					header('Access-Control-Allow-Origin: *');
+					header('Access-Control-Allow-Credentials: true');
+					header('Access-Control-Allow-Methods: '.implode(',',$AllowMethods));
+					header('Access-Control-Allow-Headers: token, Content-Type');
+					header('Access-Control-Max-Age: 1728000');
+					header('Content-Length: 0');
+					header('Content-Type: text/plain');
+					die();
+				} 
+			break;
+			case 'POST':
+				if (in_array('POST',$AllowMethods )){
+					header('Access-Control-Allow-Origin: *');
+					header('Access-Control-Allow-Methods:'.implode(',',$AllowMethods));
+					header('Access-Control-Allow-Headers: Content-Type, Authorization');
+					header('Access-Control-Allow-Credentials: true');
+					header("Content-Type: application/json");
+					$notallowed = FALSE;
+				}				
+			break;
+			case 'GET':
+				if (in_array('GET',$AllowMethods )){
+					header('Access-Control-Allow-Origin: *');
+					header('Access-Control-Allow-Methods:'.implode(',',$AllowMethods));
+					header('Access-Control-Allow-Headers: Content-Type, Authorization');
+					header('Access-Control-Allow-Credentials: true');
+					header("Content-Type: application/json");
+					$notallowed = FALSE;
+				}				
+			break;
+			case 'PUT':
+				if (in_array('PUT',$AllowMethods )){
+					header('Access-Control-Allow-Origin: *');
+					header('Access-Control-Allow-Methods:'.implode(',',$AllowMethods));
+					header('Access-Control-Allow-Headers: Content-Type, Authorization');
+					header('Access-Control-Allow-Credentials: true');
+					header("Content-Type: application/json");
+					$notallowed = FALSE;
+				}				
+			break;
+			case 'PATCH':
+				if (in_array('PATCH',$AllowMethods )){
+					header('Access-Control-Allow-Origin: *');
+					header('Access-Control-Allow-Methods:'.implode(',',$AllowMethods));
+					header('Access-Control-Allow-Headers: Content-Type, Authorization');
+					header('Access-Control-Allow-Credentials: true');
+					header("Content-Type: application/json");
+					$notallowed = FALSE;
+				}				
+			break;	
+			case 'DELETE':
+				if (in_array('DELETE',$AllowMethods )){
+					header('Access-Control-Allow-Origin: *');
+					header('Access-Control-Allow-Methods:'.implode(',',$AllowMethods));
+					header('Access-Control-Allow-Headers: Content-Type, Authorization');
+					header('Access-Control-Allow-Credentials: true');
+					header("Content-Type: application/json");
+					$notallowed = FALSE;
+				}				
+			break;												
+		}
+		if ($notallowed ){
+			$this->_renderJson(405,["message" => "Method Not Allowed"]);
+		}
 
-	private function _getAllowedOrigins(): array {
-		// Adapter selon les environnements
-		return [
-			'https://regio.dev-asso.fr',
-			'https://www.abcm-mulhouse.fr',
-			"http://localhost"
-			// ajouter les origines légitimes ici
-		];
-	}
-
-	private function _setCorsHeaders(array $allowMethods): void {
-		$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-		
-		if (in_array($origin, $this->_getAllowedOrigins(), true)) {
-			header('Access-Control-Allow-Origin: ' . $origin);
-		}
-		// Si l'origine n'est pas autorisée, on n'envoie PAS le header — le navigateur bloquera.
-		
-		header('Vary: Origin');
-		header('Access-Control-Allow-Credentials: true');
-		header('Access-Control-Allow-Methods: ' . implode(',', $allowMethods));
-		header('Access-Control-Allow-Headers: Content-Type, Authorization, token');
-	}
-	
-	private function _SetHeaders(array $allowMethods = ['POST','GET','DELETE','PUT','PATCH','OPTIONS']): void {
-		$method = $_SERVER['REQUEST_METHOD'];
-	
-		if ($method === 'OPTIONS') {
-			if (!in_array('OPTIONS', $allowMethods)) {
-				$this->_renderJson(405, ['message' => 'Method Not Allowed']);
-				return;
-			}
-			$this->_setCorsHeaders($allowMethods);
-			header('Access-Control-Max-Age: 1728000');
-			header('Content-Length: 0');
-			header('Content-Type: text/plain');
-			die();
-		}
-	
-		if (!in_array($method, $allowMethods)) {
-			$this->_renderJson(405, ['message' => 'Method Not Allowed']);
-			return;
-		}
-	
-		$this->_setCorsHeaders($allowMethods);
-		header('Content-Type: application/json');
 	}
 
 	/**
@@ -122,14 +140,6 @@ class Api extends MY_Controller {
 	 */
 	public function SetTable($model_name = 'Sendmail_model'){
 		$this->_SetHeaders(['GET','OPTIONS']);
-
-
-		// Whitelist — on refuse tout modèle non listé
-		if (!in_array($model_name, self::ALLOWED_MODELS, true)) {
-			$this->_renderJson(403, ['message' => 'Modèle non autorisé']);
-			return;
-		}
-
 		$this->load->dbforge();
 		$this->load->model('GenericSql_model','SQL');
 		$this->_model_name = $model_name;
