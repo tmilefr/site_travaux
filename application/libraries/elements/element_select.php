@@ -17,6 +17,9 @@ class element_select extends element
 	}
 	
 	public function Render(){
+
+		echo debug($this->values);
+
 		if (isset($this->values[$this->value]))
 			return $this->values[$this->value];
 		else

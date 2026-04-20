@@ -70,15 +70,22 @@ defined('BASEPATH') || exit('No direct script access allowed');
 | The $query_builder variables lets you determine whether or not to load
 | the query builder class.
 */
+
+
+
+// Charger le .env si disponible (une seule fois via index.php idéalement)
+$env = parse_ini_file(FCPATH . '.env') ?: [];
+
+
 $active_group = 'default';
 $query_builder = TRUE;
 
 $db['default'] = array(
 	'dsn'	=> '',
-	'hostname' => 'localhost',
-	'username' => 'root',
-	'password' => 'root',
-	'database' => 'regiomlh_prod',
+	'hostname' => $env['DB_DEV_HOST'] ,
+	'username' => $env['DB_DEV_USER'] ,
+	'password' => $env['DB_DEV_PASS'] ,
+	'database' => $env['DB_DEV_NAME'] ,
 	'dbdriver' => 'mysqli',
 	'dbprefix' => '',
 	'pconnect' => FALSE,
