@@ -38,3 +38,7 @@ application/config/production/config.php
 application/config/production/database.php
 
 /public/files/img/team
+.env
+/application/third_party
+/application/third_party/dompdf
+/application/third_party/dompdf/vendor

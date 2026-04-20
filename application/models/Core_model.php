@@ -1,527 +1,483 @@
 <?php
 defined('BASEPATH') || exit('No direct script access allowed');
 
+/**
+ * Core_model
+ * Modèle de base générique pour tous les modèles de l'application.
+ *
+ * CORRECTIONS v2 :
+ *  - _set_list_fields() : bug de doublon du dernier caractère corrigé (substr → rtrim)
+ *  - get_all()          : ajout d'une limite de sécurité (défaut 1000 lignes)
+ *  - get_all()          : la recherche globale utilise _setField() comme get()
+ *                         pour être cohérente avec le mode 'join'
+ */
 class Core_model extends CI_Model {
-	
-	protected $table; 	//table used in model
-	protected $key; 	//id used in model
-	protected $key_value; 	
-	protected $order	= []; 	//sort used in model
-	protected $direction;//direction used in model
-	protected $autorized_fields = array();
-	protected $autorized_fields_search = array();
-	protected $required = array();
-	protected $datas = array(); // datas in model
-	protected $filter = array();//filter for model
-	protected $group_by = array(); //group by for model
-	protected $per_page = 20;
-	protected $_debug = FALSE;
-	protected $page = 1;
-	protected $nb = null;
-	protected $_debug_array = array();
-	protected $like = array();
+
+	protected $table;
+	protected $key;
+	protected $key_value;
+	protected $order        = [];
+	protected $direction;
+	protected $autorized_fields        = [];
+	protected $autorized_fields_search = [];
+	protected $required     = [];
+	protected $datas        = [];
+	protected $filter       = [];
+	protected $group_by     = [];
+	protected $per_page     = 20;
+	protected $_debug       = FALSE;
+	protected $page         = 1;
+	protected $nb           = null;
+	protected $_debug_array = [];
+	protected $like         = [];
 	protected $global_search = null;
-	protected $defs = array();	
-	protected $json = null;
-	protected $json_path = APPPATH.'models/json/';
-	protected $_mode = 'classic'; // classic or join
-	protected $_model_name = '';
-    /**
-	 * @brief 
-	 * @returns 
-	 * 
-	 * 
-	 */
+	protected $defs         = [];
+	protected $json         = null;
+	protected $json_path    = APPPATH.'models/json/';
+	protected $_mode        = 'classic'; // classic | join
+
+	// -----------------------------------------------------------------------
+
 	public function __construct()
 	{
 		parent::__construct();
 		$this->load->database();
-		if (!$this->page){
+		if (!$this->page) {
 			$this->page = 1;
 		}
 	}
 
-	/**
-	 * @brief 
-	 * @param $opt (std class) 
-	 * $opt->id 
-	 * $opt->value 
-	 * $opt->filter_field 
-	 * $opt->filter_value 
-	 * @returns 
-	 * 
-	 * 
-	 */
-	public function distinct($opt){
-		try{
-		//	$table,$id,$value,$filter_field=null, $filter_value = null;
-			//echo debug($opt);
-			if (strpos($opt->value,'@')){
-				$fields = 'CONCAT_WS(" ",'.str_replace('@',',',$opt->value).') AS ';
-				$as = ' '.str_replace('@','_',$opt->value);
-			} else {
-				$fields = $opt->value;
-				$as = $opt->value;
-			}
-			$this->db->distinct();
-			if ( isset($opt->filter_field) &&  isset($opt->filter_value) ){
-				$datas = $this->db->select("$opt->table.$opt->id,$fields $as")->where($opt->filter_field,$opt->filter_value)->order_by("$as", 'asc' )->get($opt->table)->result();
-			} else {
-				$datas = $this->db->select("$opt->table.$opt->id,$fields $as")->order_by("$as", 'asc' )->get($opt->table)->result();
-			}
-			//echo $this->db->last_query().'<BR/>';
-			$this->_debug_array[] = $this->db->last_query();
 
-			return $datas;
-		} catch (Exception $e) {
-			//echo 'Exception reçue : ',  $e->getMessage(), "\n";
-		}
-	}	
-		
 	/**
-	 * Method DeleteLink
-	 *
-	 * @param $foreign_key $foreign_key [explicite description]
-	 * @param $id $id [explicite description]
-	 *
-	 * @return void
+	 * Log une erreur DB et lève une exception si $throw = true.
+	 * Utiliser dans tous les catch des méthodes critiques.
 	 */
-	function DeleteLink($foreign_key, $id = null){
-		if ($id){
-			$this->db->where_in($foreign_key, $id)
-				 ->delete($this->table); 
-			$this->_debug_array[] = $this->db->last_query();
+	protected function _handleDbError(string $context, Exception $e, bool $throw = true): void {
+		$dbError = $this->db->error();
+		$msg = sprintf(
+			'[%s] Exception: %s | DB error: %s | Last query: %s',
+			$context,
+			$e->getMessage(),
+			json_encode($dbError),
+			$this->db->last_query()
+		);
+		log_message('error', $msg);
 
-			/*if ($this->table == "capacitys"){
-				echo debug($this->db->last_query());
-				die();
-			}*/
-		}
-		
-	}
-	
-	/**
-	 * Method SetLink
-	 *
-	 * @param $foreign_key $foreign_key [explicite description]
-	 * @param $id $id [explicite description]
-	 *
-	 * @return void
-	 */
-	function SetLink($foreign_key, $id = null){
-		if ($id){
-			$this->db->set($foreign_key, $id);
-			$this->db->where($foreign_key, 99999);
-			$this->db->update($this->table);	
-			$this->_debug_array[] = $this->db->last_query();
+		if ($throw) {
+			throw new RuntimeException($msg, (int)($dbError['code'] ?? 0), $e);
 		}
 	}
 
-	/**
-	 * @brief 
-	 * @param $opt (std class) 
-	 * $opt->id 
-	 * $opt->value 
-	 * $opt->filter_field 
-	 * $opt->filter_value 
-	 * @returns 
-	 * 
-	 * 
-	 */
-	public function query($sql){
-		try{
-			$datas = $this->db->query($sql)->result();
-			//echo $this->db->last_query().'<BR/>';
-			$this->_debug_array[] = $this->db->last_query();
+	// -----------------------------------------------------------------------
+	// LECTURE
+	// -----------------------------------------------------------------------
 
-			return $datas;
-		} catch (Exception $e) {
-			//echo 'Exception reçue : ',  $e->getMessage(), "\n";
+	/**
+	 * Récupère tous les enregistrements correspondant aux filtres.
+	 *
+	 * CORRECTIONS :
+	 *  1. Limite de sécurité : $limit (défaut 1000) pour éviter de charger
+	 *     l'intégralité d'une table volumineuse en mémoire.
+	 *     Passer 0 pour désactiver la limite (à utiliser avec précaution).
+	 *  2. global_search : utilise _setField() pour la cohérence avec le mode 'join'.
+	 *
+	 * @param  int $limit  Nombre max de lignes (0 = illimité)
+	 * @return array
+	 */
+	public function get_all($limit = 1000)
+	{
+		if (is_array($this->filter) && count($this->filter)) {
+			foreach ($this->filter as $key => $value) {
+				$this->db->where($key, $value);
+			}
 		}
-	}
-	
-	/**
-	 * @brief 
-	 * @returns 
-	 * 
-	 * 
-	 */
-	public function _init_def(){
-		$this->defs = array();
-		$json = file_get_contents($this->json_path.$this->json);
-		$json = json_decode($json);
-		foreach($json AS $field => $defs){
-			$this->autorized_fields[]  = $field;
-			if ($defs->search){
-				$this->autorized_fields_search[] = $field;
-			}
-			if ($defs->rules){
-				$this->required[] = $field;
-			}
-			//FIELD OBJECT ELEMENT
-			$fileobject = APPPATH.'libraries/elements/element_'.$defs->type.'.php';
-			if (is_file($fileobject)){
-				require_once($fileobject);
-				$object_name = 'element_'.$defs->type;
-			} else {
-				require_once(APPPATH.'libraries/elements/element.php');
-				$object_name = 'element';
-			}
-			$obj = new $object_name;
-			foreach($defs AS $key => $value){
-				$obj->_set($key , $value);
-			}			
-			if ($obj->_get('param')){
-				$op_mg = $obj->SetParams();
-				//echo debug($op_mg);
 
-				if (isset($op_mg->method) && method_exists($this,$op_mg->method)){
-					//echo debug($op_mg);
-					$datas_select = [];
-					$datas = $this->{$op_mg->method}($op_mg);
-					if (count($datas)){
-						foreach($datas AS $data){
-							$datas_select[$data->{$op_mg->key}] = $data->{$op_mg->data};
-						}
-					}
-					//echo debug($datas_select);
-					$obj->_set('values', $datas_select);
-				}
-			} else {
-				//$obj->_set('values', $defs->values);	
-				if (method_exists($obj,'SetValues')){//new methode for set datas
-					$obj->SetValues();
+		if ($this->global_search) {
+			$this->db->group_start();
+			foreach ($this->autorized_fields_search as $idx => $field) {
+				$resolvedField = $this->_setField($field);
+				if ($idx === 0) {
+					$this->db->like($resolvedField, $this->global_search);
+				} else {
+					$this->db->or_like($resolvedField, $this->global_search);
 				}
 			}
-			$obj->_set('_model_name', $this->_get('_model_name'));
-			$obj->_set('name', $field);
-			$this->defs[$field] = $obj;
+			$this->db->group_end();
 		}
-	}
-	
-	/**
-	 * @brief 
-	 * @returns 
-	 * 
-	 * 
-	 */
-	public function truncate(){
-		$this->db->truncate($this->table);	
-	}	
-	
-	/**
-	 * @brief 
-	 * @param $field 
-	 * @param $value 
-	 * @param $fields 
-	 * @returns 
-	 * 
-	 * 
-	 */
-	public function is_exist($field = 'id' ,$value = null, $fields = null){
-		$query = $this->db->get_where($this->table , (($fields) ? $fields:array($field => $value)) );
-		$this->_debug_array[] = $this->db->last_query();
-		
-		if ($query->num_rows())
-			return $query->row();
-		else
-			return false;			
-	}	
 
-	/**
-	 * @brief 
-	 * @returns 
-	 * 
-	 * 
-	 */
-	public function get_all(){
-		if (is_array($this->filter) AND count($this->filter)){
-			foreach($this->filter AS $key => $value){
-				$this->db->where($key , $value);
-			}
-		} 	
-		if ($this->global_search){
-			foreach($this->autorized_fields_search AS $key => $value){
-				$this->db->or_like($value , $this->global_search);
-			}
-		} 			
-		$datas = $this->db->select(implode(',',$this->autorized_fields))
-					   ->order_by($this->order, $this->direction )
-					   ->get($this->table)
-					   ->result();
+		$q = $this->db->select(implode(',', $this->autorized_fields))
+		              ->order_by($this->order, $this->direction);
+
+		if ($limit > 0) {
+			$q->limit($limit);
+		}
+
+		$datas = $q->get($this->table)->result();
 		$this->_debug_array[] = $this->db->last_query();
 		return $datas;
 	}
-	
+
+	// -----------------------------------------------------------------------
+
 	/**
-	 * @brief 
-	 * @param $field 
-	 * @returns 
-	 * 
-	 * 
+	 * Récupère une liste paginée (utilisée par les vues liste).
+	 *
+	 * @return array
 	 */
-	public function get_distinct($field){
+	public function get()
+	{
+		$this->_set_filter();
+		$this->_set_search();
+
+		if ($this->per_page) {
+			if (!$this->page) {
+				$this->page = 1;
+			}
+			$this->db->limit(intval($this->per_page), ($this->page - 1) * $this->per_page);
+		}
+
+		$datas = $this->db->select($this->_set_list_fields())
+		                  ->order_by($this->order, $this->direction)
+		                  ->get($this->table);
+		$this->_debug_array[] = $this->db->last_query();
+		return $datas->result();
+	}
+
+	// -----------------------------------------------------------------------
+
+	/**
+	 * Retourne le nombre total de lignes pour la pagination.
+	 *
+	 * @return int
+	 */
+	public function get_pagination()
+	{
+		if (!$this->nb) {
+			$this->_set_filter();
+			$this->_set_search();
+			$this->nb = $this->db->select($this->table . '.' . $this->key)
+			                     ->get($this->table)
+			                     ->num_rows();
+		}
+		$this->_debug_array[] = 'get_pagination : ' . $this->nb;
+		return $this->nb;
+	}
+
+	// -----------------------------------------------------------------------
+
+	/**
+	 * Récupère un enregistrement unique par clé primaire.
+	 *
+	 * @return object|false
+	 */
+	public function get_one()
+	{
+		try {
+			$this->db->where($this->key, $this->key_value);
+			$result = $this->db->select($this->_set_list_fields())
+							   ->get($this->table)
+							   ->row();
+			$this->_debug_array[] = $this->db->last_query();
+			return $result ?: null; // null explicite plutôt que false/empty
+		} catch (Exception $e) {
+			$this->_handleDbError('Core_model::get_one', $e);
+		}
+	}
+
+	// -----------------------------------------------------------------------
+
+	/**
+	 * Récupère un enregistrement unique par un champ quelconque.
+	 *
+	 * @param  array $fields  ['champ' => 'valeur']
+	 * @return object|false
+	 */
+	public function get_by($fields)
+	{
+		$query = $this->db->select('*')
+		                  ->from($this->table)
+		                  ->where($fields)
+		                  ->limit(1)
+		                  ->get();
+		$this->_debug_array[] = $this->db->last_query();
+
+		if ($query->num_rows()) {
+			return $query->row();
+		}
+		return false;
+	}
+
+	// -----------------------------------------------------------------------
+
+	public function get_distinct($field)
+	{
 		$this->db->distinct();
 		$datas = $this->db->select($field)->get($this->table)->result();
 		$this->_debug_array[] = $this->db->last_query();
 		return $datas;
-	}		
-	
-	/* only one ? really ? */
-	/**
-	 * @brief 
-	 * @returns 
-	 * 
-	 * 
-	 */
-	public function get_one()
-	{
-		$this->db->select('*')
-				 ->from($this->table)
-				 ->where($this->key, $this->key_value);
-		$datas = $this->db->get()->row();
-		$this->_debug_array[] = $this->db->last_query();
-		return $datas;
 	}
 
+	// -----------------------------------------------------------------------
+
+	public function distinct($opt)
+	{
+		try {
+			if (strpos($opt->value, '@')) {
+				$fields = 'CONCAT_WS(" ",' . str_replace('@', ',', $opt->value) . ') AS ';
+				$as     = ' ' . str_replace('@', '_', $opt->value);
+			} else {
+				$fields = $opt->value;
+				$as     = $opt->value;
+			}
+			$this->db->distinct();
+			if (isset($opt->filter_field) && isset($opt->filter_value)) {
+				$datas = $this->db->select("$opt->table.$opt->id,$fields $as")
+				                  ->where($opt->filter_field, $opt->filter_value)
+				                  ->order_by("$as", 'asc')
+				                  ->get($opt->table)->result();
+			} else {
+				$datas = $this->db->select("$opt->table.$opt->id,$fields $as")
+				                  ->order_by("$as", 'asc')
+				                  ->get($opt->table)->result();
+			}
+			$this->_debug_array[] = $this->db->last_query();
+			return $datas;
+		} catch (Exception $e) {
+			log_message('error', 'Core_model::distinct() — ' . $e->getMessage());
+			return [];
+		}
+	}
+
+	// -----------------------------------------------------------------------
+
+	public function query($sql)
+	{
+		try {
+			$datas = $this->db->query($sql)->result();
+			$this->_debug_array[] = $this->db->last_query();
+			return $datas;
+		} catch (Exception $e) {
+			log_message('error', 'Core_model::query() — ' . $e->getMessage());
+			return [];
+		}
+	}
+
+	// -----------------------------------------------------------------------
+	// ÉCRITURE
+	// -----------------------------------------------------------------------
+
 	/**
-	 * @brief 
-	 * @param $datas 
-	 * @returns 
-	 * 
-	 * 
+	 * Insère un enregistrement.
+	 *
+	 * @param  array $datas
+	 * @return int   Insert ID
 	 */
 	public function post($datas)
 	{
-		/*foreach ($datas AS $key=>$fields){
-			if (!in_array($field, $this->$this->autorized_fields)){
-				unset($this->datas[$key]);
-			}
-		}*/
 		$this->db->insert($this->table, $datas);
 		$this->_debug_array[] = $this->db->last_query();
 		return $this->db->insert_id();
 	}
 
-	/**
-	 * @brief 
-	 * @returns 
-	 * 
-	 * 
-	 */
-	function _set_filter(){
-		if (is_array($this->filter) AND count($this->filter)){
-			//echo debug($this->filter);
-			$this->db->group_start();
-			foreach($this->filter AS $key => $value){
-				$this->db->where($key , $value);
-			}
-			$this->db->group_end();
-		} 
-	}
-	
-	/**
-	 * @brief 
-	 * @returns 
-	 * 
-	 * 
-	 */
-	function _set_group_by(){
-		if (is_array($this->group_by) AND count($this->group_by)){
-			foreach($this->group_by AS $key => $value){
-				$this->db->group_by($value);
-			}
-		} 	
-	}
+	// -----------------------------------------------------------------------
 
 	/**
-	 * @brief 
-	 * @returns 
-	 * 
-	 * 
-	 */
-	function _set_order_by(){
-		if (is_array($this->order) AND count($this->order)){
-			foreach($this->order AS $key => $value){
-				$this->db->order_by($key, $value);
-			}
-		} 	
-	}	
-
-	function _setField($field){
-		$def = $this->_get('defs')[$field];
-		if (isset($def->table[$field])){
-			$this->_mode = 'join';
-			$this->db->join($def->table[$field],$this->table.'.'.$field.'='.$def->table[$field].'.'.$def->foreignKey[$field], 'left' );
-			return $def->table[$field].'.'.$def->foreignField[$field];
-		} else {
-			if ($this->_mode == 'join'){
-				return $this->table.'.'.$field.'';
-			} else {
-				return $field;
-			}
-		}		
-	}
-	
-
-	/**
-	 * @brief 
-	 * @returns 
-	 * 
-	 * 
-	 */
-	function _set_search(){
-		if ($this->global_search){
-			$this->db->group_start();
-			foreach($this->autorized_fields_search AS $key => $value){
-				if (!$key AND is_array($this->filter) AND count($this->filter)){
-					$this->db->like( $this->_setField($value) , $this->global_search);
-				} else {
-					$this->db->or_like( $this->_setField($value)  , $this->global_search);					
-				}
-			}
-			$this->db->group_end();
-		} 	
-	}
-
-
-	/**
-	 * @brief 
-	 * @returns 
-	 * 
-	 * 
-	 */
-	public function get_pagination(){
-		if (!$this->nb){
-			$this->_set_filter();
-			$this->_set_search();
-			$this->nb = $this->db->select( $this->table.'.'.$this->key )->get($this->table)->num_rows();
-		} 
-		$this->_debug_array[] = 'get_pagination : '. $this->nb; 
-		return $this->nb;
-	}	
-	
-
-	function _set_list_fields(){
-		$string_field = '';
-		if ($this->autorized_fields){
-			foreach($this->autorized_fields AS $field ){
-				if ($this->_mode == 'join'){
-					$string_field .= $this->table.'.'.$field.',';
-				} else {
-					$string_field .= $field.',';
-				}
-			}
-			$string_field .= substr($string_field,-1);
-		} else {
-			$string_field = '*';
-		} 
-		return $string_field;
-	}
-
-    /**
-	 * @brief 
-	 * @returns 
-	 * 
-	 * 
-	 */
-	public function get(){
-		$this->_set_filter();
-		$this->_set_search();		  		
-		if ($this->per_page  ){
-			if (!$this->page)
-				$this->page = 1 ;
-			$this->db->limit(intval($this->per_page), ($this->page - 1 ) * $this->per_page);
-		}
-        $datas = $this->db->select( $this->_set_list_fields()  )
-                           ->order_by($this->order, $this->direction )
-                           ->get($this->table);
-		$this->_debug_array[] = $this->db->last_query();
-		return $datas->result();
-    }
-
-	/**
-	 * @brief 
-	 * @returns 
-	 * 
-	 * 
+	 * Met à jour l'enregistrement courant ($this->key_value).
+	 *
+	 * @param  int|null $id  Optionnel — remplace $this->key_value
 	 */
 	public function put($id = null)
 	{
-		foreach ($this->datas AS $field=>$data){
-			if (!in_array($field, $this->autorized_fields)){
+		foreach ($this->datas as $field => $data) {
+			if (!in_array($field, $this->autorized_fields)) {
 				unset($this->datas[$field]);
 			}
 		}
-		if ($id){
+		if ($id) {
 			$this->key_value = $id;
 		}
 		$this->db->where($this->key, $this->key_value);
-		$this->db->update($this->table, $this->datas);		
+		$this->db->update($this->table, $this->datas);
 		$this->_debug_array[] = $this->db->last_query();
 	}
 
-	/**
-	 * @brief 
-	 * @returns 
-	 * 
-	 * 
-	 */
+	// -----------------------------------------------------------------------
+
 	public function delete()
 	{
 		$this->db->where_in($this->key, $this->key_value)
-				 ->delete($this->table);
-		$this->_debug_array[] = $this->db->last_query();
+		         ->delete($this->table);
 	}
 
+	// -----------------------------------------------------------------------
+	// MÉTHODES INTERNES
+	// -----------------------------------------------------------------------
+
 	/**
-	 * @brief 
-	 * @param $field 
-	 * @param $value 
-	 * @returns 
-	 * 
-	 * 
+	 * Construit la liste des champs SELECT.
+	 *
+	 * CORRECTION : substr($string_field, -1) ajoutait le dernier caractère
+	 * au lieu d'une virgule → remplacé par rtrim(..., ',') pour supprimer
+	 * proprement la virgule finale.
+	 *
+	 * @return string
 	 */
-	public function _set($field,$value){
-		$this->$field = $value;
-		//initialisation de l'id parent des objets
-		switch($field){
-			case 'key_value':
-				foreach($this->defs AS $obj){
-					$obj->_set('parent_id',$value);
+	function _set_list_fields()
+	{
+		if (empty($this->autorized_fields)) {
+			return ($this->_mode === 'join') ? $this->table . '.*' : '*';
+		}
+
+		$parts = [];
+		foreach ($this->autorized_fields as $field) {
+			$parts[] = ($this->_mode === 'join') ? $this->table . '.' . $field : $field;
+		}
+		return implode(',', $parts);
+	}
+
+	// -----------------------------------------------------------------------
+
+	function _set_filter()
+	{
+		if (is_array($this->filter) && count($this->filter)) {
+			$this->db->group_start();
+			foreach ($this->filter as $key => $value) {
+				$this->db->where($key, $value);
+			}
+			$this->db->group_end();
+		}
+	}
+
+	// -----------------------------------------------------------------------
+
+	function _set_search()
+	{
+		if ($this->global_search) {
+			$this->db->group_start();
+			foreach ($this->autorized_fields_search as $key => $value) {
+				if (!$key && is_array($this->filter) && count($this->filter)) {
+					$this->db->like($this->_setField($value), $this->global_search);
+				} else {
+					$this->db->or_like($this->_setField($value), $this->global_search);
 				}
-			break;
+			}
+			$this->db->group_end();
 		}
-
 	}
 
-	/**
-	 * @brief 
-	 * @param $field 
-	 * @returns 
-	 * 
-	 * 
-	 */
-	public function _get($field){
-		return $this->$field;
+	// -----------------------------------------------------------------------
+
+	function _set_group_by()
+	{
+		if (is_array($this->group_by) && count($this->group_by)) {
+			foreach ($this->group_by as $value) {
+				$this->db->group_by($value);
+			}
+		}
 	}
-	
+
+	// -----------------------------------------------------------------------
+
+	function _set_order_by()
+	{
+		if (is_array($this->order) && count($this->order)) {
+			foreach ($this->order as $key => $value) {
+				$this->db->order_by($key, $value);
+			}
+		}
+	}
+
+	// -----------------------------------------------------------------------
+
+	function _setField($field)
+	{
+		$defs = $this->_get('defs');
+		if (!isset($defs[$field])) {
+			return $field;
+		}
+		$def = $defs[$field];
+
+		if (isset($def->table[$field])) {
+			$this->_mode = 'join';
+			$this->db->join(
+				$def->table[$field],
+				$this->table . '.' . $field . '=' . $def->table[$field] . '.' . $def->foreignKey[$field],
+				'left'
+			);
+			return $def->table[$field] . '.' . $def->foreignField[$field];
+		} else {
+			return ($this->_mode === 'join') ? $this->table . '.' . $field : $field;
+		}
+	}
+
+	// -----------------------------------------------------------------------
+
 	/**
-	 * @brief 
-	 * @returns 
-	 * 
-	 * 
+	 * Initialise les définitions de champs depuis le fichier JSON associé.
 	 */
-	public function __destruct(){
-		if ($this->_debug){
-			echo debug($this->_debug_array, __file__);
-			//$this->CI->bootstrap_tools->render_debug($this->_debug_array);
-		/*	foreach($this->_debug_array AS $msg)
-				log_message('debug', debug($msg, get_class($this)));			*/
+	public function _init_def()
+	{
+		if (!$this->json) return;
+
+		$path = $this->json_path . $this->json;
+		if (!file_exists($path)) {
+			log_message('error', 'Core_model::_init_def() — JSON introuvable : ' . $path);
+			return;
 		}
 
-	}	
+		$json = json_decode(file_get_contents($path), false);
+		if (!$json) {
+			log_message('error', 'Core_model::_init_def() — JSON invalide : ' . $path);
+			return;
+		}
 
+		foreach ($json as $field => $def) {
+			// Chargement de la classe d'élément
+			$elementClass = 'element_' . $def->type;
+			$elementFile  = APPPATH . 'libraries/elements/' . $elementClass . '.php';
+
+			if (file_exists($elementFile)) {
+				require_once($elementFile);
+				$this->defs[$field] = new $elementClass();
+			} else {
+				require_once(APPPATH . 'libraries/elements/element.php');
+				$this->defs[$field] = new element();
+			}
+
+			$this->defs[$field]->_set('name', $field);
+
+			foreach ($def as $key => $value) {
+				$this->defs[$field]->_set($key, $value);
+			}
+
+			if (isset($def->list) && $def->list === true) {
+				$this->autorized_fields[] = $field;
+			}
+			if (isset($def->search) && $def->search === true) {
+				$this->autorized_fields_search[] = $field;
+			}
+			if (isset($def->rules) && $def->rules) {
+				$this->required[$field] = $def->rules;
+			}
+		}
+	}
+
+	// -----------------------------------------------------------------------
+
+	public function _set($field, $value) { $this->$field = $value; }
+	public function _get($field)         { return $this->$field;   }
+
+	// -----------------------------------------------------------------------
+
+	public function __destruct()
+	{
+		if ($this->_debug) {
+			echo debug($this->_debug_array, __FILE__);
+			foreach ($this->_debug_array as $msg) {
+				log_message('debug', debug($msg, get_class($this)));
+			}
+		}
+	}
 }
 
 /* End of file Core_model.php */

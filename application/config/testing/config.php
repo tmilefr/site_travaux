@@ -1,6 +1,10 @@
 <?php
 defined('BASEPATH') || exit('No direct script access allowed');
 
+
+// Charger le .env si disponible (une seule fois via index.php idéalement)
+$env = parse_ini_file(FCPATH . '.env') ?: [];
+
 /*
 |--------------------------------------------------------------------------
 | Base Site URL
@@ -23,7 +27,7 @@ defined('BASEPATH') || exit('No direct script access allowed');
 | a PHP script and you can easily do that on your own.
 |
 */
-$config['base_url'] = 'https://regio.dev-asso.fr/';
+$config['base_url'] = $env['DEV_URL'];
 
 /*
 |--------------------------------------------------------------------------
