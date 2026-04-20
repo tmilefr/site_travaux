@@ -1,10 +1,6 @@
 <?php
 defined('BASEPATH') || exit('No direct script access allowed');
 
-
-// Charger le .env si disponible (une seule fois via index.php idéalement)
-$env = parse_ini_file(FCPATH . '.env') ?: [];
-
 /*
 |--------------------------------------------------------------------------
 | Base Site URL
@@ -27,7 +23,7 @@ $env = parse_ini_file(FCPATH . '.env') ?: [];
 | a PHP script and you can easily do that on your own.
 |
 */
-$config['base_url'] = $env['DEV_URL'];
+$config['base_url'] = 'http://localhost:8080/site_travaux/';
 
 /*
 |--------------------------------------------------------------------------
@@ -140,7 +136,7 @@ $config['subclass_prefix'] = 'MY_';
 | Note: This will NOT disable or override the CodeIgniter-specific
 |	autoloading (application/config/autoload.php)
 */
-$config['composer_autoload'] = 'vendor/autoload.php';
+$config['composer_autoload'] = FALSE;
 
 /*
 |--------------------------------------------------------------------------
