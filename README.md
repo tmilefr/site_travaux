@@ -770,3 +770,113 @@ Ensuite, on met à jour l'environnement regio pour tester (git deploy sur le ser
 sur notre validation, on pousse en prod (git deploy sur le serveur)
 
 Pour les hotfix, branche de hotfix "hotfix-xxx" à partir de "main", et cherry pick sur main après validation sur la production.
+
+
+# Framework CI3 — Optimisations v2
+
+## Fichiers modifiés
+
+| Fichier | Statut |
+|---|---|
+| `application/models/Acl_users_model.php` | ✅ Corrigé |
+| `application/models/Core_model.php` | ✅ Corrigé |
+| `application/libraries/Acl.php` | ✅ Corrigé |
+| `application/libraries/elements/element_password.php` | ✅ Corrigé |
+| `application/libraries/elements/element_file.php` | ✅ Corrigé |
+| `migration_passwords.sql` | 🆕 Nouveau |
+
+---
+
+## Détail des corrections
+
+### 🔴 Acl_users_model.php — Bug critique d'authentification
+
+**Problème :** `verifyLogin()` accordait l'accès à n'importe quel utilisateur existant,
+quel que soit le mot de passe. Le `if (hash_equals(...))` ne faisait rien car
+`$usercheck->autorize = true` était positionné **en dehors** de la condition.
+De plus, un `echo "Mot de passe correct !"` était présent en production.
+
+**Correction :**
+- La condition de vérification du mot de passe contrôle maintenant réellement l'accès.
+- `crypt()` + sel fixe remplacé par `password_verify()` (bcrypt).
+- Migration transparente : les anciens hash `crypt()` sont migrés vers bcrypt
+  silencieusement lors de la prochaine connexion réussie.
+- Nouvelle méthode `hashPassword()` centralisée pour le hashage.
+- `echo` de debug supprimé.
+
+---
+
+### 🔴 element_password.php — Hashage faible
+
+**Problème :** `crypt()` avec un sel fixe (`PASSWORD_SALT`) est vulnérable aux
+attaques par table arc-en-ciel et brute-force modernes.
+
+**Correction :** `password_hash($value, PASSWORD_BCRYPT)` — bcrypt avec sel
+aléatoire par défaut, coût adaptatif.
+
+---
+
+### 🟠 Acl.php — DontCheck TRUE par défaut
+
+**Problème :** `$DontCheck = TRUE` signifie que TOUTES les pages sont
+accessibles sans authentification si on oublie de mettre `DontCheck = FALSE`.
+C'est l'inverse de ce qu'on veut (secure by default).
+
+**Correction :** `$DontCheck = FALSE` — les contrôleurs publics doivent
+explicitement déclarer `protected $DontCheck = TRUE`.
+
+---
+
+### 🟠 Acl.php — Permissions rechargées à chaque requête
+
+**Problème :** `getRolePermissions()` était appelé à chaque requête HTTP,
+générant une requête SQL inutile pour chaque page.
+
+**Correction :** Cache en session par `role_id` :
+- Chargé une fois depuis la BDD, stocké en session sous la clé `acl_perms_{role_id}`.
+- Invalidé automatiquement à la déconnexion.
+- Méthodes `_getPermissionsFromCache()` et `_loadAndCachePermissions()` ajoutées.
+
+---
+
+### 🟠 Acl.php — Bug CheckLogin()
+
+**Problème :** `CheckLogin()` lisait `$this->usercheck->autorize` après avoir
+mis à jour la session, mais `$this->usercheck` n'était pas rechargé.
+
+**Correction :** On vérifie `$usercheck->autorize` (variable locale, fraîchement
+retournée par `verifyLogin()`) plutôt que `$this->usercheck->autorize`.
+
+---
+
+## ✅ Ce qui est corrigé
+
+- ✅ **Menu mobile** : le plugin `tinynav` (déjà chargé mais inutilisé) est maintenant activé → transforme le menu en `<select>` déroulant sur mobile
+- ✅ **Débordement horizontal** : `overflow-x: hidden` sur `html/body` + grille nicdark forcée en colonne unique < 768px
+- ✅ **Tableaux illisibles** : wrappers scrollables horizontalement (`overflow-x: auto` + `-webkit-overflow-scrolling: touch`)
+- ✅ **Dimensions** : titres, espaceurs, paddings et marges adaptés aux petits écrans
+- ✅ **Formulaires** : champs en pleine largeur, `font-size: 16px` pour éviter le zoom automatique iOS
+- ✅ **Onglets Bootstrap** : défilement horizontal au lieu de casser la mise en page
+- ✅ **Images parallax** : `background-attachment: scroll` (le `fixed` est bogué sur iOS)
+- ✅ **Boutons** : taille minimale 40px pour cibles tactiles confortables
+
+## 🎯 Breakpoints utilisés
+
+- `≤ 1024px` : tablettes (ajustements conteneur)
+- `≤ 768px` : tablettes portrait + smartphones (cœur de l'optimisation)
+- `≤ 480px` : smartphones (ajustements fins)
+- `≤ 900px + paysage` : correctifs orientation paysage
+---
+
+## Migration des mots de passe
+
+Voir `migration_passwords.sql` pour identifier les comptes avec d'anciens
+hash `crypt()` et les migrer.
+
+La migration est **automatique** lors de la prochaine connexion de chaque
+utilisateur (gérée dans `Acl_users_model::verifyLogin()`).
+
+Penser à agrandir la colonne `password` :
+```sql
+ALTER TABLE acl_users MODIFY COLUMN password VARCHAR(255) NOT NULL;
+```
