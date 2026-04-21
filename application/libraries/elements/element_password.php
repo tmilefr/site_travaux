@@ -1,21 +1,26 @@
 <?php
-/*
+/**
  * element_password.php
- * PASSWORD Object in page
  *
- * CORRECTIONS v2 :
- *  - PrepareForDBA() : crypt() + sel fixe remplacé par password_hash() bcrypt
- *  - Le hash n'est recalculé QUE si la case "changer le mot de passe" est cochée,
- *    ce qui préserve le hash existant lors d'une édition sans modification du mdp.
+ * Objet PASSWORD pour les formulaires.
+ *
+ * CORRECTIONS v3 :
+ *  - Délégation à PasswordAuthenticator pour le hashage (source de vérité
+ *    unique, coût bcrypt cohérent entre toutes les couches).
+ *  - Le hash n'est recalculé que si la case "changer le mot de passe" est
+ *    cochée, ce qui préserve le hash existant lors d'une édition qui ne
+ *    touche pas au mot de passe.
+ *  - Plus aucun appel direct à crypt() + PASSWORD_SALT.
  */
-require_once(APPPATH.'libraries/elements/element.php');
+require_once(APPPATH . 'libraries/elements/element.php');
 
 class element_password extends element
 {
 	public function __construct()
 	{
 		parent::__construct();
-		if (isset($this->CI->bootstrap_tools)) {
+		$this->CI =& get_instance();
+		if (isset($this->CI) && isset($this->CI->bootstrap_tools)) {
 			$this->CI->bootstrap_tools->_SetHead('assets/js/togglefield.js', 'js');
 		}
 	}
@@ -23,19 +28,17 @@ class element_password extends element
 	// -----------------------------------------------------------------------
 
 	/**
-	 * Rendu du champ dans un formulaire.
-	 * En mode édition, affiche des étoiles + une case à cocher pour débloquer la saisie.
+	 * Rendu du champ en mode formulaire.
 	 *
-	 * @return string HTML
+	 * @return string
 	 */
 	public function RenderFormElement()
 	{
 		if ($this->disabled) {
 			return '<input type="hidden" name="' . $this->name . '" value="' . $this->value . '">'
-			     . '<input class="form-control" type="text" value="********" readonly>';
+				. '<input class="form-control" type="text" value="********" readonly>';
 		}
 
-		// En édition : le champ est en readonly par défaut (contrôlé par togglefield.js)
 		$txt  = $this->CI->bootstrap_tools->password_text(
 			$this->name,
 			$this->CI->lang->line($this->name),
@@ -60,7 +63,7 @@ class element_password extends element
 	// -----------------------------------------------------------------------
 
 	/**
-	 * Rendu en mode lecture seule (liste, fiche).
+	 * Rendu en mode lecture seule.
 	 *
 	 * @return string
 	 */
@@ -72,27 +75,27 @@ class element_password extends element
 	// -----------------------------------------------------------------------
 
 	/**
-	 * Prépare la valeur avant insertion / mise à jour en base.
+	 * Prépare la valeur avant insertion / mise à jour.
 	 *
 	 * Si la case "changer le mot de passe" est cochée → on hashe en bcrypt.
 	 * Sinon → on renvoie la valeur brute du POST (hash déjà stocké en base,
 	 *          transmis via le champ hidden dans le formulaire).
 	 *
-	 * CORRECTION : password_hash() bcrypt remplace crypt() + sel fixe.
-	 *
-	 * @param  string $value  Valeur brute du POST (mot de passe en clair ou hash existant)
-	 * @return string         Hash bcrypt ou hash existant inchangé
+	 * @param  string $value
+	 * @return string
 	 */
 	public function PrepareForDBA($value)
 	{
 		$changeFlag = $this->CI->input->post($this->name . '_check');
 
 		if ($changeFlag === 'change_password' && !empty($value)) {
-			// Nouveau mot de passe : on hashe avec bcrypt
-			return password_hash($value, PASSWORD_BCRYPT);
+			$this->CI->load->library('PasswordAuthenticator', [], 'passauth');
+			return $this->CI->passauth->hash($value);
 		}
 
-		// Pas de changement : on retourne le hash existant tel quel
 		return $value;
 	}
 }
+
+/* End of file element_password.php */
+/* Location: ./application/libraries/elements/element_password.php */
