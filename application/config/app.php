@@ -11,6 +11,8 @@ $config['unit_todo'] = 20;
 $config['maintenance'] = false;
 $config['civil_year'] = '2025-2026';
 
+$config['role_famille'] = 2;
+
 $config['crlf'] = '';
 
 /* EMAIL */
