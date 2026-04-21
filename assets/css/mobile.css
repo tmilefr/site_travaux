@@ -1,0 +1,298 @@
+/* =====================================================================
+ *  mobile.css  —  Optimisations mobiles pour le site (framework nicdark + Bootstrap)
+ *  À charger APRÈS nicdark_style.css, nicdark_responsive.css, bootstrap.min.css et app.css
+ *  Breakpoints utilisés :
+ *     - max-width: 768px  → tablettes portrait & smartphones
+ *     - max-width: 480px  → smartphones
+ * ===================================================================== */
+
+
+/* ---------- 1. BASE : empêcher tout débordement horizontal ----------- */
+html,
+body {
+    max-width: 100%;
+    overflow-x: hidden;
+    -webkit-text-size-adjust: 100%; /* évite le zoom auto iOS */
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+img,
+video,
+iframe,
+embed,
+object {
+    max-width: 100%;
+    height: auto;
+}
+
+
+/* ---------- 2. MOBILE : <= 768px ------------------------------------- */
+@media (max-width: 768px) {
+
+    /* --- Conteneurs & grille nicdark ---------------------------------- */
+    .nicdark_site,
+    .nicdark_site_fullwidth,
+    .nicdark_container,
+    .nicdark_section {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    /* Toute la grille nicdark passe en colonne unique */
+    .grid,
+    .grid_1, .grid_2, .grid_3, .grid_4,
+    .grid_5, .grid_6, .grid_7, .grid_8,
+    .grid_9, .grid_10, .grid_11, .grid_12 {
+        width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        float: none !important;
+        display: block;
+    }
+
+    /* Annule les marges calculées en desktop */
+    .nicdark_marginleft10,
+    .nicdark_marginleft20,
+    .nicdark_marginleft30,
+    .nicdark_marginleft50,
+    .nicdark_marginleft70,
+    .nicdark_marginleft100 {
+        margin-left: 0 !important;
+    }
+
+    /* Les icônes "absolute" des cartes nicdark_archive1 passent en flux normal */
+    .nicdark_archive1 .nicdark_absolute,
+    .nicdark_btn_iconbg.nicdark_absolute {
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
+        right: auto !important;
+        margin: 0 0 10px 0 !important;
+        display: inline-block;
+    }
+
+    /* Espaceurs verticaux : on les réduit pour éviter les pages trop longues */
+    .nicdark_space100 { height: 40px !important; }
+    .nicdark_space50  { height: 25px !important; }
+    .nicdark_space40  { height: 20px !important; }
+    .nicdark_space30  { height: 15px !important; }
+    .nicdark_space20  { height: 10px !important; }
+
+    /* --- Header / logo / menu ---------------------------------------- */
+    .nicdark_logo {
+        margin-left: 0 !important;
+        text-align: center;
+        width: 100%;
+    }
+    .nicdark_logo img {
+        max-width: 180px;
+        height: auto;
+    }
+
+    /* Menu nicdark principal : on le cache et on affiche tinynav à la place.
+       tinynav crée automatiquement un <select class="tinynav"> */
+    .nicdark_menu {
+        display: none !important;
+    }
+    .tinynav {
+        display: block !important;
+        width: 100%;
+        padding: 10px;
+        margin: 10px 0;
+        font-size: 16px;  /* >= 16px empêche iOS de zoomer au focus */
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        background: #fff;
+    }
+
+    /* Les éléments marqués "cacher sur mobile" dans le thème nicdark */
+    .nicdark_displaynone_responsive {
+        display: none !important;
+    }
+    .nicdark_displaynone_ipadpotr {
+        display: none !important;
+    }
+
+    /* --- Titres : tailles réduites ----------------------------------- */
+    h1, h1.subtitle { font-size: 28px !important; line-height: 1.2 !important; }
+    h2             { font-size: 24px !important; line-height: 1.25 !important; }
+    h3, h3.subtitle { font-size: 20px !important; line-height: 1.3 !important; }
+    h4             { font-size: 18px !important; line-height: 1.35 !important; }
+    h5, h6         { font-size: 16px !important; }
+
+    /* --- Sections parallax : réduire la hauteur et désactiver fixed -- */
+    .nicdark_imgparallax {
+        background-attachment: scroll !important; /* fixed est bogué sur iOS */
+        background-size: cover !important;
+    }
+
+    /* --- TABLES : scroll horizontal propre --------------------------- */
+    /* Wrapper nicdark existant */
+    .overflow_scroll,
+    .nicdark_textevidence {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        width: 100% !important;
+    }
+
+    /* Toutes les tables deviennent scrollables individuellement */
+    table,
+    .nicdark_table,
+    .table {
+        display: block;
+        width: 100% !important;
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        white-space: nowrap;
+        font-size: 14px;
+    }
+    table thead,
+    table tbody,
+    table tr {
+        /* garde l’apparence tabulaire tout en autorisant le scroll parent */
+        display: table;
+        width: 100%;
+        table-layout: auto;
+    }
+    table th,
+    table td {
+        padding: 6px 8px !important;
+        word-break: normal;
+    }
+
+    /* Les colonnes qui forçaient un % de largeur gênant */
+    .nicdark_width_percentage10,
+    .nicdark_width_percentage20,
+    .nicdark_width_percentage30,
+    .nicdark_width_percentage40,
+    .nicdark_width_percentage50 {
+        width: auto !important;
+    }
+
+    /* --- Formulaires ------------------------------------------------- */
+    /* Bootstrap form-row empilé proprement */
+    .form-row > [class*="col-"] {
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+        margin-bottom: 12px;
+    }
+
+    /* Champs de formulaire : taille mini 16px pour éviter le zoom iOS */
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="number"],
+    input[type="search"],
+    input[type="tel"],
+    input[type="url"],
+    input[type="date"],
+    select,
+    textarea,
+    .form-control {
+        font-size: 16px !important;
+        max-width: 100%;
+        width: 100%;
+    }
+
+    /* Tabs Bootstrap : défilement horizontal plutôt qu’empilement qui casse le design */
+    .nav-tabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        white-space: nowrap;
+    }
+    .nav-tabs .nav-item,
+    .nav-tabs .nav-link {
+        white-space: nowrap;
+    }
+
+    /* --- Boutons : cibles tactiles confortables ---------------------- */
+    .btn,
+    button,
+    .nicdark_btn {
+        min-height: 40px;
+        padding: 8px 14px;
+    }
+
+    /* --- Barre de recherche du header ------------------------------- */
+    .form-inline {
+        display: flex !important;
+        flex-wrap: wrap;
+    }
+    .form-inline .form-control {
+        width: 100% !important;
+        margin-bottom: 6px;
+    }
+
+    /* --- Footer pagination ------------------------------------------ */
+    .footer .navbar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .footer .navbar-nav {
+        flex-direction: column;
+        width: 100%;
+    }
+}
+
+
+/* ---------- 3. SMARTPHONES : <= 480px -------------------------------- */
+@media (max-width: 480px) {
+
+    .nicdark_container,
+    .nicdark_section {
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+
+    h1, h1.subtitle { font-size: 24px !important; }
+    h2              { font-size: 20px !important; }
+    h3, h3.subtitle { font-size: 18px !important; }
+
+    /* Cartes home : padding/margin réduits */
+    .nicdark_margin20  { margin: 10px !important; }
+    .nicdark_margin010 { margin: 0 5px !important; }
+    .nicdark_padding50 { padding: 15px !important; }
+
+    /* Boutons icône circulaires : plus petits */
+    .nicdark_btn_icon.medium,
+    .nicdark_btn_iconbg.extrabig {
+        width: 50px !important;
+        height: 50px !important;
+        line-height: 50px !important;
+    }
+
+    /* Espaceurs encore réduits */
+    .nicdark_space100 { height: 30px !important; }
+    .nicdark_space50  { height: 20px !important; }
+
+    /* Tables en très petit écran */
+    table,
+    .nicdark_table,
+    .table {
+        font-size: 13px;
+    }
+
+    /* Alert boxes */
+    .alert {
+        padding: 10px !important;
+        font-size: 14px;
+    }
+}
+
+
+/* ---------- 4. ORIENTATION PAYSAGE SUR PETITS MOBILES ---------------- */
+@media (max-width: 900px) and (orientation: landscape) {
+    .nicdark_space100 { height: 30px !important; }
+    .nicdark_imgparallax {
+        background-attachment: scroll !important;
+    }
+}

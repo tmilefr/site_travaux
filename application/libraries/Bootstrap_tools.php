@@ -38,7 +38,8 @@ Class Bootstrap_tools{
 		$this->_SetHead('assets/css/nicdark_responsive.css','css');
 		// menu 4 mobile
 		$this->_SetHead('assets/js/plugins/menu/tinynav.min.js','js');
-
+		$this->_SetHead('assets/css/mobile.css','css');
+		$this->_SetHead('assets/js/mobile-menu.js','js');
 
 		// google fonts
 		$this->_SetHead('http'.((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') ? 's':'').'://fonts.googleapis.com/css?family=Montserrat:400,700','font');//font-family: 'Montserrat', sans-serif;
