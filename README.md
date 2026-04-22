@@ -1,6 +1,37 @@
 
 # Documentation
 
+## Vue d'ensemble
+Il s'agit d'une application web de gestion de travaux associatifs (probablement pour une école ou une association avec un système de participation par familles), construite avec le framework CodeIgniter 3 (PHP). Le projet est sous licence MIT (© Tmile fr, 2018).
+Contexte métier : gestion d'inscriptions de familles à des travaux/chantiers, avec décompte d'« unités » de participation, validation a posteriori et gestion de droits par rôles.
+
+## Architecture générale
+Le projet suit une architecture MVC classique CodeIgniter avec des surcouches maison :
+application/
+├── core/          → MY_Controller (CRUD générique), extension de CI_Controller
+├── controllers/   → Home, Admwork, Units, Api, Acl_*_controller, ...
+├── models/        → Core_model (base) + modèles métiers (Infos, Famille, Travaux...)
+│   └── json/      → Schémas JSON décrivant les tables (champs, règles, dbforge)
+├── libraries/     → Acl, Render_object (factory), Bootstrap_tools, Libpdf...
+├── hooks/         → Loginchecker (hook d'authentification)
+├── migrations/    → SQL manuels + migrations CI
+├── language/      → i18n (français)
+└── views/         → template/, edition/, unique/
+
+### Points forts
+1. Approche « factory » par schéma JSON. Chaque table a un fichier JSON (Infos.json, Acl_users.json...) qui décrit les champs, règles de validation, rendu (input, select, select_database, hidden), et la définition dbforge. Le Core_model et le Render_object exploitent ces schémas pour générer formulaires, listes, vues et validations automatiquement. C'est très DRY et productif pour un back-office.
+2. CRUD générique via MY_Controller. Les contrôleurs déclarent seulement _controller_name, _model_name, _edit_view, _list_view, _autorize puis appellent init(). Le reste (routage add/edit/list/delete/view) est géré par la classe mère.
+3. ACL correctement pensée. Le fichier application/libraries/Acl.php comporte des commentaires de correction v2 intéressants et pertinents :
+
+DontCheck = FALSE par défaut → secure by default (bonne pratique)
+Cache des permissions en session par role_id (évite un SQL à chaque requête)
+Invalidation du cache à la déconnexion
+Correctif documenté d'un bug où CheckLogin() lisait $this->usercheck avant que la session ne soit rechargée
+
+Le hook Loginchecker appelle acl->Route() avant chaque action → centralisation propre de l'autorisation.
+4. API REST séparée (Api.php) avec JWT, endpoints /api/mails, login/logout, gestion des verbes HTTP (GET/POST/PUT/DELETE), codes de retour corrects (201, 202, 400, 403…).
+5. Git Flow documenté : develop → env. de dev (regio.dev-asso.fr), main → prod (mulhouse-travaux.abcmzwei.eu), branches feature-* et hotfix-*.
+
 ## Arboresence
 
 ```js
