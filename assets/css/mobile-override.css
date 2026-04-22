@@ -4,6 +4,14 @@
  * - Chargé APRÈS nicdark_responsive.css : ses règles priment.
  * - Aucune modification des CSS d'origine.
  * Breakpoint principal : <= 767px (téléphone portrait + paysage léger)
+ *
+ * CORRECTION v3.1 (superposition logo / menu tinynav) :
+ *   Sur desktop, .nicdark_logo { position:relative; height:10px; } et
+ *   .nicdark_logo img { position:absolute; margin-top:-14px; } — l'image
+ *   du logo est donc détachée du flux. Sur mobile, le <select.tinynav>
+ *   est injecté juste après le logo par tinynav.js ; l'image absolue se
+ *   retrouvait par-dessus le select. On remet l'image en flux normal et
+ *   on force le select sur sa propre ligne.
  * ========================================================================= */
 
 /* ------------------------------------------------------------------
@@ -121,6 +129,32 @@ select.tinynav {
         text-align: left !important;
     }
 
+    /* --- Logo : recentrer, remettre l'image en flux, donner une vraie hauteur --- */
+    /* CORRECTION : nicdark_shortcodes.css impose width:90px, height:10px et
+       une image en position:absolute margin-top:-14px. Résultat mobile :
+       un conteneur minuscule avec une image flottante par-dessus le menu.
+       On neutralise TOUT ça. */
+    .nicdark_logo {
+        float: none !important;
+        position: static !important;     /* était relative */
+        display: block;
+        width: auto !important;          /* était 90px */
+        height: auto !important;         /* était 10px  */
+        text-align: center;
+        margin: 10px auto !important;
+        padding: 0 !important;
+        clear: both;                     /* aucun résidu flottant avant */
+    }
+
+    .nicdark_logo img {
+        position: static !important;     /* était absolute */
+        width: auto !important;          /* était 90px forcés */
+        max-width: 180px;
+        height: auto;
+        margin: 0 auto !important;       /* était margin-top:-14px */
+        display: inline-block;
+    }
+
     /* --- Menu principal nicdark ---
        tinynav.js le convertit en <select class="tinynav">.
        Selon la version de tinynav, le <select> peut être caché par défaut
@@ -129,6 +163,8 @@ select.tinynav {
     select.tinynav,
     select.tinynav-ready {
         display: block !important;
+        clear: both !important;          /* passe sous le logo, pas à côté */
+        float: none !important;
         width: calc(100% - 20px);
         margin: 10px;
         padding: 12px;
@@ -139,6 +175,8 @@ select.tinynav {
         color: #333;
         -webkit-appearance: menulist;
         appearance: menulist;
+        position: relative;              /* au cas où parent en position */
+        z-index: 1;                      /* sous le hamburger (z-index:10000) */
     }
 
     /* Masquer TOUS les <ul class="nicdark_menu"> d'origine sur mobile.
@@ -153,17 +191,12 @@ select.tinynav {
         padding: 0 !important;
     }
 
-    /* --- Logo : recentrer et limiter la taille --- */
-    .nicdark_logo {
+    /* La <nav> wrapper ne doit plus imposer un float ou une hauteur */
+    .nicdark_logo + nav,
+    nav {
         float: none !important;
-        display: block;
-        text-align: center;
-        margin: 10px auto !important;
-    }
-
-    .nicdark_logo img {
-        max-width: 180px;
-        height: auto;
+        clear: both;
+        width: 100%;
     }
 
     /* --- Grilles : empilement forcé --- */
@@ -266,7 +299,7 @@ select.tinynav {
     }
 
     .nicdark_logo img {
-        max-width: 150px;
+        max-width: 150px !important;
     }
 
     h1 { font-size: 20px !important; }

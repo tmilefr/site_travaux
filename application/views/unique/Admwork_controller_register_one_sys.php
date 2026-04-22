@@ -83,7 +83,21 @@ Vue inscription aux travaux, mode utilisateur SYS
                             echo 'de '.$this->render_object->RenderElement('heure_debut_prevue', $unit->heure_debut_prevue, null, 'Infos_model').' à '.$this->render_object->RenderElement('heure_fin_prevue', $unit->heure_fin_prevue, null, 'Infos_model');
                         }?>
                     </p></td>   
-                    <td><p><?php echo $this->render_object->RenderElement('nb_unites_valides', $unit->nb_unites_valides, null, 'Infos_model');?></p></td>
+                    <td>
+                        <p><?php echo $this->render_object->RenderElement('nb_unites_valides', $unit->nb_unites_valides, null, 'Infos_model');?></p>
+                        <?php if (!empty($unit->valide_par_ref) && !empty($unit->valide_ref_at)) { ?>
+                            <p class="small text-success">
+                                <i class="icon-ok"></i>
+                                <?php echo $this->lang->line('VALIDATED_BY_REF'); ?>
+                                <?php echo date('d/m/Y H:i', strtotime($unit->valide_ref_at)); ?>
+                            </p>
+                        <?php } ?>
+                        <?php if (!empty($unit->commentaire_ref)) { ?>
+                            <p class="small text-muted" style="font-style:italic;">
+                                « <?php echo htmlspecialchars($unit->commentaire_ref, ENT_QUOTES); ?> »
+                            </p>
+                        <?php } ?>
+                    </td>
                     <td><a class="btn btn-sm btn-danger confirmModalLink " href="<?php echo base_url('Admwork_controller/managed_one/').$work->id.'/'.$unit->id;?>"><span class="oi oi-circle-x"></span></a></td>
                     
                 </tr>
