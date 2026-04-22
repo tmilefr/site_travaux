@@ -8,14 +8,18 @@ if (!defined('BASEPATH')) {
  * Gestion de la connexion et de la sécurité du site.
  *
  * CORRECTIONS v3 :
- *  - CheckLogin() délègue à Auth::Login() : on bénéficie ainsi de la cascade
- *    acl_users → famille. Avant v3, l'interface web ne testait que
- *    acl_users, ce qui coupait l'accès à toutes les familles.
- *  - CheckLogin() synchronise à la fois 'usercheck' (utilisé par Acl) et
- *    'connected_user' (utilisé par Auth/API) pour un état cohérent.
- *  - DontCheck reste à FALSE par défaut (secure by default). Les contrôleurs
- *    publics doivent poser $DontCheck = TRUE explicitement.
+ *  - CheckLogin() délègue à Auth::Login() : cascade acl_users → famille.
+ *    Avant v3, l'interface web ne testait que acl_users, coupant l'accès
+ *    à toutes les familles.
+ *  - CheckLogin() synchronise 'usercheck' (utilisé par Acl) et
+ *    'connected_user' (positionné par Auth via la session) pour un état
+ *    cohérent entre interface web et API.
+ *  - DontCheck reste à FALSE par défaut (secure by default).
  *  - Permissions en cache session par role_id, invalidées à la déconnexion.
+ *  - Auth est autoloadé globalement (config/autoload.php) : on accède à
+ *    $this->CI->auth sans le charger ici, ce qui évite les problèmes
+ *    d'ordre d'initialisation entre le hook Loginchecker et les contrôleurs
+ *    (erreurs "Undefined property: Xxx_controller::$auth").
  *
  * @package    WebApp
  * @subpackage Libraries
@@ -69,6 +73,7 @@ class Acl
 	{
 		$this->CI = &get_instance();
 		$this->CI->load->library('session');
+		$this->CI->load->library('auth');
 		$this->CI->load->helper('url');
 		$this->CI->load->model('Acl_roles_model');
 		$this->CI->load->model('Acl_users_model');
@@ -175,20 +180,24 @@ class Acl
 	/**
 	 * Vérifie les identifiants saisis via le formulaire de connexion web.
 	 *
-	 * Délègue à Auth::Login() pour bénéficier de la cascade sys+fam et (si le
-	 * type_cnx est fourni) du SSO Delta.
+	 * Délègue à Auth::Login() pour bénéficier de la cascade acl_users →
+	 * famille et (si type_cnx fourni) du SSO Delta.
 	 *
 	 * @param  array $data  ['login', 'password', 'type_cnx' (facultatif)]
 	 * @return string|null  Message d'erreur à afficher, ou null si succès
 	 */
 	public function CheckLogin($data)
 	{
-		// Invalide d'abord le cache de l'ancien rôle
+		// Invalide d'abord le cache de l'ancien rôle éventuel
 		$previousRoleId = isset($this->usercheck->role_id) ? $this->usercheck->role_id : 0;
 		$this->CI->session->unset_userdata('acl_perms_' . $previousRoleId);
 
-		// Délégation à la factory Auth (cascade acl_users → famille, SSO Delta…)
-		$this->CI->load->library('Auth');
+		// Garde-fou : Auth est normalement autoloadée via config/autoload.php.
+		// On recharge quand même au cas où, l'appel est idempotent côté CI.
+		if (!isset($this->CI->auth) || !is_object($this->CI->auth)) {
+			$this->CI->load->library('Auth');
+		}
+
 		$connectedUser = $this->CI->auth->Login($data);
 
 		if (empty($connectedUser->autorize) || $connectedUser->autorize !== TRUE) {
