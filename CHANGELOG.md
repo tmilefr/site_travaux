@@ -1,6 +1,79 @@
 Changelog:
 ===========
 
+# Validation des présences par le référent 
+
+## Architecture
+
+```
+Session passée
+    │
+    ▼
+cron quotidien  ─── php index.php cron send_ref_validation_mails
+    │
+    ├── pour chaque travaux sans ref_mail_sent_at
+    │     ├── génère un token (validation_tokens)
+    │     ├── insère mail (sendmail_model)
+    │     └── marque la session comme notifiée
+    │
+    ▼
+cron sendmail  ─── php index.php cron sendmail  (déjà existant)
+    │
+    ▼
+Email reçu par le référent → clic sur le lien
+    │
+    ▼
+/Admwork_controller/validate_by_token/abc123...
+    │   (route GUEST, pas besoin de login)
+    │   ↳ vérifie le token dans validation_tokens
+    ▼
+Vue validate_one_ref
+    │   ↳ coche présents, saisit unités, commentaires, no-shows
+    ▼
+POST → écrit dans `infos` + marque le token comme utilisé
+    │
+    ▼
+Validation finale par un `sys` via Units_controller/valid (flux existant)
+```
+
+## Points d'attention
+
+### 🔑 Jointure famille ↔ membre de commission
+J'utilise la jointure par email (`famille.e_mail = groupes_member.email`). **C'est fragile** :
+- un parent avec 2 emails différents ne matchera pas
+- toute typo casse le lien
+
+Si vous avez déjà, ou pouvez ajouter, une colonne `groupes_member.id_fam` pointant sur `famille.id`, c'est **infiniment plus fiable**. Il suffit de remplacer dans `Admwork_model_additions.php` :
+```sql
+-- Actuel
+LOWER(famille.e_mail) = LOWER(groupes_member.email)
+-- Mieux
+famille.id = groupes_member.id_fam
+```
+
+### 🔒 Sécurité du token
+- Généré avec `random_bytes(32)` → 256 bits d'entropie, non devinable
+- Unique en base (contrainte SQL)
+- Expiration à 30 jours
+- Le token n'est **consommé** qu'au POST final : le référent peut revenir plusieurs fois tant qu'il n'a pas soumis (pratique s'il veut corriger). À ajuster si vous préférez un usage strictement unique.
+
+### 📨 Template d'email
+Le template actuel (dans `Cron_additions.php`) est en texte brut. Si vous utilisez déjà `Templates_controller` pour vos emails, remplacez la construction `$subject`/`$message` par un appel à votre moteur de templates.
+
+### ✉️ Bounce / mauvais email
+Si l'email du référent est invalide, aujourd'hui le token reste en BDD mais la session est marquée `ref_mail_sent_at`. Vous pouvez :
+- soit ne pas marquer la session si l'email échoue (le cron ré-essaiera)
+- soit prévoir une alerte au bureau via `Sendmail_statut` en statut 2 (erreur) — votre code existant le gère déjà.
+
+### 🧪 Test
+Avant de passer en prod, testez sur `regio.dev-asso.fr` (votre env develop) :
+1. Créez une session test avec une date passée
+2. Lancez manuellement `php index.php cron send_ref_validation_mails`
+3. Vérifiez la table `validation_tokens` et `sendmail`
+4. Cliquez le lien dans le mail reçu
+5. Vérifiez que le POST met bien à jour `infos`
+
+
 # Framework CI3 — Optimisations v3 (sécurité d'authentification)
 
 Cette version **corrige les régressions de la v2** sur l'authentification

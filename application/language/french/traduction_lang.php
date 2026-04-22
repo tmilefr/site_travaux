@@ -421,4 +421,41 @@ $lang['PUBLICS_FILES'] ='Fichiers';
 $lang['PUBLICS_FILES_subtitle'] ='publics';
 $lang['PUBLICS_FILES_TEXT'] = 'Veuillez trouver ici les documents en relation avec ABCM Mulhouse';
 
+
+// Menu
+$lang['Admwork_controller_my_sessions']          = 'Mes sessions à animer';
+$lang['Admwork_controller_my_sessions_subtitle'] = 'les sessions où je suis référent';
+
+// Liste
+$lang['REF_MY_SESSIONS_TITLE']    = 'Mes sessions à animer';
+$lang['REF_MY_SESSIONS_SUBTITLE'] = 'Retrouvez ici les sessions où vous êtes référent, avec la possibilité de valider les présences après chaque session.';
+$lang['REF_NO_SESSIONS']          = 'Vous n\'êtes référent d\'aucune session pour le moment.';
+$lang['REF_VALIDATE_ACTION']      = 'Valider les présences';
+$lang['REF_NOT_YET']              = 'session pas encore eu lieu';
+
+// Formulaire de validation
+$lang['REF_VALIDATE_PAGE_TITLE']   = 'Validation des présences';
+$lang['REF_VALIDATE_INTRO']        = 'En tant que référent de cette session, merci de valider la présence des parents inscrits.';
+$lang['REF_VALIDATE_HELP']         = 'Cochez les parents présents, ajustez le nombre d\'unités effectives si besoin, ajoutez un commentaire, et signalez les absences non excusées. Votre validation sera ensuite confirmée par le bureau.';
+$lang['REF_VALIDATE_SUBMIT']       = 'Enregistrer les présences';
+$lang['REF_VALIDATE_CONFIRM']      = 'Confirmer l\'enregistrement des présences ?';
+$lang['REF_VALIDATE_SAVED']        = 'Présences enregistrées. Merci !';
+
+$lang['PRESENT']                   = 'Présent';
+$lang['REF_COMMENT']               = 'Commentaire';
+$lang['REF_COMMENT_PLACEHOLDER']   = 'ex: en retard, est reparti plus tôt…';
+$lang['REF_COMMENT_GLOBAL']        = 'Commentaire général sur la session (optionnel)';
+$lang['REF_COMMENT_GLOBAL_PLACEHOLDER'] = 'Ambiance, points à signaler au bureau…';
+$lang['REF_NO_SHOW']               = 'No-show';
+$lang['REF_NO_SHOW_LABEL']         = 'Désinscrire';
+
+// Token / accès par lien email
+$lang['REF_TOKEN_ERROR_TITLE']     = 'Lien invalide ou expiré';
+$lang['REF_TOKEN_INVALID']         = 'Ce lien de validation n\'est plus valide. Il a peut-être expiré (durée de 30 jours après la session) ou il est incorrect.';
+$lang['REF_TOKEN_ERROR_HELP']      = 'Vous pouvez vous connecter à votre espace pour retrouver vos sessions à valider, ou contacter le bureau.';
+$lang['LOGIN_TO_CONTINUE']         = 'Se connecter';
+
+// Trace côté admin (vue sys)
+$lang['VALIDATED_BY_REF']          = 'Validé par le référent le';
+
 ?>

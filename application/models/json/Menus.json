@@ -140,7 +140,13 @@
 						"url":"Admwork_controller/worker",
 						"name":"Admwork_controller_worker",
 						"type":"link"
-					}						
+					},
+					{
+						"url":"Admwork_controller/my_sessions",
+						"name":"Admwork_controller_my_sessions",
+						"type":"link"
+					}		
+										
 				]
 			},
 			{

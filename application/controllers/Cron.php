@@ -88,4 +88,73 @@ class Cron extends MY_Controller {
 			exit;
 		}
     }
+
+
+    
+    /**
+     * Envoie aux référents un lien pour valider les présences de leurs
+     * sessions passées.
+     *
+     * @param int $days_since  délai de sécurité (jours depuis la session)
+     * @return void
+     */
+    public function send_ref_validation_mails($days_since = 0)
+    {
+        $this->_setLock();
+
+        $this->LoadModel('Admwork_model');
+        $this->LoadModel('ValidationToken_model');
+        $this->LoadModel('Sendmail_model');
+
+        $works = $this->Admwork_model->GetWorksNeedingRefMail((int) $days_since);
+        if (empty($works)) {
+            echo "Aucune session à notifier.\n";
+            return;
+        }
+
+        $base_url = config_item('base_url') ?: base_url();
+
+        foreach ($works as $work) {
+            // 1) Retrouver la famille référente
+            $refFamily = $this->Admwork_model->GetReferentFamily($work->id);
+            if (!$refFamily || empty($refFamily->e_mail)) {
+                echo "Session {$work->id} : référent sans email, ignorée.\n";
+                // Marquer quand même pour ne pas retenter indéfiniment ?
+                // $this->Admwork_model->MarkRefMailSent($work->id);
+                continue;
+            }
+
+            // 2) Générer un token pour ce (session, référent)
+            $token = $this->ValidationToken_model->create($work->id, $refFamily->id);
+            $link  = rtrim($base_url, '/') . '/Admwork_controller/validate_by_token/' . $token;
+
+            // 3) Construire le mail (texte simple — votre template peut l'enrichir)
+            $subject = 'Validation des présences : ' . $work->titre
+                . ' (' . date('d/m/Y', strtotime($work->date_travaux)) . ')';
+
+            $message = "Bonjour,\n\n"
+                . "Vous étiez référent de la session \"" . $work->titre . "\" "
+                . "du " . date('d/m/Y', strtotime($work->date_travaux)) . ".\n\n"
+                . "Merci de valider la présence des parents inscrits en suivant ce lien :\n"
+                . $link . "\n\n"
+                . "Ce lien est personnel et expire dans "
+                . ValidationToken_model::EXPIRY_DAYS . " jours.\n\n"
+                . "Merci !\n"
+                . "L'association ABCM Mulhouse-Lutterbach";
+
+            // 4) Pousser dans la file d'envoi (cron sendmail s'en chargera)
+            $this->Sendmail_model->post([
+                'reference' => 'ref_validation',
+                'email'     => $refFamily->e_mail,
+                'object'    => $subject,
+                'message'   => $message,
+                'created'   => date('Y-m-d H:i:s'),
+            ]);
+
+            // 5) Marquer la session comme notifiée
+            $this->Admwork_model->MarkRefMailSent($work->id);
+
+            echo "Mail programmé pour {$refFamily->e_mail} (session {$work->id}).\n";
+        }
+    }
 }

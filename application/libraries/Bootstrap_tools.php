@@ -39,6 +39,7 @@ Class Bootstrap_tools{
 		// menu 4 mobile
 		$this->_SetHead('assets/js/plugins/menu/tinynav.min.js','js');
 		$this->_SetHead('assets/css/mobile.css','css');
+		$this->_SetHead('assets/css/mobile-override.css','css');
 		$this->_SetHead('assets/js/mobile-menu.js','js');
 
 		// google fonts
