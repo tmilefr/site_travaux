@@ -48,6 +48,7 @@ class Acl
 		'home/about',
 		'home/maintenance',
 		'home',
+		'admwork_controller/validate_by_token',  // ← accès par lien email
 	];
 
 	/**
