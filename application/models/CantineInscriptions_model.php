@@ -63,14 +63,27 @@ class CantineInscriptions_model extends Core_model {
     }
 
     /**
+     * Récupère l'inscription d'une famille pour une date (ou null).
+     */
+    function GetOne($id_famille, $date, $ecole){
+        return $this->db->from($this->table)
+            ->where('date_garde', $date)
+            ->where('id_famille', $id_famille)
+            ->where('ecole', $ecole)
+            ->get()->row();
+    }
+
+    /**
      * Ajoute une inscription.
      */
-    function Register($id_famille, $date, $ecole, $civil_year){
+    function Register($id_famille, $date, $ecole, $civil_year, $id_info = null, $id_travaux = null){
         if ($this->IsRegistered($id_famille, $date, $ecole)) return false;
         $this->db->insert($this->table, [
             'date_garde' => $date,
             'id_famille' => $id_famille,
             'ecole'      => $ecole,
+            'id_info'    => $id_info,
+            'id_travaux' => $id_travaux,
             'civil_year' => $civil_year,
             'created'    => date('Y-m-d H:i:s'),
             'updated'    => date('Y-m-d H:i:s'),

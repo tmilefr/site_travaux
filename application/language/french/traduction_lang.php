@@ -530,4 +530,61 @@ $lang['STATS_PAST']             = 'Passées';
 $lang['SEE_DETAILS']            = 'Détails';
 $lang['FULL']                   = 'Complet';
 $lang['REGISTERED_TAG']         = 'Inscrit';
+
+// Titres de menu / controller
+$lang['GESTION_Cantine_controller']        = 'Garde du midi';
+$lang['Cantine_controller_register']       = 'Garde du midi';   // libellé menu (fallback)
+$lang['Cantine_controller_register_fam']   = 'Garde du midi';   // libellé menu famille
+$lang['Cantine_controller_register_sys']   = 'Garde du midi';   // libellé menu admin
+$lang['Cantine_controller_config']         = 'Paramétrer la garde';
+
+// Vue parent : agenda
+$lang['cantine_title']            = 'Agenda de la garde du midi';
+$lang['cantine_subtitle']         = 'Inscrivez-vous pour encadrer les enfants pendant la pause méridienne.';
+$lang['cantine_prev_week']        = 'Semaine précédente';
+$lang['cantine_next_week']        = 'Semaine suivante';
+$lang['cantine_this_week']        = 'Semaine en cours';
+$lang['cantine_config_link']      = 'Paramétrer les jours';
+$lang['cantine_back_to_agenda']   = 'Retour à l\'agenda';
+
+$lang['cantine_stat_days']        = 'Jours de garde';
+$lang['cantine_stat_mine']        = 'Mes inscriptions';
+$lang['cantine_stat_open']        = 'Places restantes';
+
+$lang['cantine_day_1']            = 'Lundi';
+$lang['cantine_day_2']            = 'Mardi';
+$lang['cantine_day_3']            = 'Mercredi';
+$lang['cantine_day_4']            = 'Jeudi';
+$lang['cantine_day_5']            = 'Vendredi';
+
+$lang['cantine_day_inactive']     = 'Pas de garde ce jour';
+$lang['cantine_registered']       = 'Inscrits';
+$lang['cantine_slot_free']        = 'Place libre';
+$lang['cantine_you']              = 'vous';
+$lang['cantine_full']             = 'Complet';
+$lang['cantine_passed']           = 'Date passée';
+
+$lang['cantine_btn_register']     = 'M\'inscrire';
+$lang['cantine_btn_cancel']       = 'Me désinscrire';
+$lang['cantine_confirm_cancel']   = 'Confirmer la désinscription ?';
+
+$lang['cantine_register_hint']    = 'Cliquez sur « M\'inscrire » pour prendre un créneau. Une fois inscrit, vous pouvez vous désinscrire tant que la date n\'est pas passée.';
+
+// Vue admin : paramétrage
+$lang['cantine_config_title']     = 'Paramétrage de la garde du midi';
+$lang['cantine_config_subtitle']  = 'Définissez les jours où une garde est nécessaire, le nombre de parents requis, les unités accordées et le référent qui validera.';
+$lang['cantine_school']           = 'École';
+$lang['cantine_day_needed']       = 'Garde nécessaire';
+$lang['cantine_nb_parents']       = 'Nombre de parents requis';
+$lang['cantine_nb_units']         = 'Unités accordées / parent';
+$lang['cantine_hours']            = 'Horaires (début / fin)';
+$lang['cantine_referent']         = 'Référent validateur';
+$lang['cantine_referent_none']    = 'Aucun référent';
+$lang['cantine_save_config']      = 'Enregistrer la configuration';
+$lang['cantine_config_hint']      = 'Les unités seront créées automatiquement à chaque inscription et devront être validées par le référent via l\'écran « Gestion des unités ».';
+
+// Info inscription → unité
+$lang['cantine_unit_info']        = '%s unité(s) seront créées pour chaque parent inscrit (à valider par le référent).';
+
+
 ?>

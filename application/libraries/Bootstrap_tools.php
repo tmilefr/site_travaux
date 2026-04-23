@@ -167,6 +167,14 @@ Class Bootstrap_tools{
 				$design->color = 'nicdark_bg_blue';
 				$design->icon ='blue';
 			break;
+			case 'can':
+			        $design->color      = 'nicdark_bg_green';
+			        $design->bordercolor= 'nicdark_border_green';
+			        $design->backhover  = 'nicdark_bg_greendark_hover';
+			        $design->img        = 'events/img5.jpg';
+			        $design->btn        = 'nicdark_bg_blue';
+			        $design->title      = 'Garde du midi';
+			break;
 			case 'MEN':
 				$design->color = 'nicdark_bg_blue';
 				$design->bordercolor ='nicdark_border_blue';

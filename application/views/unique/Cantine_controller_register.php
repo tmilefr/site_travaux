@@ -125,6 +125,15 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                         </h5>
                         <div class="nicdark_space10"></div>
 
+                        <!-- Info unité -->
+                        <?php if ($day->nb_units > 0){ ?>
+                        <p class="<?php echo $text_color;?>" style="font-size:12px; opacity:0.85;">
+                            <i class="icon-star"></i>
+                            <?php echo sprintf($this->lang->line('cantine_unit_info'), $day->nb_units);?>
+                        </p>
+                        <div class="nicdark_space10"></div>
+                        <?php } ?>
+
                         <!-- Liste des inscrits -->
                         <ul class="nicdark_ul">
                             <?php for($i = 0; $i < $day->nb_slots; $i++){

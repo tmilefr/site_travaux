@@ -56,6 +56,32 @@
 			"default": "B"
 		}
 	},
+	"id_info": {
+		"type": "select_database",
+		"param": "distinct(infos,id:id_travaux)",
+		"values": [],
+		"list": false,
+		"search": false,
+		"rules": null,
+		"since": 1,
+		"dbforge": {
+			"type": "INT",
+			"constraint": 11
+		}
+	},
+	"id_travaux": {
+		"type": "select_database",
+		"param": "distinct(travaux,id:titre)",
+		"values": [],
+		"list": false,
+		"search": false,
+		"rules": null,
+		"since": 1,
+		"dbforge": {
+			"type": "INT",
+			"constraint": 11
+		}
+	},
 	"civil_year": {
 		"type": "select",
 		"list": false,
