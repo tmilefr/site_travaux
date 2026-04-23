@@ -99,54 +99,52 @@ class Admwork_controller extends MY_Controller {
 		}
 	}
 
-	/** @return void  */
-	public function register(){
-		
+	public function register() {
+
+		/* --- Nouveaux assets à ajouter --- */
+		$this->bootstrap_tools->_SetHead('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css', 'css');
+		$this->bootstrap_tools->_SetHead('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js', 'js');
 		$this->bootstrap_tools->_SetHead('assets/css/admwork_register.css', 'css');
 		$this->bootstrap_tools->_SetHead('assets/js/admwork_register.js',   'js');
-
-		$this->bootstrap_tools->_SetHead('assets/vendor/isotope/isotope.pkgd.min.js','js');
-		$this->bootstrap_tools->_SetHead('assets/js/counter.js','js');
-		$this->bootstrap_tools->_SetHead('assets/js/isotope.js','js');
-		//type de travaux sur l'objet, permet de construire la liste de choix.
+	
+		/* --- Garder si utilisé ailleurs, sinon supprimer --- */
+		// $this->bootstrap_tools->_SetHead('assets/vendor/isotope/isotope.pkgd.min.js','js');
+		// $this->bootstrap_tools->_SetHead('assets/js/counter.js','js');
+		// $this->bootstrap_tools->_SetHead('assets/js/isotope.js','js');
+	
+		/* --- Code existant inchangé --- */
 		$this->data_view['WorkType'] = $this->Admwork_model->_get('defs')['type']->_get('values');
-
 		$this->_set('view_inprogress','unique/'.$this->_controller_name.'_register');
 		$this->{$this->_model_name}->_set('order','date_travaux');
-
-		if ($this->acl->getType() == 'fam'){
+	
+		if ($this->acl->getType() == 'fam') {
 			$id_fam = $this->acl->getUserId();
 			$family = $this->Familys_model->GetFamily($id_fam);
-			$works = $this->{$this->_model_name}->GetFiltered($this->config->item('civil_year'), ['B',$family->ecole]);
-
+			$works  = $this->{$this->_model_name}->GetFiltered($this->config->item('civil_year'), ['B', $family->ecole]);
 		} else {
 			$works = $this->{$this->_model_name}->GetFiltered($this->config->item('civil_year'), ['B','M','L']);
-			//$works = $this->{$this->_model_name}->get_all();
-		} 		
-		
-
+		}
+	
 		$planified_works = [];
-		foreach($works AS $key=>$work){
-			if ($work->type == 'URG'){
+		foreach ($works as $key => $work) {
+			if ($work->type == 'URG') {
 				$work->delay = -1;
 			} else {
-				$work->delay = Compare('date',$work->date_travaux, date('Y-m-d'))+1;
-			}			
-			$work->register = true;
-			$work->participant = $this->Infos_model->Decompte($work->id)->nb_participants;
-			$work->already_registred =  $this->Infos_model->IsRegister($this->acl->getUserId(), $work->id);
-			$work->registreds = $this->Infos_model->GetRegistred($work->id, true);
-			
-			if ($work->registreds >= $work->nb_inscrits_max)
+				$work->delay = Compare('date', $work->date_travaux, date('Y-m-d')) + 1;
+			}
+			$work->register       = true;
+			$work->participant    = $this->Infos_model->Decompte($work->id)->nb_participants;
+			$work->already_registred = $this->Infos_model->IsRegister($this->acl->getUserId(), $work->id);
+			$work->registreds     = $this->Infos_model->GetRegistred($work->id, true);
+	
+			if ($work->registreds >= $work->nb_inscrits_max) {
 				$work->register = false;
-			//$planified_works[] = $work;
-
-			if ($work->archived !=  1)
+			}
+			if ($work->archived != 1) {
 				$planified_works[] = $work;
-			//echo debug($work);
+			}
 		}
 		$this->data_view['works'] = $planified_works;
-
 		$this->render_view();
 	}
 
