@@ -458,4 +458,76 @@ $lang['LOGIN_TO_CONTINUE']         = 'Se connecter';
 // Trace côté admin (vue sys)
 $lang['VALIDATED_BY_REF']          = 'Validé par le référent le';
 
+// Titres de menu / controller
+$lang['GESTION_Cantine_controller']        = 'Garde du midi';
+$lang['Cantine_controller_register_fam']   = 'Garde du midi';   // libellé menu famille
+$lang['Cantine_controller_register_sys']   = 'Garde du midi';   // libellé menu admin
+$lang['Cantine_controller_config']         = 'Paramétrage garde midi';
+
+// Vue parent : agenda
+$lang['cantine_title']            = 'Agenda de la garde du midi';
+$lang['cantine_subtitle']         = 'Inscrivez-vous pour encadrer les enfants pendant la pause méridienne.';
+$lang['cantine_prev_week']        = 'Semaine précédente';
+$lang['cantine_next_week']        = 'Semaine suivante';
+$lang['cantine_this_week']        = 'Semaine en cours';
+$lang['cantine_config_link']      = 'Paramétrer les jours';
+$lang['cantine_back_to_agenda']   = 'Retour à l\'agenda';
+
+$lang['cantine_stat_days']        = 'Jours de garde';
+$lang['cantine_stat_mine']        = 'Mes inscriptions';
+$lang['cantine_stat_open']        = 'Places restantes';
+
+$lang['cantine_day_1']            = 'Lundi';
+$lang['cantine_day_2']            = 'Mardi';
+$lang['cantine_day_3']            = 'Mercredi';
+$lang['cantine_day_4']            = 'Jeudi';
+$lang['cantine_day_5']            = 'Vendredi';
+
+$lang['cantine_day_inactive']     = 'Pas de garde ce jour';
+$lang['cantine_registered']       = 'Inscrits';
+$lang['cantine_slot_free']        = 'Place libre';
+$lang['cantine_you']              = 'vous';
+$lang['cantine_full']             = 'Complet';
+$lang['cantine_passed']           = 'Date passée';
+
+$lang['cantine_btn_register']     = 'M\'inscrire';
+$lang['cantine_btn_cancel']       = 'Me désinscrire';
+$lang['cantine_confirm_cancel']   = 'Confirmer la désinscription ?';
+
+$lang['cantine_register_hint']    = 'Cliquez sur « M\'inscrire » pour prendre un créneau. Une fois inscrit, vous pouvez vous désinscrire tant que la date n\'est pas passée.';
+
+// Vue admin : paramétrage
+$lang['cantine_config_title']     = 'Paramétrage de la garde du midi';
+$lang['cantine_config_subtitle']  = 'Définissez les jours où une garde est nécessaire et le nombre de parents requis chaque jour.';
+$lang['cantine_school']           = 'École';
+$lang['cantine_day_needed']       = 'Garde nécessaire';
+$lang['cantine_nb_parents']       = 'Nombre de parents requis';
+$lang['cantine_save_config']      = 'Enregistrer la configuration';
+$lang['cantine_config_hint']      = 'La configuration s\'applique à partir de la semaine en cours et pour toutes les semaines suivantes de l\'année scolaire.';
+
+$lang['SECTION_UPCOMING']       = 'À venir';
+$lang['SECTION_PAST']           = 'Sessions passées';
+$lang['SECTION_NO_UPCOMING']    = 'Aucune session à venir pour le moment.';
+$lang['SECTION_NO_PAST']        = 'Aucune session passée à afficher.';
+$lang['TODAY_MARKER']           = 'Aujourd\'hui';
+
+// Countdown (utilisé en dur dans _format_countdown(), ces clés sont là si tu
+// veux internationaliser plus tard en remplaçant les chaînes codées en dur)
+$lang['COUNT_IN_DAYS']          = 'dans %d j';
+$lang['COUNT_IN_DAY']           = 'demain';
+$lang['COUNT_AGO_DAYS']         = 'il y a %d j';
+$lang['COUNT_AGO_DAY']          = 'hier';
+$lang['COUNT_AGO_MONTH']        = 'il y a ~1 mois';
+$lang['COUNT_AGO_MONTHS']       = 'il y a %d mois';
+
+// Bloc statistiques
+$lang['STATS_UPCOMING']         = 'À venir';
+$lang['STATS_AVAILABLE']        = 'Places dispo';
+$lang['STATS_MY_REGISTRATIONS'] = 'Mes inscriptions';
+$lang['STATS_PAST']             = 'Passées';
+
+// Boutons / états
+$lang['SEE_DETAILS']            = 'Détails';
+$lang['FULL']                   = 'Complet';
+$lang['REGISTERED_TAG']         = 'Inscrit';
 ?>
