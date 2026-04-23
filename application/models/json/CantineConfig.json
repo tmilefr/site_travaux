@@ -58,6 +58,69 @@
 			"default": 0
 		}
 	},
+	"nb_units": {
+		"type": "input",
+		"list": true,
+		"search": false,
+		"rules": "trim|numeric",
+		"since": 1,
+		"dbforge": {
+			"type": "FLOAT",
+			"constraint": 10,
+			"default": 1
+		}
+	},
+	"id_referent": {
+		"type": "typeahead",
+		"list": true,
+		"search": true,
+		"rules": null,
+		"since": 1,
+		"values": [],
+		"query": "SELECT tr.id,CONCAT_WS(\" \",gr.short,gm.name,gm.surname) AS title FROM `trombi` tr LEFT JOIN `groupes_member` gm ON tr.ref = gm.id LEFT JOIN `groupes` gr ON tr.id_grp = gr.id WHERE tr.classif IN ('reftra','RT');",
+		"id_key": "id",
+		"json_data_key": "title",
+		"alternate_field": "name",
+		"data_key": "title",
+		"dbforge": {
+			"type": "VARCHAR",
+			"constraint": 255
+		}
+	},
+	"heure_deb": {
+		"type": "time",
+		"list": false,
+		"search": false,
+		"rules": "trim",
+		"since": 1,
+		"minTime": "10:00:00",
+		"maxHour": 15,
+		"maxMinutes": 59,
+		"interval": 15,
+		"startTime": 11,
+		"dbforge": {
+			"type": "VARCHAR",
+			"constraint": 10,
+			"default": "11:45"
+		}
+	},
+	"heure_fin": {
+		"type": "time",
+		"list": false,
+		"search": false,
+		"rules": "trim",
+		"since": 1,
+		"minTime": "10:00:00",
+		"maxHour": 15,
+		"maxMinutes": 59,
+		"interval": 15,
+		"startTime": 13,
+		"dbforge": {
+			"type": "VARCHAR",
+			"constraint": 10,
+			"default": "13:30"
+		}
+	},
 	"ecole": {
 		"type": "select",
 		"list": true,

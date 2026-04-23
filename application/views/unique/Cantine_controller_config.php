@@ -60,6 +60,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                     <h3 class="<?php echo $txt_color;?>"><?php echo $label;?></h3>
                     <div class="nicdark_space20"></div>
 
+                    <!-- Actif ? -->
                     <label class="<?php echo $txt_color;?>">
                         <input type="checkbox" name="active_<?php echo $id_day;?>" value="1"
                                <?php echo $is_active ? 'checked' : '';?> />
@@ -67,6 +68,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                     </label>
 
                     <div class="nicdark_space20"></div>
+
+                    <!-- Nb parents -->
                     <label class="<?php echo $txt_color;?>">
                         <?php echo $this->lang->line('cantine_nb_parents');?> :
                     </label>
@@ -74,8 +77,54 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                     <input type="number" min="0" max="20" step="1"
                            name="nb_slots_<?php echo $id_day;?>"
                            value="<?php echo (int)$cfg->nb_slots;?>"
-                           class="nicdark_input"
-                           style="width:80px; padding:8px; border-radius:4px; border:0; text-align:center;" />
+                           style="width:100%; padding:8px; border-radius:4px; border:0; text-align:center;" />
+
+                    <div class="nicdark_space20"></div>
+
+                    <!-- Nb unités -->
+                    <label class="<?php echo $txt_color;?>">
+                        <?php echo $this->lang->line('cantine_nb_units');?> :
+                    </label>
+                    <div class="nicdark_space10"></div>
+                    <input type="number" min="0" max="10" step="0.25"
+                           name="nb_units_<?php echo $id_day;?>"
+                           value="<?php echo (float)$cfg->nb_units;?>"
+                           style="width:100%; padding:8px; border-radius:4px; border:0; text-align:center;" />
+
+                    <div class="nicdark_space20"></div>
+
+                    <!-- Horaires -->
+                    <label class="<?php echo $txt_color;?>">
+                        <?php echo $this->lang->line('cantine_hours');?> :
+                    </label>
+                    <div class="nicdark_space10"></div>
+                    <div style="display:flex; gap:6px;">
+                        <input type="time" name="heure_deb_<?php echo $id_day;?>"
+                               value="<?php echo html_escape(!empty($cfg->heure_deb) ? $cfg->heure_deb : '11:45');?>"
+                               style="flex:1; padding:6px; border-radius:4px; border:0; text-align:center;" />
+                        <input type="time" name="heure_fin_<?php echo $id_day;?>"
+                               value="<?php echo html_escape(!empty($cfg->heure_fin) ? $cfg->heure_fin : '13:30');?>"
+                               style="flex:1; padding:6px; border-radius:4px; border:0; text-align:center;" />
+                    </div>
+
+                    <div class="nicdark_space20"></div>
+
+                    <!-- Référent -->
+                    <label class="<?php echo $txt_color;?>">
+                        <?php echo $this->lang->line('cantine_referent');?> :
+                    </label>
+                    <div class="nicdark_space10"></div>
+                    <select name="id_referent_<?php echo $id_day;?>"
+                            style="width:100%; padding:6px; border-radius:4px; border:0;">
+                        <option value="">-- <?php echo $this->lang->line('cantine_referent_none');?> --</option>
+                        <?php foreach($referents AS $rid => $rtitle){ ?>
+                            <option value="<?php echo html_escape($rid);?>"
+                                    <?php echo ((string)$cfg->id_referent === (string)$rid) ? 'selected' : '';?>>
+                                <?php echo html_escape($rtitle);?>
+                            </option>
+                        <?php } ?>
+                    </select>
+
                     <div class="nicdark_space20"></div>
                 </div>
             </div>

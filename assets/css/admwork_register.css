@@ -1,100 +1,207 @@
 /*
- * admwork_register.css  — v2
- * Design fidèle à la maquette fournie :
- *   · Cartes blanches avec bordure gauche colorée 4px
- *   · Sans image, typographie claire
- *   · Badge type de session coloré
- *   · Footer séparé par une ligne
- *   · Cartes passées grisées
- *
- * Charger APRÈS nicdark_shortcodes.css.
+ * admwork_register.css — v3
+ * Charger APRÈS nicdark_shortcodes.css
  * Controller :
  *   $this->bootstrap_tools->_SetHead('assets/css/admwork_register.css','css');
  *   $this->bootstrap_tools->_SetHead('assets/js/admwork_register.js','js');
  */
 
-
 /* =====================================================================
-   RESET — neutralise styles nicdark sur les éléments remplacés
+   0. CONTENEUR RACINE — neutralise les floats nicdark
    ===================================================================== */
-.aw-card .nicdark_archive1 {
-    background: none !important;
-    box-shadow: none !important;
-    float: none !important;
-    width: 100% !important;
-    min-height: 0 !important;
-    overflow: visible !important;
-    position: static !important;
-    border-radius: 0 !important;
-}
-.aw-card img, .aw-card .nicdark_absolute_left,
-.aw-card .nicdark_absolute_right, .aw-card .nicdark_textevidence { display: none !important; }
-
-
-/* =====================================================================
-   1. GRILLE
-   ===================================================================== */
-.aw-cards-grid {
-    display: flex !important;
-    flex-wrap: wrap;
-    gap: 14px;
-    float: none !important;
+.aw-root {
+    float: left;
     width: 100%;
     box-sizing: border-box;
-    transition: none !important;
 }
-.aw-cards-grid .aw-card {
-    flex: 0 0 calc(33.333% - 10px);
-    min-width: 220px;
-    float: none !important;
-    width: auto !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    box-sizing: border-box;
-}
-
+.aw-root::after { content:''; display:table; clear:both; }
 
 /* =====================================================================
-   2. CARTE PRINCIPALE
+   1. MÉTRIQUES
    ===================================================================== */
-.aw-card-inner {
-    background: #ffffff;
+.aw-stats {
+    display: flex;
     border: 1px solid #e8e8e8;
-    border-left: 4px solid #aaa;
     border-radius: 8px;
     overflow: hidden;
+    background: #fff;
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 22px;
+}
+.aw-stat { flex: 1; padding: 14px 20px; border-right: 1px solid #e8e8e8; }
+.aw-stat:last-child { border-right: none; }
+.aw-stat .st-label {
+    font-size: 11px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    margin-bottom: 4px;
+}
+.aw-stat .st-value {
+    font-size: 26px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    color: #1a1a1a;
+    line-height: 1;
+}
+
+/* =====================================================================
+   2. BARRE DE FILTRES
+   ===================================================================== */
+.aw-filters-bar {
     display: flex;
-    flex-direction: column;
-    height: 100%;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 20px;
+}
+.aw-search-wrap { position: relative; }
+.aw-search-wrap i {
+    position: absolute; left: 12px; top: 50%;
+    transform: translateY(-50%);
+    color: #ccc; font-size: 13px;
+    pointer-events: none;
+}
+.aw-search {
+    padding: 7px 14px 7px 34px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 999px;
+    font-size: 13px;
+    font-family: 'Raleway', sans-serif;
+    color: #333; outline: none; width: 190px;
+    transition: border-color .15s;
+    background: #fff; box-sizing: border-box;
+}
+.aw-search:focus { border-color: #999; }
+.aw-search::placeholder { color: #ccc; }
+.aw-chip {
+    display: inline-block;
+    font-size: 13px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    padding: 6px 16px;
+    border-radius: 999px;
+    border: 1.5px solid #e0e0e0;
+    background: #fff;
+    color: #666;
+    cursor: pointer;
+    text-decoration: none !important;
+    transition: border-color .15s, background .15s, color .15s;
+    line-height: 1.3;
+}
+.aw-chip:hover { border-color: #bbb; color: #222; }
+.aw-chip.is-active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+
+/* =====================================================================
+   3. EN-TÊTES DE SECTION
+   ===================================================================== */
+.aw-section-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    margin: 6px 0 14px;
+}
+.aw-section-head .sh-dot {
+    width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
+}
+.aw-section-head.upcoming .sh-dot { background: #1a1a1a; }
+.aw-section-head.past     .sh-dot { background: #bbb; }
+.aw-section-head h2 {
+    margin: 0;
+    font-size: 14px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    color: #1a1a1a;
+}
+.aw-section-head.past h2 { color: #888; }
+.aw-section-head .sh-count {
+    font-size: 11px; background: #f1f1f1; color: #999;
+    padding: 1px 8px; border-radius: 999px;
+    font-family: 'Montserrat', sans-serif; font-weight: 600;
+}
+.aw-section-head .sh-line { flex: 1; height: 1px; background: #ebebeb; }
+
+/* =====================================================================
+   4. GRILLE DE CARTES
+   La clé : width fixe en %, pas flex seul, pour contrer le float parent
+   ===================================================================== */
+.aw-cards-grid {
+    /* On sort du flux float nicdark avec un clearfix */
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    /* Simulation d'une grille 3 colonnes via inline-block */
+    font-size: 0; /* supprime l'espace entre inline-blocks */
+}
+.aw-cards-grid::after { content:''; display:table; clear:both; }
+
+/* Chaque carte : float left 3 colonnes */
+.aw-card {
+    display: inline-block;
+    vertical-align: top;
+    width: calc(33.333% - 10px);
+    margin: 0 5px 14px;
+    box-sizing: border-box;
+    font-size: 14px; /* restaure la font-size annulée sur le parent */
+}
+
+/* =====================================================================
+   5. CARTE — structure interne
+   ===================================================================== */
+
+/* Supprime les styles nicdark hérités */
+.aw-card .nicdark_archive1,
+.aw-card-inner {
+    all: unset !important;
+    display: flex !important;
+    flex-direction: column !important;
+    box-sizing: border-box !important;
+}
+.aw-card img,
+.aw-card .nicdark_absolute_left,
+.aw-card .nicdark_absolute_right,
+.aw-card .nicdark_textevidence { display: none !important; }
+
+.aw-card-inner {
+    background: #ffffff !important;
+    border: 1px solid #e8e8e8 !important;
+    border-left: 4px solid #aaa !important;
+    border-radius: 8px !important;
+    overflow: hidden !important;
+    width: 100% !important;
+    min-height: 0 !important;
     transition: box-shadow .18s ease, transform .18s ease;
 }
 .aw-card-inner:hover {
-    box-shadow: 0 4px 18px rgba(0,0,0,.09);
+    box-shadow: 0 4px 18px rgba(0,0,0,.09) !important;
     transform: translateY(-2px);
 }
-/* Bordures colorées par type */
-.aw-stripe-TRA { border-left-color: #e16c6c !important; }
-.aw-stripe-MEN { border-left-color: #74cee4 !important; }
+
+/* Couleurs de bordure par type */
+.aw-stripe-TRA,
+.aw-stripe-URG { border-left-color: #e16c6c !important; }
+.aw-stripe-MEN,
 .aw-stripe-INF { border-left-color: #74cee4 !important; }
 .aw-stripe-GOU { border-left-color: #ec774b !important; }
 .aw-stripe-LAV { border-left-color: #c389ce !important; }
 .aw-stripe-DEC { border-left-color: #6fc191 !important; }
-.aw-stripe-URG { border-left-color: #e16c6c !important; }
 .aw-stripe-default { border-left-color: #74cee4 !important; }
 
-
 /* =====================================================================
-   3. CORPS DE LA CARTE
+   6. CORPS DE CARTE
    ===================================================================== */
 .aw-card-body {
-    padding: 14px 16px 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 7px;
-    flex: 1;
+    padding: 14px 16px 10px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 7px !important;
+    flex: 1 !important;
 }
-
-/* Date + countdown */
 .aw-card-dateline {
     display: flex;
     justify-content: space-between;
@@ -110,13 +217,12 @@
     font-size: 11px;
     font-family: 'Montserrat', sans-serif;
     font-weight: 600;
-    color: #aaa;
+    color: #bbb;
     white-space: nowrap;
 }
 .aw-countdown.is-soon { color: #e16c6c; font-weight: 700; }
-.aw-countdown.is-past { color: #bbb; font-weight: 400; }
+.aw-countdown.is-past { color: #ccc; font-weight: 400; }
 
-/* Titre */
 .aw-card-title {
     font-size: 15px;
     font-family: 'Raleway', sans-serif;
@@ -125,8 +231,6 @@
     line-height: 1.35;
     margin: 0;
 }
-
-/* Badge type */
 .aw-type-badge {
     display: inline-block;
     font-size: 10px;
@@ -138,14 +242,13 @@
     border-radius: 4px;
     align-self: flex-start;
 }
-.aw-badge-TRA, .aw-badge-URG { background: #fde8e8; color: #c13a3a; }
+.aw-badge-TRA, .aw-badge-URG { background: #fde8e8; color: #b83030; }
 .aw-badge-MEN, .aw-badge-INF { background: #e2f5fb; color: #1478a0; }
 .aw-badge-GOU                { background: #fff0e0; color: #b05a00; }
 .aw-badge-LAV                { background: #f2e8ff; color: #7030a0; }
 .aw-badge-DEC                { background: #e8f7ee; color: #1e6e42; }
 .aw-badge-default            { background: #f1f1f1; color: #555; }
 
-/* Méta */
 .aw-card-meta {
     display: flex;
     flex-direction: column;
@@ -160,34 +263,35 @@
     color: #555;
     font-family: 'Raleway', sans-serif;
 }
-.aw-meta-row i {
-    font-size: 12px;
-    color: #ccc;
-    width: 14px;
-    flex-shrink: 0;
-    text-align: center;
-}
-
+.aw-meta-row i { font-size: 12px; color: #ccc; width: 14px; flex-shrink: 0; text-align: center; }
 
 /* =====================================================================
-   4. PIED DE CARTE
+   7. PIED DE CARTE
    ===================================================================== */
 .aw-card-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 16px;
-    border-top: 1px solid #f0f0f0;
-    background: #fff;
-    flex-shrink: 0;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 10px 16px !important;
+    border-top: 1px solid #f0f0f0 !important;
+    background: #fff !important;
+    flex-shrink: 0 !important;
+    gap: 8px;
 }
 .aw-slots {
     font-size: 13px;
     font-family: 'Montserrat', sans-serif;
     color: #888;
+    white-space: nowrap;
 }
 .aw-slots strong { color: #1a1a1a; font-weight: 700; }
-.aw-footer-actions { display: flex; align-items: center; gap: 6px; }
+.aw-badge-inscrit {
+    font-size: 11px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    color: #1e6e42;
+}
+.aw-footer-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 
 .aw-btn {
     display: inline-block;
@@ -196,193 +300,46 @@
     font-weight: 700;
     padding: 7px 16px;
     border-radius: 6px;
-    border: 1.5px solid #2a2a2a;
+    border: 1.5px solid #1a1a1a;
     background: #fff;
     color: #1a1a1a;
     cursor: pointer;
-    text-decoration: none;
+    text-decoration: none !important;
     transition: background .15s, color .15s;
     white-space: nowrap;
     line-height: 1.3;
 }
-.aw-btn:hover { background: #f5f5f5; color: #1a1a1a; text-decoration: none; }
-.aw-btn.inscrit  { background: #2a2a2a; color: #fff; border-color: #2a2a2a; }
-.aw-btn.inscrit:hover { background: #111; }
-.aw-btn.complet  { border-color: #ddd; color: #aaa; cursor: not-allowed; }
-.aw-btn.complet:hover { background: #fff; }
-.aw-btn.details  { border-color: #ccc; color: #666; }
-.aw-btn.details:hover { background: #f8f8f8; color: #333; border-color: #aaa; }
-.aw-btn.adm      { border-color: #74cee4; color: #1478a0; }
-.aw-btn.adm:hover { background: #e2f5fb; }
-
-.aw-btn-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px; height: 32px;
-    border-radius: 6px;
-    border: 1.5px solid #ddd;
-    background: #fff;
-    color: #888;
-    cursor: pointer;
-    text-decoration: none;
-    transition: background .15s;
-}
-.aw-btn-icon:hover { background: #f5f5f5; }
-.aw-btn-icon i { font-size: 13px; }
-
-.aw-badge-inscrit {
-    font-size: 12px;
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 700;
-    color: #1e6e42;
-}
-
+.aw-btn:hover             { background: #f5f5f5; color: #1a1a1a; }
+.aw-btn.inscrit           { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+.aw-btn.inscrit:hover     { background: #333; }
+.aw-btn.complet           { border-color: #ddd; color: #bbb; cursor: not-allowed; }
+.aw-btn.complet:hover     { background: #fff; }
+.aw-btn.details           { border-color: #ccc; color: #777; }
+.aw-btn.details:hover     { background: #f8f8f8; border-color: #999; color: #444; }
+.aw-btn.adm               { border-color: #74cee4; color: #1478a0; }
+.aw-btn.adm:hover         { background: #e2f5fb; }
 
 /* =====================================================================
-   5. CARTES PASSÉES
+   8. CARTES PASSÉES
    ===================================================================== */
 .aw-card.is-past .aw-card-inner {
-    background: #f8f8f8;
-    border-color: #e5e5e5;
-    opacity: .8;
+    background: #f8f8f8 !important;
+    border-color: #e5e5e5 !important;
+    opacity: .82;
     transition: opacity .2s;
 }
 .aw-card.is-past .aw-card-inner:hover { opacity: 1; }
 .aw-card.is-past .aw-card-title { color: #777; }
-.aw-card.is-past .aw-card-footer { background: #f8f8f8; border-top-color: #ebebeb; }
-
-
-/* =====================================================================
-   6. MÉTRIQUES
-   ===================================================================== */
-.aw-stats {
-    display: flex;
-    gap: 0;
-    margin-bottom: 24px;
-    border: 1px solid #ebebeb;
-    border-radius: 8px;
-    overflow: hidden;
-    background: #fff;
-    float: left;
-    width: 100%;
-    box-sizing: border-box;
-}
-.aw-stat {
-    flex: 1;
-    padding: 14px 20px;
-    border-right: 1px solid #ebebeb;
-}
-.aw-stat:last-child { border-right: none; }
-.aw-stat .st-label {
-    font-size: 12px;
-    font-family: 'Montserrat', sans-serif;
-    color: #999; font-weight: 500;
-    margin-bottom: 3px;
-}
-.aw-stat .st-value {
-    font-size: 24px;
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 700;
-    color: #1a1a1a; line-height: 1;
-}
-
-
-/* =====================================================================
-   7. FILTRES (chips style maquette)
-   ===================================================================== */
-.aw-filters-bar {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    align-items: center;
-    margin-bottom: 22px;
-    float: left;
-    width: 100%;
-}
-.aw-search-wrap {
-    position: relative;
-    margin-right: 4px;
-}
-.aw-search-wrap i {
-    position: absolute;
-    left: 12px; top: 50%;
-    transform: translateY(-50%);
-    color: #ccc; font-size: 13px;
-}
-.aw-search {
-    padding: 7px 14px 7px 34px;
-    border: 1.5px solid #e0e0e0;
-    border-radius: 999px;
-    font-size: 13px;
-    font-family: 'Raleway', sans-serif;
-    color: #333; outline: none;
-    width: 190px;
-    transition: border-color .15s;
-    background: #fff;
-}
-.aw-search:focus { border-color: #999; }
-.aw-search::placeholder { color: #ccc; }
-
-.aw-chip {
-    font-size: 13px;
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 500;
-    padding: 6px 16px;
-    border-radius: 999px;
-    border: 1.5px solid #e0e0e0;
-    background: #fff;
-    color: #666;
-    cursor: pointer;
-    text-decoration: none;
-    transition: border-color .15s, background .15s, color .15s;
-    display: inline-block;
-    line-height: 1.3;
-}
-.aw-chip:hover { border-color: #bbb; color: #222; text-decoration: none; }
-.aw-chip.is-active {
-    background: #2a2a2a; color: #fff; border-color: #2a2a2a;
-}
-
-
-/* =====================================================================
-   8. EN-TÊTE DE SECTION
-   ===================================================================== */
-.aw-section-head {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin: 0 0 14px;
-    float: left; width: 100%;
-}
-.aw-section-head .sh-dot {
-    width: 9px; height: 9px;
-    border-radius: 50%; flex-shrink: 0;
-}
-.aw-section-head.upcoming .sh-dot { background: #2a2a2a; }
-.aw-section-head.past     .sh-dot { background: #bbb; }
-.aw-section-head h2 {
-    margin: 0;
-    font-size: 14px;
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 700;
-    color: #2a2a2a;
-}
-.aw-section-head.past h2 { color: #888; }
-.aw-section-head .sh-count {
-    font-size: 11px; background: #f1f1f1; color: #999;
-    padding: 1px 8px; border-radius: 999px;
-    font-family: 'Montserrat', sans-serif; font-weight: 600;
-}
-.aw-section-head .sh-line { flex: 1; height: 1px; background: #ebebeb; }
-
+.aw-card.is-past .aw-card-footer { background: #f8f8f8 !important; border-top-color: #ebebeb !important; }
 
 /* =====================================================================
    9. MARQUEUR AUJOURD'HUI
    ===================================================================== */
 .aw-today-marker {
-    float: left; width: 100%;
-    display: flex; align-items: center; gap: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
     margin: 26px 0;
     font-size: 11px;
     font-family: 'Montserrat', sans-serif;
@@ -393,86 +350,112 @@
 }
 .aw-today-marker .tm-line { flex: 1; height: 1px; background: #cdeef7; }
 
-
 /* =====================================================================
-   10. ACCORDÉONS MOIS
+   10. ACCORDÉONS MOIS PASSÉS
    ===================================================================== */
-.aw-accordion-past { float: left; width: 100%; }
+.aw-accordion-past { width: 100%; }
+
 .aw-month-header {
-    display: flex; align-items: center; justify-content: space-between;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     padding: 10px 16px;
-    background: #f8f8f8; border: 1px solid #ebebeb; border-radius: 8px;
-    cursor: pointer; margin-bottom: 6px;
+    background: #f8f8f8;
+    border: 1px solid #ebebeb;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-bottom: 6px;
+    width: 100%;
+    box-sizing: border-box;
     transition: background .15s;
-    float: left; width: 100%; box-sizing: border-box;
 }
 .aw-month-header:hover { background: #f2f2f2; }
-.aw-month-header.is-open { background: #f2f2f2; border-radius: 8px 8px 0 0; margin-bottom: 0; border-bottom-color: transparent; }
+.aw-month-header.is-open {
+    background: #f2f2f2;
+    border-radius: 8px 8px 0 0;
+    margin-bottom: 0;
+    border-bottom-color: transparent;
+}
 .aw-month-title {
     display: flex; align-items: center; gap: 10px;
     font-size: 14px; font-family: 'Montserrat', sans-serif; font-weight: 700; color: #404547;
 }
-.aw-month-badge { font-size: 11px; background: #e8e8e8; color: #777; padding: 1px 9px; border-radius: 999px; font-weight: 600; }
+.aw-month-badge {
+    font-size: 11px; background: #e8e8e8; color: #777;
+    padding: 1px 9px; border-radius: 999px; font-weight: 600;
+}
 .aw-month-chevron { font-size: 12px; color: #bbb; transition: transform .2s; }
 .aw-month-header.is-open .aw-month-chevron { transform: rotate(180deg); }
+
 .aw-month-body {
     display: none;
-    border: 1px solid #ebebeb; border-top: none; border-radius: 0 0 8px 8px;
-    padding: 16px 14px 14px; margin-bottom: 8px;
-    float: left; width: 100%; box-sizing: border-box; background: #fafafa;
+    border: 1px solid #ebebeb;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    padding: 16px 14px 14px;
+    margin-bottom: 8px;
+    width: 100%;
+    box-sizing: border-box;
+    background: #fafafa;
 }
 .aw-month-body.is-open { display: block; }
-
 
 /* =====================================================================
    11. TOGGLE VUE
    ===================================================================== */
-.view-toggle { display: inline-flex; background: #f1f1f1; border-radius: 6px; padding: 3px; gap: 3px; }
+.view-toggle {
+    display: inline-flex;
+    background: #f1f1f1;
+    border-radius: 6px;
+    padding: 3px; gap: 3px;
+}
 .view-toggle a {
     display: inline-flex; align-items: center; gap: 6px;
     padding: 7px 16px; border-radius: 4px;
     font-size: 13px; font-family: 'Montserrat', sans-serif; font-weight: 600;
     color: #666; cursor: pointer;
     transition: background .15s, color .15s, box-shadow .15s;
-    text-decoration: none;
+    text-decoration: none !important;
 }
 .view-toggle a.active, .view-toggle a:hover {
     background: #fff; color: #333;
-    box-shadow: 0 1px 4px rgba(0,0,0,.10); text-decoration: none;
+    box-shadow: 0 1px 4px rgba(0,0,0,.10);
 }
-.view-toggle a i { font-size: 14px; }
 #view-cards    { display: block; }
 #view-calendar { display: none; }
-
 
 /* =====================================================================
    12. FULLCALENDAR
    ===================================================================== */
-.fc .fc-toolbar-title { font-family: 'Raleway', sans-serif; font-size: 17px; font-weight: 700; color: #2a2a2a; }
+#aw-fullcalendar { width: 100%; min-height: 500px; }
+.fc .fc-toolbar-title { font-family: 'Raleway', sans-serif; font-size: 17px; font-weight: 700; color: #1a1a1a; }
 .fc .fc-button-primary { background: #404547 !important; border-color: #404547 !important; font-family: 'Montserrat', sans-serif; font-size: 12px; font-weight: 600; border-radius: 5px !important; }
-.fc .fc-button-primary:hover { background: #2a2a2a !important; border-color: #2a2a2a !important; }
+.fc .fc-button-primary:hover { background: #1a1a1a !important; border-color: #1a1a1a !important; }
 .fc .fc-button-primary:not(:disabled).fc-button-active { background: #6fc191 !important; border-color: #6fc191 !important; }
-.fc .fc-daygrid-day-number, .fc .fc-col-header-cell-cushion { font-family: 'Montserrat', sans-serif; font-size: 12px; font-weight: 600; color: #404547; text-decoration: none; }
+.fc .fc-daygrid-day-number,
+.fc .fc-col-header-cell-cushion { font-family: 'Montserrat', sans-serif; font-size: 12px; font-weight: 600; color: #404547; text-decoration: none; }
 .fc .fc-daygrid-day.fc-day-today { background: #f0fdf6; }
-.fc-event { border-radius: 4px !important; border: none !important; font-size: 11px !important; font-family: 'Montserrat', sans-serif !important; font-weight: 600 !important; padding: 2px 5px !important; cursor: pointer; }
+.fc-event { border-radius: 4px !important; border: none !important; font-size: 11px !important; font-family: 'Montserrat', sans-serif !important; font-weight: 600 !important; padding: 2px 6px !important; cursor: pointer; }
 .fc-event.ev-past { opacity: .5; filter: grayscale(40%); }
 .aw-cal-tooltip {
-    position: fixed; z-index: 9999;
-    background: #2a2a2a; color: #fff;
+    position: fixed; z-index: 99999;
+    background: #1a1a1a; color: #fff;
     font-family: 'Montserrat', sans-serif; font-size: 12px;
     padding: 9px 13px; border-radius: 6px; max-width: 230px;
-    pointer-events: none; box-shadow: 0 4px 16px rgba(0,0,0,.2); line-height: 1.55;
+    pointer-events: none; box-shadow: 0 4px 16px rgba(0,0,0,.25); line-height: 1.6;
 }
-.aw-cal-tooltip::after { content:''; position:absolute; top:100%; left:16px; border:6px solid transparent; border-top-color:#2a2a2a; }
-
+.aw-cal-tooltip::after { content:''; position:absolute; top:100%; left:14px; border:6px solid transparent; border-top-color:#1a1a1a; }
 
 /* =====================================================================
    13. RESPONSIVE
    ===================================================================== */
-@media (max-width: 900px) { .aw-cards-grid .aw-card { flex: 0 0 calc(50% - 7px); } }
-@media (max-width: 600px) {
-    .aw-cards-grid .aw-card { flex: 0 0 100%; }
+@media (max-width: 900px) {
+    .aw-card { width: calc(50% - 10px); margin: 0 5px 14px; }
+}
+@media (max-width: 580px) {
+    .aw-card { width: 100%; margin: 0 0 14px; }
     .aw-stats { flex-wrap: wrap; }
-    .aw-stat  { flex: 0 0 50%; border-bottom: 1px solid #ebebeb; }
+    .aw-stat  { flex: 0 0 50%; border-bottom: 1px solid #e8e8e8; }
     .view-toggle a span { display: none; }
+    .aw-search { width: 140px; }
 }

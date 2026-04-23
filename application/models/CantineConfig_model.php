@@ -39,22 +39,30 @@ class CantineConfig_model extends Core_model {
         for($d=1; $d<=5; $d++){
             if (!isset($by_day[$d])){
                 $this->db->insert($this->table, [
-                    'id_day'     => $d,
-                    'active'     => 0,
-                    'nb_slots'   => 0,
-                    'ecole'      => $ecole,
-                    'civil_year' => $civil_year,
-                    'created'    => date('Y-m-d H:i:s'),
-                    'updated'    => date('Y-m-d H:i:s'),
+                    'id_day'      => $d,
+                    'active'      => 0,
+                    'nb_slots'    => 0,
+                    'nb_units'    => 1,
+                    'id_referent' => null,
+                    'heure_deb'   => '11:45',
+                    'heure_fin'   => '13:30',
+                    'ecole'       => $ecole,
+                    'civil_year'  => $civil_year,
+                    'created'     => date('Y-m-d H:i:s'),
+                    'updated'     => date('Y-m-d H:i:s'),
                 ]);
                 $id = $this->db->insert_id();
                 $by_day[$d] = (object)[
-                    'id'         => $id,
-                    'id_day'     => $d,
-                    'active'     => 0,
-                    'nb_slots'   => 0,
-                    'ecole'      => $ecole,
-                    'civil_year' => $civil_year,
+                    'id'          => $id,
+                    'id_day'      => $d,
+                    'active'      => 0,
+                    'nb_slots'    => 0,
+                    'nb_units'    => 1,
+                    'id_referent' => null,
+                    'heure_deb'   => '11:45',
+                    'heure_fin'   => '13:30',
+                    'ecole'       => $ecole,
+                    'civil_year'  => $civil_year,
                 ];
             }
         }
@@ -65,7 +73,7 @@ class CantineConfig_model extends Core_model {
     /**
      * Sauvegarde la config des 5 jours.
      *
-     * @param array $days  [ ['id_day'=>1,'active'=>1,'nb_slots'=>2], ... ]
+     * @param array $days  [ ['id_day'=>1,'active'=>1,'nb_slots'=>2,'nb_units'=>1,'id_referent'=>12,'heure_deb'=>'11:45','heure_fin'=>'13:30'], ... ]
      * @param string $ecole
      * @param string $civil_year
      */
@@ -74,7 +82,18 @@ class CantineConfig_model extends Core_model {
             $id_day   = (int)$d['id_day'];
             $active   = !empty($d['active']) ? 1 : 0;
             $nb_slots = max(0, min(20, (int)$d['nb_slots']));
+            $nb_units = max(0, (float)$d['nb_units']);
             if (!$active) $nb_slots = 0;
+
+            $payload = [
+                'active'      => $active,
+                'nb_slots'    => $nb_slots,
+                'nb_units'    => $nb_units,
+                'id_referent' => !empty($d['id_referent']) ? $d['id_referent'] : null,
+                'heure_deb'   => !empty($d['heure_deb']) ? $d['heure_deb'] : '11:45',
+                'heure_fin'   => !empty($d['heure_fin']) ? $d['heure_fin'] : '13:30',
+                'updated'     => date('Y-m-d H:i:s'),
+            ];
 
             $existing = $this->db->select('id')
                 ->from($this->table)
@@ -84,21 +103,13 @@ class CantineConfig_model extends Core_model {
                 ->get()->row();
 
             if ($existing){
-                $this->db->where('id', $existing->id)->update($this->table, [
-                    'active'   => $active,
-                    'nb_slots' => $nb_slots,
-                    'updated'  => date('Y-m-d H:i:s'),
-                ]);
+                $this->db->where('id', $existing->id)->update($this->table, $payload);
             } else {
-                $this->db->insert($this->table, [
-                    'id_day'     => $id_day,
-                    'active'     => $active,
-                    'nb_slots'   => $nb_slots,
-                    'ecole'      => $ecole,
-                    'civil_year' => $civil_year,
-                    'created'    => date('Y-m-d H:i:s'),
-                    'updated'    => date('Y-m-d H:i:s'),
-                ]);
+                $payload['id_day']     = $id_day;
+                $payload['ecole']      = $ecole;
+                $payload['civil_year'] = $civil_year;
+                $payload['created']    = date('Y-m-d H:i:s');
+                $this->db->insert($this->table, $payload);
             }
         }
     }
