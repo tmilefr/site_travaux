@@ -92,6 +92,25 @@
 				]
 			},
 			{
+				"url" : "Cantine_controller/index",
+				"opt" : "sys",
+				"name" : "Cantine_controller_index",
+				"color" : "orange",
+				"noright":false,
+				"items":[
+					{
+						"url":"Cantine_controller/register",
+						"name":"Cantine_controller_register",
+						"type":"link"
+					},{
+						"url":"Cantine_controller/config",
+						"name":"Units_controller_config",
+						"type":"link"
+					}			
+				]
+			},
+			
+			{
 				"url" : "Familys_controller/histo",
 				"opt" : "sys",
 				"name" : "Familys_controller_histo",
