@@ -101,6 +101,10 @@ class Admwork_controller extends MY_Controller {
 
 	/** @return void  */
 	public function register(){
+		
+		$this->bootstrap_tools->_SetHead('assets/css/admwork_register.css', 'css');
+		$this->bootstrap_tools->_SetHead('assets/js/admwork_register.js',   'js');
+
 		$this->bootstrap_tools->_SetHead('assets/vendor/isotope/isotope.pkgd.min.js','js');
 		$this->bootstrap_tools->_SetHead('assets/js/counter.js','js');
 		$this->bootstrap_tools->_SetHead('assets/js/isotope.js','js');
