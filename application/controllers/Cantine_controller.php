@@ -244,8 +244,14 @@ class Cantine_controller extends MY_Controller {
         }
 
         $ecole = $this->input->get('ecole');
-        if (!in_array($ecole, ['B','M','L'])) $ecole = 'B';
+        if (!in_array($ecole, ['B','M','L'])) $ecole = 'M';
         $civil_year = $this->config->item('civil_year');
+
+        // Mois affiché dans l'agenda (?ym=YYYY-MM), par défaut mois courant
+        $ym = $this->input->get('ym');
+        if (!$ym || !preg_match('/^\d{4}-\d{2}$/', $ym)){
+            $ym = date('Y-m');
+        }
 
         $this->data_view['config']      = $this->CantineConfig_model->GetConfig($ecole, $civil_year);
         $this->data_view['ecole']       = $ecole;
@@ -253,6 +259,16 @@ class Cantine_controller extends MY_Controller {
         $this->data_view['referents']   = $this->_getReferents();
         $this->data_view['generations'] = $this->CantineGeneration_model->GetLastGenerations($ecole, $civil_year, 5);
         $this->data_view['nb_upcoming'] = $this->CantineGeneration_model->CountUpcoming($ecole, $civil_year);
+
+        // Agenda mensuel
+        $first = $ym.'-01';
+        $this->data_view['agenda_ym']        = $ym;
+        $this->data_view['agenda_prev_ym']   = date('Y-m', strtotime($first.' -1 month'));
+        $this->data_view['agenda_next_ym']   = date('Y-m', strtotime($first.' +1 month'));
+        $this->data_view['agenda_label']     = $this->_frMonthLabel($first);
+        $this->data_view['agenda_sessions']  = $this->CantineGeneration_model->GetSessionsByDate(
+            $ecole, $civil_year, $first
+        );
 
         // Dates par défaut pour le formulaire de génération : aujourd'hui -> fin d'année scolaire
         $this->data_view['default_date_deb'] = date('Y-m-d');
@@ -396,5 +412,17 @@ class Cantine_controller extends MY_Controller {
     private function _frWeekday(DateTime $d){
         $names = [1=>'Lundi',2=>'Mardi',3=>'Mercredi',4=>'Jeudi',5=>'Vendredi',6=>'Samedi',7=>'Dimanche'];
         return $names[(int)$d->format('N')];
+    }
+
+        /**
+     * Retourne un libellé "Mois Année" en français, ex: "Avril 2026".
+     */
+    private function _frMonthLabel($ymd){
+        $months = [
+            1=>'Janvier',2=>'Février',3=>'Mars',4=>'Avril',5=>'Mai',6=>'Juin',
+            7=>'Juillet',8=>'Août',9=>'Septembre',10=>'Octobre',11=>'Novembre',12=>'Décembre',
+        ];
+        $t = strtotime($ymd);
+        return $months[(int)date('n', $t)].' '.date('Y', $t);
     }
 }

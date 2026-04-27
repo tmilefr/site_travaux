@@ -521,6 +521,32 @@ $lang['SECTION_NO_UPCOMING']    = 'Aucune session à venir pour le moment.';
 $lang['SECTION_NO_PAST']        = 'Aucune session passée à afficher.';
 $lang['TODAY_MARKER']           = 'Aujourd\'hui';
 
+
+// Agenda mensuel des sessions générées (admin)
+$lang['cantine_agenda_title']     = 'Agenda des sessions planifiées';
+$lang['cantine_agenda_hint']      = 'Vue d\'ensemble des sessions de garde déjà créées. Naviguez de mois en mois.';
+$lang['cantine_agenda_prev']      = 'Mois précédent';
+$lang['cantine_agenda_next']      = 'Mois suivant';
+$lang['cantine_agenda_today']     = 'Mois en cours';
+$lang['cantine_agenda_empty']     = 'Aucune session générée pour ce mois.';
+$lang['cantine_agenda_full']      = 'complet';
+$lang['cantine_agenda_open']      = 'place(s)';
+$lang['cantine_agenda_legend_full']    = 'Session complète';
+$lang['cantine_agenda_legend_partial'] = 'Places à pourvoir';
+$lang['cantine_agenda_legend_empty']   = 'Aucun inscrit';
+
+// Bloc admin unifié (règles + génération)
+$lang['cantine_admin_title']      = 'Configuration & génération';
+$lang['cantine_admin_hint']       = 'Définissez les règles de la garde du midi puis générez les sessions sur la période souhaitée.';
+
+// Format compact des règles (ligne)
+$lang['cantine_rules_col_active']    = 'Actif';
+$lang['cantine_rules_col_day']       = 'Jour';
+$lang['cantine_rules_col_parents']   = 'Parents';
+$lang['cantine_rules_col_units']     = 'Unités';
+$lang['cantine_rules_col_hours']     = 'Horaires';
+$lang['cantine_rules_col_referent']  = 'Référent';
+
 // Countdown (utilisé en dur dans _format_countdown(), ces clés sont là si tu
 // veux internationaliser plus tard en remplaçant les chaînes codées en dur)
 $lang['COUNT_IN_DAYS']          = 'dans %d j';
