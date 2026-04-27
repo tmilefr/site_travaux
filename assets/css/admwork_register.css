@@ -1,618 +1,396 @@
 /*
- * admwork_register.css — v3
+ * admwork_register.css — v5
  * Charger APRÈS nicdark_shortcodes.css
- * Controller :
- *   $this->bootstrap_tools->_SetHead('assets/css/admwork_register.css','css');
- *   $this->bootstrap_tools->_SetHead('assets/js/admwork_register.js','js');
  */
 
 /* =====================================================================
-   0. CONTENEUR RACINE — neutralise les floats nicdark
+   CONTENEUR RACINE
    ===================================================================== */
-.aw-root {
-    float: left;
-    width: 100%;
-    box-sizing: border-box;
-}
+.aw-root { float:left; width:100%; box-sizing:border-box; }
 .aw-root::after { content:''; display:table; clear:both; }
 
 /* =====================================================================
-   1. MÉTRIQUES
+   EN-TÊTE + TOGGLE VUE
+   ===================================================================== */
+.aw-page-head {
+    display:flex; justify-content:space-between;
+    align-items:flex-start; flex-wrap:wrap; gap:12px;
+}
+.aw-view-toggle {
+    display:inline-flex;
+    background:#f1f1f1;
+    border-radius:7px;
+    padding:3px; gap:3px;
+    flex-shrink:0;
+    margin-top:4px;
+}
+.aw-toggle-btn {
+    display:inline-flex; align-items:center; gap:7px;
+    padding:7px 16px; border-radius:5px; border:none;
+    background:transparent; color:#777;
+    font-size:13px; font-family:'Montserrat',sans-serif; font-weight:600;
+    cursor:pointer; transition:background .15s, color .15s, box-shadow .15s;
+    line-height:1;
+}
+.aw-toggle-btn svg { flex-shrink:0; }
+.aw-toggle-btn.active {
+    background:#fff; color:#1a1a1a;
+    box-shadow:0 1px 4px rgba(0,0,0,.10);
+}
+.aw-toggle-btn:hover:not(.active) { color:#444; }
+
+/* =====================================================================
+   MÉTRIQUES
    ===================================================================== */
 .aw-stats {
-    display: flex;
-    border: 1px solid #e8e8e8;
-    border-radius: 8px;
-    overflow: hidden;
-    background: #fff;
-    width: 100%;
-    box-sizing: border-box;
-    margin-bottom: 22px;
+    display:flex; border:1px solid #e8e8e8; border-radius:8px;
+    overflow:hidden; background:#fff;
+    width:100%; box-sizing:border-box; margin-bottom:22px;
 }
-.aw-stat { flex: 1; padding: 14px 20px; border-right: 1px solid #e8e8e8; }
-.aw-stat:last-child { border-right: none; }
+.aw-stat { flex:1; padding:14px 20px; border-right:1px solid #e8e8e8; }
+.aw-stat:last-child { border-right:none; }
 .aw-stat .st-label {
-    font-size: 11px;
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 600;
-    color: #999;
-    text-transform: uppercase;
-    letter-spacing: .4px;
-    margin-bottom: 4px;
+    font-size:11px; font-family:'Montserrat',sans-serif; font-weight:600;
+    color:#999; text-transform:uppercase; letter-spacing:.4px; margin-bottom:4px;
 }
 .aw-stat .st-value {
-    font-size: 26px;
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 700;
-    color: #1a1a1a;
-    line-height: 1;
+    font-size:26px; font-family:'Montserrat',sans-serif; font-weight:700;
+    color:#1a1a1a; line-height:1;
 }
 
 /* =====================================================================
-   2. BARRE DE FILTRES
+   FILTRES
    ===================================================================== */
 .aw-filters-bar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    align-items: center;
-    width: 100%;
-    margin-bottom: 20px;
+    display:flex; flex-wrap:wrap; gap:8px;
+    align-items:center; width:100%; margin-bottom:20px;
 }
-.aw-search-wrap { position: relative; }
+.aw-search-wrap { position:relative; }
 .aw-search-wrap i {
-    position: absolute; left: 12px; top: 50%;
-    transform: translateY(-50%);
-    color: #ccc; font-size: 13px;
-    pointer-events: none;
+    position:absolute; left:12px; top:50%;
+    transform:translateY(-50%); color:#ccc; font-size:13px; pointer-events:none;
 }
 .aw-search {
-    padding: 7px 14px 7px 34px;
-    border: 1.5px solid #e0e0e0;
-    border-radius: 999px;
-    font-size: 13px;
-    font-family: 'Raleway', sans-serif;
-    color: #333; outline: none; width: 190px;
-    transition: border-color .15s;
-    background: #fff; box-sizing: border-box;
+    padding:7px 14px 7px 34px;
+    border:1.5px solid #e0e0e0; border-radius:999px;
+    font-size:13px; font-family:'Raleway',sans-serif;
+    color:#333; outline:none; width:190px;
+    transition:border-color .15s; background:#fff; box-sizing:border-box;
 }
-.aw-search:focus { border-color: #999; }
-.aw-search::placeholder { color: #ccc; }
+.aw-search:focus { border-color:#999; }
+.aw-search::placeholder { color:#ccc; }
 .aw-chip {
-    display: inline-block;
-    font-size: 13px;
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 500;
-    padding: 6px 16px;
-    border-radius: 999px;
-    border: 1.5px solid #e0e0e0;
-    background: #fff;
-    color: #666;
-    cursor: pointer;
-    text-decoration: none !important;
-    transition: border-color .15s, background .15s, color .15s;
-    line-height: 1.3;
+    display:inline-block; font-size:13px;
+    font-family:'Montserrat',sans-serif; font-weight:500;
+    padding:6px 16px; border-radius:999px;
+    border:1.5px solid #e0e0e0; background:#fff; color:#666;
+    cursor:pointer; text-decoration:none !important;
+    transition:border-color .15s, background .15s, color .15s; line-height:1.3;
 }
-.aw-chip:hover { border-color: #bbb; color: #222; }
-.aw-chip.is-active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+.aw-chip:hover { border-color:#bbb; color:#222; }
+.aw-chip.is-active { background:#1a1a1a; color:#fff; border-color:#1a1a1a; }
 
 /* =====================================================================
-   3. EN-TÊTES DE SECTION
+   EN-TÊTES DE SECTION
    ===================================================================== */
 .aw-section-head {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-    margin: 6px 0 14px;
+    display:flex; align-items:center; gap:8px; width:100%; margin:6px 0 14px;
 }
-.aw-section-head .sh-dot {
-    width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
-}
-.aw-section-head.upcoming .sh-dot { background: #1a1a1a; }
-.aw-section-head.past     .sh-dot { background: #bbb; }
+.aw-section-head .sh-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+.aw-section-head.upcoming .sh-dot { background:#1a1a1a; }
+.aw-section-head.past     .sh-dot { background:#bbb; }
 .aw-section-head h2 {
-    margin: 0;
-    font-size: 14px;
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 700;
-    color: #1a1a1a;
+    margin:0; font-size:14px; font-family:'Montserrat',sans-serif;
+    font-weight:700; color:#1a1a1a;
 }
-.aw-section-head.past h2 { color: #888; }
+.aw-section-head.past h2 { color:#888; }
 .aw-section-head .sh-count {
-    font-size: 11px; background: #f1f1f1; color: #999;
-    padding: 1px 8px; border-radius: 999px;
-    font-family: 'Montserrat', sans-serif; font-weight: 600;
+    font-size:11px; background:#f1f1f1; color:#999;
+    padding:1px 8px; border-radius:999px;
+    font-family:'Montserrat',sans-serif; font-weight:600;
 }
-.aw-section-head .sh-line { flex: 1; height: 1px; background: #ebebeb; }
+.aw-section-head .sh-line { flex:1; height:1px; background:#ebebeb; }
 
 /* =====================================================================
-   4. GRILLE DE CARTES
-   La clé : width fixe en %, pas flex seul, pour contrer le float parent
+   VUE CARTES
    ===================================================================== */
 .aw-cards-grid {
-    /* On sort du flux float nicdark avec un clearfix */
-    display: block;
-    width: 100%;
-    box-sizing: border-box;
-    /* Simulation d'une grille 3 colonnes via inline-block */
-    font-size: 0; /* supprime l'espace entre inline-blocks */
+    display:block; width:100%; box-sizing:border-box; font-size:0;
 }
 .aw-cards-grid::after { content:''; display:table; clear:both; }
 
-/* Chaque carte : float left 3 colonnes */
 .aw-card {
-    display: inline-block;
-    vertical-align: top;
-    width: calc(33.333% - 10px);
-    margin: 0 5px 14px;
-    box-sizing: border-box;
-    font-size: 14px; /* restaure la font-size annulée sur le parent */
+    display:inline-block; vertical-align:top;
+    width:calc(33.333% - 10px); margin:0 5px 14px;
+    box-sizing:border-box; font-size:14px;
 }
 
-/* =====================================================================
-   5. CARTE — structure interne
-   ===================================================================== */
-
-/* Supprime les styles nicdark hérités */
+/* Neutralise nicdark sur la carte */
 .aw-card .nicdark_archive1,
 .aw-card-inner {
-    all: unset !important;
-    display: flex !important;
-    flex-direction: column !important;
-    box-sizing: border-box !important;
+    all:unset !important;
+    display:flex !important; flex-direction:column !important;
+    box-sizing:border-box !important;
 }
 .aw-card img,
 .aw-card .nicdark_absolute_left,
 .aw-card .nicdark_absolute_right,
-.aw-card .nicdark_textevidence { display: none !important; }
+.aw-card .nicdark_textevidence { display:none !important; }
 
 .aw-card-inner {
-    background: #ffffff !important;
-    border: 1px solid #e8e8e8 !important;
-    border-left: 4px solid #aaa !important;
-    border-radius: 8px !important;
-    overflow: hidden !important;
-    width: 100% !important;
-    min-height: 0 !important;
-    transition: box-shadow .18s ease, transform .18s ease;
+    background:#fff !important;
+    border:1px solid #e8e8e8 !important;
+    border-left:4px solid #aaa !important;
+    border-radius:8px !important;
+    overflow:hidden !important;
+    width:100% !important;
+    min-height:0 !important;
+    transition:box-shadow .18s ease, transform .18s ease;
 }
 .aw-card-inner:hover {
-    box-shadow: 0 4px 18px rgba(0,0,0,.09) !important;
-    transform: translateY(-2px);
+    box-shadow:0 4px 18px rgba(0,0,0,.09) !important;
+    transform:translateY(-2px);
 }
 
-/* Couleurs de bordure par type */
-.aw-stripe-TRA,
-.aw-stripe-URG { border-left-color: #e16c6c !important; }
-.aw-stripe-MEN,
-.aw-stripe-INF { border-left-color: #74cee4 !important; }
-.aw-stripe-GOU { border-left-color: #ec774b !important; }
-.aw-stripe-LAV { border-left-color: #c389ce !important; }
-.aw-stripe-DEC { border-left-color: #6fc191 !important; }
-.aw-stripe-default { border-left-color: #74cee4 !important; }
+/* Couleurs bordure */
+.aw-stripe-TRA,.aw-stripe-URG { border-left-color:#e16c6c !important; }
+.aw-stripe-MEN,.aw-stripe-INF { border-left-color:#74cee4 !important; }
+.aw-stripe-GOU                { border-left-color:#ec774b !important; }
+.aw-stripe-LAV                { border-left-color:#c389ce !important; }
+.aw-stripe-DEC                { border-left-color:#6fc191 !important; }
+.aw-stripe-default            { border-left-color:#74cee4 !important; }
 
-/* =====================================================================
-   6. CORPS DE CARTE
-   ===================================================================== */
 .aw-card-body {
-    padding: 14px 16px 10px !important;
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 7px !important;
-    flex: 1 !important;
+    padding:14px 16px 10px !important;
+    display:flex !important; flex-direction:column !important;
+    gap:7px !important; flex:1 !important;
 }
-.aw-card-dateline {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
+.aw-card-dateline { display:flex; justify-content:space-between; align-items:center; }
 .aw-card-date {
-    font-size: 13px;
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 600;
-    color: #404547;
+    font-size:13px; font-family:'Montserrat',sans-serif; font-weight:600; color:#404547;
 }
-.aw-countdown {
-    font-size: 11px;
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 600;
-    color: #bbb;
-    white-space: nowrap;
-}
-.aw-countdown.is-soon { color: #e16c6c; font-weight: 700; }
-.aw-countdown.is-past { color: #ccc; font-weight: 400; }
-
+.aw-countdown { font-size:11px; font-family:'Montserrat',sans-serif; font-weight:600; color:#bbb; white-space:nowrap; }
+.aw-countdown.is-soon { color:#e16c6c; font-weight:700; }
+.aw-countdown.is-past { color:#ccc; font-weight:400; }
 .aw-card-title {
-    font-size: 15px;
-    font-family: 'Raleway', sans-serif;
-    font-weight: 700;
-    color: #1a1a1a;
-    line-height: 1.35;
-    margin: 0;
+    font-size:15px; font-family:'Raleway',sans-serif; font-weight:700;
+    color:#1a1a1a; line-height:1.35; margin:0;
 }
 .aw-type-badge {
-    display: inline-block;
-    font-size: 10px;
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 700;
-    letter-spacing: .5px;
-    text-transform: uppercase;
-    padding: 3px 10px;
-    border-radius: 4px;
-    align-self: flex-start;
+    display:inline-block; font-size:10px; font-family:'Montserrat',sans-serif;
+    font-weight:700; letter-spacing:.5px; text-transform:uppercase;
+    padding:3px 10px; border-radius:4px; align-self:flex-start;
 }
-.aw-badge-TRA, .aw-badge-URG { background: #fde8e8; color: #b83030; }
-.aw-badge-MEN, .aw-badge-INF { background: #e2f5fb; color: #1478a0; }
-.aw-badge-GOU                { background: #fff0e0; color: #b05a00; }
-.aw-badge-LAV                { background: #f2e8ff; color: #7030a0; }
-.aw-badge-DEC                { background: #e8f7ee; color: #1e6e42; }
-.aw-badge-default            { background: #f1f1f1; color: #555; }
+.aw-badge-TRA,.aw-badge-URG { background:#fde8e8; color:#b83030; }
+.aw-badge-MEN,.aw-badge-INF { background:#e2f5fb; color:#1478a0; }
+.aw-badge-GOU               { background:#fff0e0; color:#b05a00; }
+.aw-badge-LAV               { background:#f2e8ff; color:#7030a0; }
+.aw-badge-DEC               { background:#e8f7ee; color:#1e6e42; }
+.aw-badge-default           { background:#f1f1f1; color:#555; }
 
-.aw-card-meta {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    margin-top: 2px;
-}
+.aw-card-meta { display:flex; flex-direction:column; gap:4px; margin-top:2px; }
 .aw-meta-row {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    font-size: 13px;
-    color: #555;
-    font-family: 'Raleway', sans-serif;
+    display:flex; align-items:center; gap:7px;
+    font-size:13px; color:#555; font-family:'Raleway',sans-serif;
 }
-.aw-meta-row i { font-size: 12px; color: #ccc; width: 14px; flex-shrink: 0; text-align: center; }
+.aw-meta-row i { font-size:12px; color:#ccc; width:14px; flex-shrink:0; text-align:center; }
 
-/* =====================================================================
-   7. PIED DE CARTE
-   ===================================================================== */
 .aw-card-footer {
-    display: flex !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    padding: 10px 16px !important;
-    border-top: 1px solid #f0f0f0 !important;
-    background: #fff !important;
-    flex-shrink: 0 !important;
-    gap: 8px;
+    display:flex !important; justify-content:space-between !important;
+    align-items:center !important;
+    padding:10px 16px !important; border-top:1px solid #f0f0f0 !important;
+    background:#fff !important; flex-shrink:0 !important; gap:8px;
 }
-.aw-slots {
-    font-size: 13px;
-    font-family: 'Montserrat', sans-serif;
-    color: #888;
-    white-space: nowrap;
-}
-.aw-slots strong { color: #1a1a1a; font-weight: 700; }
+.aw-slots { font-size:13px; font-family:'Montserrat',sans-serif; color:#888; }
+.aw-slots strong { color:#1a1a1a; font-weight:700; }
+.aw-footer-actions { display:flex; align-items:center; gap:6px; flex-shrink:0; }
 .aw-badge-inscrit {
-    font-size: 11px;
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 700;
-    color: #1e6e42;
+    font-size:11px; font-family:'Montserrat',sans-serif; font-weight:700; color:#1e6e42;
 }
-.aw-footer-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-
-.aw-btn {
-    display: inline-block;
-    font-size: 13px;
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 700;
-    padding: 7px 16px;
-    border-radius: 6px;
-    border: 1.5px solid #1a1a1a;
-    background: #fff;
-    color: #1a1a1a;
-    cursor: pointer;
-    text-decoration: none !important;
-    transition: background .15s, color .15s;
-    white-space: nowrap;
-    line-height: 1.3;
-}
-.aw-btn:hover             { background: #f5f5f5; color: #1a1a1a; }
-.aw-btn.inscrit           { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
-.aw-btn.inscrit:hover     { background: #333; }
-.aw-btn.complet           { border-color: #ddd; color: #bbb; cursor: not-allowed; }
-.aw-btn.complet:hover     { background: #fff; }
-.aw-btn.details           { border-color: #ccc; color: #777; }
-.aw-btn.details:hover     { background: #f8f8f8; border-color: #999; color: #444; }
-.aw-btn.adm               { border-color: #74cee4; color: #1478a0; }
-.aw-btn.adm:hover         { background: #e2f5fb; }
 
 /* =====================================================================
-   8. CARTES PASSÉES
+   BOUTONS (communs cartes + liste)
    ===================================================================== */
-.aw-card.is-past .aw-card-inner {
-    background: #f8f8f8 !important;
-    border-color: #e5e5e5 !important;
-    opacity: .82;
-    transition: opacity .2s;
+.aw-btn {
+    display:inline-block; font-size:12px; font-weight:700;
+    font-family:'Montserrat',sans-serif;
+    padding:6px 14px; border-radius:6px;
+    border:1.5px solid #1a1a1a; background:#fff; color:#1a1a1a;
+    cursor:pointer; text-decoration:none !important;
+    transition:background .15s, color .15s; white-space:nowrap; line-height:1.3;
 }
-.aw-card.is-past .aw-card-inner:hover { opacity: 1; }
-.aw-card.is-past .aw-card-title { color: #777; }
-.aw-card.is-past .aw-card-footer { background: #f8f8f8 !important; border-top-color: #ebebeb !important; }
+.aw-btn:hover           { background:#f5f5f5; color:#1a1a1a; }
+.aw-btn.inscrit         { background:#1a1a1a; color:#fff; border-color:#1a1a1a; }
+.aw-btn.inscrit:hover   { background:#333; }
+.aw-btn.complet         { border-color:#ddd; color:#bbb; cursor:not-allowed; }
+.aw-btn.complet:hover   { background:#fff; }
+.aw-btn.details         { border-color:#ccc; color:#777; }
+.aw-btn.details:hover   { background:#f8f8f8; border-color:#999; color:#444; }
+.aw-btn.adm             { border-color:#74cee4; color:#1478a0; }
+.aw-btn.adm:hover       { background:#e2f5fb; }
 
 /* =====================================================================
-   9. MARQUEUR AUJOURD'HUI
+   VUE LISTE
+   ===================================================================== */
+.aw-list {
+    width:100%; border:1px solid #e8e8e8; border-radius:8px;
+    overflow:hidden; background:#fff; margin-bottom:4px;
+}
+.aw-list-sep {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:7px 16px; background:#f5f5f5; border-bottom:1px solid #e8e8e8;
+}
+.aw-list-sep-label {
+    font-size:11px; font-weight:700; font-family:'Montserrat',sans-serif;
+    text-transform:uppercase; letter-spacing:.5px; color:#666;
+}
+.aw-list-sep-count { font-size:11px; color:#aaa; font-family:'Montserrat',sans-serif; }
+
+.aw-list-row {
+    display:flex; align-items:center; gap:14px;
+    padding:11px 16px; border-bottom:1px solid #f0f0f0;
+    background:#fff; transition:background .12s; box-sizing:border-box;
+}
+.aw-list-row:last-child { border-bottom:none; }
+.aw-list-row:hover { background:#fafafa; }
+.aw-list-row.is-past { background:#f9f9f9; opacity:.82; }
+.aw-list-row.is-past:hover { opacity:1; background:#f5f5f5; }
+
+.aw-list-date {
+    display:flex; flex-direction:column; align-items:center;
+    width:36px; flex-shrink:0; text-align:center;
+}
+.aw-list-day {
+    font-size:20px; font-weight:700; font-family:'Montserrat',sans-serif;
+    color:#1a1a1a; line-height:1;
+}
+.aw-list-mon {
+    font-size:10px; font-weight:600; font-family:'Montserrat',sans-serif;
+    text-transform:uppercase; letter-spacing:.4px; color:#aaa; margin-top:1px;
+}
+.aw-list-row.is-past .aw-list-day { color:#999; }
+
+.aw-list-stripe {
+    width:3px; height:40px; flex-shrink:0; border-radius:0; background:#aaa;
+}
+/* réutilise les classes .aw-stripe-* déjà définies pour les cartes */
+.aw-list-row.is-past .aw-list-stripe { opacity:.45; }
+
+.aw-list-info { flex:1; min-width:0; }
+.aw-list-title {
+    font-size:14px; font-weight:600; font-family:'Raleway',sans-serif;
+    color:#1a1a1a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.aw-list-row.is-past .aw-list-title { color:#777; }
+.aw-list-meta {
+    font-size:12px; color:#888; font-family:'Raleway',sans-serif;
+    margin-top:2px; display:flex; flex-wrap:wrap; align-items:center; gap:4px;
+}
+.aw-list-sep-dot { color:#ddd; }
+.aw-list-not-registered { color:#ccc; }
+.aw-list-badge {
+    display:inline-block; font-size:10px; font-weight:700;
+    font-family:'Montserrat',sans-serif; letter-spacing:.4px;
+    text-transform:uppercase; padding:2px 7px; border-radius:4px;
+}
+/* réutilise .aw-badge-* */
+
+.aw-list-slots {
+    flex-shrink:0; text-align:right;
+    display:flex; flex-direction:column; align-items:flex-end; gap:3px;
+}
+.aw-slots-num { font-size:12px; font-family:'Montserrat',sans-serif; color:#888; }
+.aw-slots-num strong { color:#1a1a1a; font-weight:700; }
+
+.aw-list-cd {
+    flex-shrink:0; font-size:11px; font-weight:600;
+    font-family:'Montserrat',sans-serif; color:#bbb;
+    white-space:nowrap; min-width:72px; text-align:right;
+}
+.aw-list-cd.is-soon { color:#e16c6c; }
+.aw-list-cd.is-past { color:#ccc; font-weight:400; }
+
+.aw-list-action { flex-shrink:0; }
+
+/* =====================================================================
+   MARQUEUR AUJOURD'HUI
    ===================================================================== */
 .aw-today-marker {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    width: 100%;
-    margin: 26px 0;
-    font-size: 11px;
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 700;
-    letter-spacing: 1.2px;
-    text-transform: uppercase;
-    color: #74cee4;
+    display:flex; align-items:center; gap:12px;
+    width:100%; margin:24px 0;
+    font-size:11px; font-family:'Montserrat',sans-serif;
+    font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:#74cee4;
 }
-.aw-today-marker .tm-line { flex: 1; height: 1px; background: #cdeef7; }
+.aw-today-marker .tm-line { flex:1; height:1px; background:#cdeef7; }
 
 /* =====================================================================
-   10. ACCORDÉONS MOIS PASSÉS
+   ACCORDÉONS PASSÉES
    ===================================================================== */
-.aw-accordion-past { width: 100%; }
-
+.aw-accordion-past { width:100%; }
 .aw-month-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 16px;
-    background: #f8f8f8;
-    border: 1px solid #ebebeb;
-    border-radius: 8px;
-    cursor: pointer;
-    margin-bottom: 6px;
-    width: 100%;
-    box-sizing: border-box;
-    transition: background .15s;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:10px 16px; background:#f8f8f8;
+    border:1px solid #ebebeb; border-radius:8px;
+    cursor:pointer; margin-bottom:6px; width:100%; box-sizing:border-box;
+    transition:background .15s;
 }
-.aw-month-header:hover { background: #f2f2f2; }
+.aw-month-header:hover { background:#f2f2f2; }
 .aw-month-header.is-open {
-    background: #f2f2f2;
-    border-radius: 8px 8px 0 0;
-    margin-bottom: 0;
-    border-bottom-color: transparent;
+    background:#f2f2f2; border-radius:8px 8px 0 0;
+    margin-bottom:0; border-bottom-color:transparent;
 }
 .aw-month-title {
-    display: flex; align-items: center; gap: 10px;
-    font-size: 14px; font-family: 'Montserrat', sans-serif; font-weight: 700; color: #404547;
+    display:flex; align-items:center; gap:10px;
+    font-size:14px; font-family:'Montserrat',sans-serif; font-weight:700; color:#404547;
 }
 .aw-month-badge {
-    font-size: 11px; background: #e8e8e8; color: #777;
-    padding: 1px 9px; border-radius: 999px; font-weight: 600;
+    font-size:11px; background:#e8e8e8; color:#777;
+    padding:1px 9px; border-radius:999px; font-weight:600;
 }
-.aw-month-chevron { font-size: 12px; color: #bbb; transition: transform .2s; }
-.aw-month-header.is-open .aw-month-chevron { transform: rotate(180deg); }
-
+.aw-month-chevron { font-size:12px; color:#bbb; transition:transform .2s; }
+.aw-month-header.is-open .aw-month-chevron { transform:rotate(180deg); }
 .aw-month-body {
-    display: none;
-    border: 1px solid #ebebeb;
-    border-top: none;
-    border-radius: 0 0 8px 8px;
-    padding: 16px 14px 14px;
-    margin-bottom: 8px;
-    width: 100%;
-    box-sizing: border-box;
-    background: #fafafa;
+    display:none;
+    border:1px solid #ebebeb; border-top:none;
+    border-radius:0 0 8px 8px;
+    margin-bottom:8px; width:100%; box-sizing:border-box; overflow:hidden;
 }
-.aw-month-body.is-open { display: block; }
+.aw-month-body.is-open { display:block; }
+.aw-month-body .aw-list-row { border-bottom:1px solid #f0f0f0; }
+.aw-month-body .aw-list-row:last-child { border-bottom:none; }
+.aw-month-body .aw-list-row:hover { background:#f5f5f5; }
 
 /* =====================================================================
-   11. TOGGLE VUE
+   ÉTAT VIDE
    ===================================================================== */
-.view-toggle {
-    display: inline-flex;
-    background: #f1f1f1;
-    border-radius: 6px;
-    padding: 3px; gap: 3px;
-}
-.view-toggle a {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 7px 16px; border-radius: 4px;
-    font-size: 13px; font-family: 'Montserrat', sans-serif; font-weight: 600;
-    color: #666; cursor: pointer;
-    transition: background .15s, color .15s, box-shadow .15s;
-    text-decoration: none !important;
-}
-.view-toggle a.active, .view-toggle a:hover {
-    background: #fff; color: #333;
-    box-shadow: 0 1px 4px rgba(0,0,0,.10);
-}
-#view-cards    { display: block; }
-#view-calendar { display: none; }
-
-/* =====================================================================
-   12. FULLCALENDAR
-   ===================================================================== */
-#aw-fullcalendar { width: 100%; min-height: 500px; }
-.fc .fc-toolbar-title { font-family: 'Raleway', sans-serif; font-size: 17px; font-weight: 700; color: #1a1a1a; }
-.fc .fc-button-primary { background: #404547 !important; border-color: #404547 !important; font-family: 'Montserrat', sans-serif; font-size: 12px; font-weight: 600; border-radius: 5px !important; }
-.fc .fc-button-primary:hover { background: #1a1a1a !important; border-color: #1a1a1a !important; }
-.fc .fc-button-primary:not(:disabled).fc-button-active { background: #6fc191 !important; border-color: #6fc191 !important; }
-.fc .fc-daygrid-day-number,
-.fc .fc-col-header-cell-cushion { font-family: 'Montserrat', sans-serif; font-size: 12px; font-weight: 600; color: #404547; text-decoration: none; }
-.fc .fc-daygrid-day.fc-day-today { background: #f0fdf6; }
-.fc-event { border-radius: 4px !important; border: none !important; font-size: 11px !important; font-family: 'Montserrat', sans-serif !important; font-weight: 600 !important; padding: 2px 6px !important; cursor: pointer; }
-.fc-event.ev-past { opacity: .5; filter: grayscale(40%); }
-.aw-cal-tooltip {
-    position: fixed; z-index: 99999;
-    background: #1a1a1a; color: #fff;
-    font-family: 'Montserrat', sans-serif; font-size: 12px;
-    padding: 9px 13px; border-radius: 6px; max-width: 230px;
-    pointer-events: none; box-shadow: 0 4px 16px rgba(0,0,0,.25); line-height: 1.6;
-}
-.aw-cal-tooltip::after { content:''; position:absolute; top:100%; left:14px; border:6px solid transparent; border-top-color:#1a1a1a; }
-
-/* =====================================================================
-   13. RESPONSIVE 
-   ===================================================================== */
-
-/* ---- Tablette : 2 colonnes ---- */
-@media (max-width: 900px) and (min-width: 581px) {
-    .aw-card { width: calc(50% - 10px); margin: 0 5px 14px; }
+.aw-empty {
+    padding:20px 0; font-style:italic; color:#aaa;
+    font-family:'Raleway',sans-serif; font-size:14px;
 }
 
 /* =====================================================================
-   MOBILE ≤ 580px — VUE LISTE COMPACTE
-   Bascule purement CSS : aucun changement HTML / JS.
-   Le bouton "Cartes" devient "Liste", les .aw-card deviennent des lignes.
+   ANIMATION TRANSITION ENTRE VUES
    ===================================================================== */
-@media (max-width: 580px) {
-
-    /* ---------- 1. BOUTON "CARTES" → "LISTE" ---------- */
-    .aw-stats { flex-wrap: wrap; }
-    .aw-stat  { flex: 0 0 50%; border-bottom: 1px solid #e8e8e8; }
-    .aw-search { width: 140px; }
-
-    /* On masque le <span>Cartes</span> et on injecte "Liste" à la place */
-    #btn-view-cards span { display: none; }
-    #btn-view-cards::after {
-        content: "Liste";
-        font-size: 13px;
-        font-family: 'Montserrat', sans-serif;
-        font-weight: 600;
-    }
-    /* Changement d'icône : on masque l'icône layout, on ajoute une icône liste via ::before */
-    #btn-view-cards i.icon-layout { display: none; }
-    #btn-view-cards::before {
-        content: "\2630"; /* trois barres ≡ ; remplaçable par icon-list si disponible */
-        margin-right: 4px;
-        font-size: 14px;
-    }
-    /* Le bouton "Calendrier" garde son icône, on masque juste son libellé */
-    #btn-view-calendar span { display: none; }
-
-    /* ---------- 2. FILTRES : scroll horizontal ---------- */
-    .aw-filters-bar {
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        padding-bottom: 4px;
-    }
-    .aw-filters-bar::-webkit-scrollbar { display: none; }
-    .aw-chip { flex-shrink: 0; }
-
-    /* ---------- 3. GRILLE → LISTE VERTICALE ---------- */
-    .aw-cards-grid { font-size: 14px; /* on restaure la font-size */ }
-    .aw-card {
-        display: block;
-        width: 100%;
-        margin: 0 0 8px;
-    }
-
-    /* ---------- 4. CARTE → LIGNE COMPACTE ---------- */
-    .aw-card-inner {
-        flex-direction: row !important;
-        align-items: stretch !important;
-        border-radius: 6px !important;
-        min-height: 58px;
-    }
-
-    .aw-card-inner:hover {
-        transform: none; /* pas d'effet hover tactile */
-        box-shadow: 0 1px 4px rgba(0,0,0,.06) !important;
-    }
-
-    /* Corps = zone principale (date+titre+badge en ligne) */
-    .aw-card-body {
-        padding: 8px 10px !important;
-        flex-direction: row !important;
-        align-items: center !important;
-        gap: 10px !important;
-        flex-wrap: wrap;
-        flex: 1 1 auto !important;
-        min-width: 0;
-    }
-
-    /* Date compacte à gauche, largeur fixe pour alignement */
-    .aw-card-dateline {
-        flex: 0 0 64px;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 2px;
-    }
-    .aw-card-date {
-        font-size: 12px;
-        font-weight: 700;
-        line-height: 1.2;
-        white-space: nowrap;
-    }
-    .aw-countdown {
-        font-size: 10px;
-        line-height: 1;
-    }
-
-    /* Titre : prend l'espace restant, tronqué si trop long */
-    .aw-card-title {
-        font-size: 14px;
-        margin: 0;
-        flex: 1 1 auto;
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        line-height: 1.3;
-    }
-
-    /* Badge type : petit, à droite du titre */
-    .aw-type-badge {
-        font-size: 9px;
-        padding: 2px 6px;
-        flex-shrink: 0;
-    }
-
-    /* Méta (école, heure, type session) cachées en mode liste
-       → on garde l'info essentielle seulement. Si besoin, retirer
-       ces lignes pour afficher l'école sous le titre. */
-    .aw-card-meta { display: none; }
-
-    /* ---------- 5. FOOTER : COMPACT SUR LE CÔTÉ DROIT ---------- */
-    .aw-card-footer {
-        flex-direction: column !important;
-        justify-content: center !important;
-        padding: 6px 10px !important;
-        border-top: none !important;
-        border-left: 1px solid #f0f0f0 !important;
-        background: #fafafa !important;
-        min-width: 72px;
-        gap: 4px;
-    }
-    .aw-card.is-past .aw-card-footer {
-        background: #f3f3f3 !important;
-        border-left-color: #ebebeb !important;
-    }
-
-    .aw-slots {
-        font-size: 11px;
-        line-height: 1.1;
-        text-align: center;
-    }
-    .aw-badge-inscrit { display: block; font-size: 10px; margin-top: 2px; }
-
-    /* Bouton d'action : icône seule (texte masqué) pour gagner de la place */
-    .aw-footer-actions { width: 100%; justify-content: center; }
-    .aw-btn {
-        font-size: 11px;
-        padding: 4px 8px;
-        border-radius: 4px;
-        border-width: 1px;
-        line-height: 1.2;
-    }
-
-    /* ---------- 6. ACCORDÉONS MOIS PASSÉS : plus compacts ---------- */
-    .aw-month-header { padding: 8px 12px; }
-    .aw-month-title { font-size: 13px; gap: 8px; }
-    .aw-month-body  { padding: 10px 8px 8px; }
-
-    /* ---------- 7. SECTIONS ---------- */
-    .aw-section-head h2 { font-size: 13px; }
-
-    /* ---------- 8. CALENDRIER : vue liste FullCalendar par défaut ---------- */
-    /* Rien à faire côté CSS — FullCalendar gère déjà 'listMonth'.
-       Optionnel : si vous voulez forcer la vue liste au lieu de dayGridMonth
-       sur mobile, voir le patch JS optionnel ci-dessous. */
+#aw-view-cards, #aw-view-list {
+    transition:opacity .15s ease;
+}
+#aw-view-cards.aw-hidden, #aw-view-list.aw-hidden {
+    opacity:0; pointer-events:none;
 }
 
+/* =====================================================================
+   RESPONSIVE
+   ===================================================================== */
+@media (max-width:900px) {
+    .aw-card { width:calc(50% - 10px); }
+}
+@media (max-width:600px) {
+    .aw-card    { width:100%; margin:0 0 14px; }
+    .aw-stats   { flex-wrap:wrap; }
+    .aw-stat    { flex:0 0 50%; border-bottom:1px solid #e8e8e8; }
+    .aw-list-cd { display:none; }
+    .aw-list-day { font-size:16px; }
+    .aw-search  { width:130px; }
+    .aw-btn     { font-size:11px; padding:5px 10px; }
+    .aw-toggle-btn span { display:none; }
+}
