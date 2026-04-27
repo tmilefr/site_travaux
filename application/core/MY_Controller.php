@@ -17,7 +17,8 @@ require_once(APPPATH.'libraries/Autoload.php');
 class MY_Controller extends CI_Controller {
 	
 	/* VARS*/
-	protected $_autorised_get_key 	= array('order','direction','filter','page','repertoire','search','id'); //autorised key in url
+	protected $_autorised_get_key 	= array('order','direction','filter','page','repertoire','search','id','per_page');
+
 	protected $_redirect			= true; //redirect page after POST
 	protected $_model_name			= FALSE; 
 	protected $_debug_array  		= array();
@@ -267,17 +268,21 @@ class MY_Controller extends CI_Controller {
 	{
 		if ($this->_search)
 			$this->data_view['search_object']->autorize = true;
-		
+
+		// Lecture du per_page courant : session > défaut contrôleur
+		$session_pp = (int) $this->session->userdata($this->set_ref_field('per_page'));
+		$effective_pp = $session_pp > 0 ? $session_pp : $this->per_page;
+
 		$this->{$this->_model_name}->_set('global_search'	, $this->session->userdata($this->set_ref_field('global_search')));
 		$this->{$this->_model_name}->_set('order'			, $this->session->userdata($this->set_ref_field('order')));
 		$this->{$this->_model_name}->_set('filter'			, $this->session->userdata($this->set_ref_field('filter')));
 		$this->{$this->_model_name}->_set('direction'		, $this->session->userdata($this->set_ref_field('direction')));
-		$this->{$this->_model_name}->_set('per_page'		, $this->per_page);
+		$this->{$this->_model_name}->_set('per_page'		, $effective_pp);
 		$this->{$this->_model_name}->_set('page'			, $this->session->userdata($this->set_ref_field('page')));
 
 		$config = array();
 		$config['use_page_numbers'] = TRUE;
-		$config['per_page'] 	= $this->per_page;
+		$config['per_page'] 	= $effective_pp;
 		$config['cur_page'] 	= (($this->{$this->_model_name}->_get('page')) ? $this->{$this->_model_name}->_get('page'):1);
 		$config['base_url'] 	= $this->config->item('base_url').$this->_controller_name.'/list/page/';
 		$config['total_rows'] 	= $this->{$this->_model_name}->get_pagination();
@@ -286,15 +291,38 @@ class MY_Controller extends CI_Controller {
 			$config['cur_page'] 	=  1;
 			$this->{$this->_model_name}->_set('page', 1 );
 		}
-		$this->pagination->initialize($config);	
-		//GET DATAS
-		$this->data_view['fields'] 	= $this->{$this->_model_name}->_get('autorized_fields');
-		$this->data_view['datas'] 	= $this->{$this->_model_name}->get();
+		$this->pagination->initialize($config);
+
+		// GET DATAS
+		$this->data_view['fields']      = $this->{$this->_model_name}->_get('autorized_fields');
+		$this->data_view['datas']       = $this->{$this->_model_name}->get();
+
+		// Exposition pour la vue : compteur + sélecteur per_page + filtres actifs
+		$this->data_view['total_rows']     = (int) $config['total_rows'];
+		$this->data_view['per_page']       = $effective_pp;
+		$this->data_view['per_page_options'] = array(15, 30, 50, 100);
+		$this->data_view['cur_page']       = (int) $config['cur_page'];
+		$this->data_view['active_filters'] = $this->session->userdata($this->set_ref_field('filter')) ?: array();
+		$this->data_view['global_search']  = $this->session->userdata($this->set_ref_field('global_search'));
+
 		$this->_set('view_inprogress','unique/list_view');
 		if ($this->render_view)
 			$this->render_view();
 	}	
 	
+	/**
+	 * @brief Réinitialise les filtres de colonnes, la recherche globale
+	 *        et la page courante pour la liste du contrôleur appelant.
+	 * @returns void
+	 */
+	public function clear_filters()
+	{
+		$this->session->set_userdata( $this->set_ref_field('filter')        , array() );
+		$this->session->set_userdata( $this->set_ref_field('global_search') , ''      );
+		$this->session->set_userdata( $this->set_ref_field('page')          , 1       );
+		redirect($this->_controller_name . '/list');
+	}
+
 	/**
 	 * @brief Genric View Method
 	 * @param $id 
@@ -457,14 +485,28 @@ class MY_Controller extends CI_Controller {
 					break;
 					case 'filter':
 						$filtered = $this->session->userdata( $this->set_ref_field('filter') );
-						//unset($filtered['filter']);
 						if ($array['filter_value'] == 'all'){
 							unset($filtered[$value]);
 						} else {
 							$filtered[$value] = $array['filter_value'];
 						}
 						$this->session->set_userdata( $this->set_ref_field('filter') , $filtered);
-
+					break;
+					case 'per_page':
+						// Liste blanche pour éviter qu'un utilisateur stocke n'importe quoi en session
+						$allowed_pp = array(15, 30, 50, 100);
+						$pp = (int) $value;
+						if (in_array($pp, $allowed_pp, true)) {
+							$this->session->set_userdata(
+								$this->set_ref_field('per_page'),
+								$pp
+							);
+							// Si on change le per_page, repartir page 1 pour ne pas tomber hors plage
+							$this->session->set_userdata(
+								$this->set_ref_field('page'),
+								1
+							);
+						}
 					break;
 					default:
 						$this->session->set_userdata( $this->set_ref_field($field) , $value );

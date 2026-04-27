@@ -32,6 +32,7 @@ class ValidationToken_model extends Core_model
 		$this->_set('key',       'id');
 		$this->_set('order',     'created');
 		$this->_set('direction', 'desc');
+		$this->_set('json'	, 'Unites.json');
 	}
 
 	/**

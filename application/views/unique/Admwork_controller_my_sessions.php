@@ -3,6 +3,10 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 /*
  * Liste des sessions où l'utilisateur connecté est référent.
  * Variable : $my_works
+ *
+ * Le bouton change selon la date :
+ *   - Session à venir → "Voir les inscrits" (mode aperçu)
+ *   - Session du jour ou passée → "Valider les présences" (mode validation)
  */
 ?>
 <section class="nicdark_section">
@@ -28,8 +32,9 @@ defined('BASEPATH') OR exit('No direct script access allowed');
             </div>
         <?php } else {
             foreach ($my_works as $work) {
-                $design  = $this->render_object->GetDesign($work->type);
-                $is_past = (strtotime($work->date_travaux) <= strtotime('today'));
+                $design    = $this->render_object->GetDesign($work->type);
+                $is_open   = (strtotime($work->date_travaux) <= strtotime('today'));
+                $days_diff = floor((strtotime($work->date_travaux) - strtotime('today')) / 86400);
         ?>
             <div class="grid grid_4">
                 <div class="nicdark_archive1 nicdark_bg_grey nicdark_radius nicdark_shadow">
@@ -42,12 +47,13 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                         </h4>
                     </div>
                     <div class="nicdark_margin20">
-                        <h5 class=""><i class="icon-pin-outline"></i>
+                        <h5>
+                            <i class="icon-pin-outline"></i>
                             <?php echo $this->render_object->RenderElement('ecole', $work->ecole); ?>
                         </h5>
                         <div class="nicdark_space10"></div>
 
-                        <?php if ($is_past) { ?>
+                        <?php if ($is_open) { ?>
                             <a href="<?php echo base_url('Admwork_controller/validate_one/' . $work->id); ?>"
                                class="nicdark_btn nicdark_bg_green white nicdark_radius medium">
                                 <i class="icon-ok"></i>
@@ -57,11 +63,17 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                             <a href="<?php echo base_url('Admwork_controller/validate_one/' . $work->id); ?>"
                                class="nicdark_btn nicdark_bg_blue white nicdark_radius medium">
                                 <i class="icon-eye"></i>
-                                <?php echo $this->lang->line('SEE_WORK'); ?>
+                                <?php echo $this->lang->line('REF_PREVIEW_ACTION'); ?>
                             </a>
                             <p class="small">
                                 <i class="icon-clock-1"></i>
-                                <?php echo $this->lang->line('REF_NOT_YET'); ?>
+                                <?php
+                                if ($days_diff == 1) {
+                                    echo $this->lang->line('REF_PREVIEW_TOMORROW');
+                                } else {
+                                    echo sprintf($this->lang->line('REF_PREVIEW_DAYS_LEFT'), (int) $days_diff);
+                                }
+                                ?>
                             </p>
                         <?php } ?>
                     </div>

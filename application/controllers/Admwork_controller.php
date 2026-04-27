@@ -102,15 +102,9 @@ class Admwork_controller extends MY_Controller {
 	public function register() {
 
 		/* --- Nouveaux assets à ajouter --- */
-		$this->bootstrap_tools->_SetHead('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css', 'css');
-		$this->bootstrap_tools->_SetHead('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js', 'js');
 		$this->bootstrap_tools->_SetHead('assets/css/admwork_register.css', 'css');
 		$this->bootstrap_tools->_SetHead('assets/js/admwork_register.js',   'js');
-	
-		/* --- Garder si utilisé ailleurs, sinon supprimer --- */
-		// $this->bootstrap_tools->_SetHead('assets/vendor/isotope/isotope.pkgd.min.js','js');
-		// $this->bootstrap_tools->_SetHead('assets/js/counter.js','js');
-		// $this->bootstrap_tools->_SetHead('assets/js/isotope.js','js');
+    	$this->bootstrap_tools->_SetHead('assets/js/index.global.min.js', 'js');
 	
 		/* --- Code existant inchangé --- */
 		$this->data_view['WorkType'] = $this->Admwork_model->_get('defs')['type']->_get('values');
@@ -306,22 +300,6 @@ class Admwork_controller extends MY_Controller {
 
 
 	/**
-	 *
- * Ajoute :
- *   - validate_by_token($token)    : route publique (guest) — lien email
- *   - my_sessions()                : liste des sessions où je suis référent
- *   - validate_one($id_work)       : accès via session fam (alternative au lien)
- *   - _IsReferentOfWork($id_work)  : contrôle de sécurité
- *   - _ProcessRefValidation()      : traitement commun du POST
- *
- * ⚠️ Il faut AUSSI :
- *   - déclarer 'admwork_controller/validate_by_token' dans $guestPages
- *     de application/libraries/Acl.php
- *   - dans le __construct() du contrôleur, charger ValidationToken_model
- *
- * ============================================================================ */
-
-	/**
 	 * Point d'entrée GUEST : le référent arrive par un lien email.
 	 * Pas de login requis — la sécurité tient au token.
 	 *
@@ -336,7 +314,8 @@ class Admwork_controller extends MY_Controller {
 		$this->LoadModel('Admwork_model');
 		$this->LoadModel('Infos_model');
 		$this->LoadModel('Familys_model');
-
+		$this->LoadModel('Trombi_model');
+		
 		$tk = $this->ValidationToken_model->findValid($token);
 		if (!$tk) {
 			$this->data_view['error'] = $this->lang->line('REF_TOKEN_INVALID');
@@ -346,19 +325,25 @@ class Admwork_controller extends MY_Controller {
 		}
 
 		// Session validée, on reproduit la logique de validate_one mais sans ACL
-		$this->data_view['msg']     = '';
-		$this->data_view['token']   = $tk->token;
+		$this->data_view['msg']       = '';
+		$this->data_view['token']     = $tk->token;
 		$this->data_view['via_token'] = true;
 
-		// Traitement du POST
-		if ($this->input->post('elements')) {
+		// La validation n'est ouverte qu'à partir du jour de la session
+		$work = $this->_BuildWorkForRefView($tk->id_travaux);
+		$is_validation_open = (strtotime($work->date_travaux) <= strtotime('today'));
+		$this->data_view['is_validation_open'] = $is_validation_open;
+
+		// Traitement du POST — uniquement si la validation est ouverte
+		if ($is_validation_open && $this->input->post('elements')) {
 			$this->_ProcessRefValidation($tk->id_travaux, $tk->id_fam_ref);
 			$this->ValidationToken_model->markUsed($tk->id);
 			$this->data_view['msg'] = '<div class="alert alert-success">'
 				. $this->lang->line('REF_VALIDATE_SAVED') . '</div>';
+			// Recharger le work pour refléter les changements
+			$work = $this->_BuildWorkForRefView($tk->id_travaux);
 		}
 
-		$work = $this->_BuildWorkForRefView($tk->id_travaux);
 		$this->data_view['work']   = $work;
 		$this->data_view['design'] = $this->render_object->GetDesign($work->type);
 
@@ -375,8 +360,6 @@ class Admwork_controller extends MY_Controller {
 	 */
 	public function validate_one($id_work)
 	{
-		$this->LoadModel('Trombi_model');
-		
 		if (!$id_work || $this->acl->getType() !== 'fam') {
 			redirect('Home/no_right');
 		}
@@ -388,13 +371,17 @@ class Admwork_controller extends MY_Controller {
 		$this->data_view['via_token'] = false;
 		$this->data_view['token']     = null;
 
-		if ($this->input->post('elements')) {
+		$work = $this->_BuildWorkForRefView($id_work);
+		$is_validation_open = (strtotime($work->date_travaux) <= strtotime('today'));
+		$this->data_view['is_validation_open'] = $is_validation_open;
+
+		if ($is_validation_open && $this->input->post('elements')) {
 			$this->_ProcessRefValidation($id_work, $this->acl->getUserId());
 			$this->data_view['msg'] = '<div class="alert alert-success">'
 				. $this->lang->line('REF_VALIDATE_SAVED') . '</div>';
+			$work = $this->_BuildWorkForRefView($id_work);
 		}
 
-		$work = $this->_BuildWorkForRefView($id_work);
 		$this->data_view['work']   = $work;
 		$this->data_view['design'] = $this->render_object->GetDesign($work->type);
 

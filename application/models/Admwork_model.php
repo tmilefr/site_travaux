@@ -95,7 +95,7 @@ class Admwork_model extends Core_model{
 			->get()
 			->row();
 		$this->_debug_array[] = $this->db->last_query();
-
+		echo '<p>'.$this->db->last_query().'</p>';
 		return $row ?: null;
 	}
 

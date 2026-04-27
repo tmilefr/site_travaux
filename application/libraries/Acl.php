@@ -48,7 +48,8 @@ class Acl
 		'home/about',
 		'home/maintenance',
 		'home',
-		'admwork_controller/validate_by_token',  // ← accès par lien email
+		'admwork_controller/validate_by_token',
+		'cron/send_ref_validation_mails'  // ← accès par lien email
 	];
 
 	/**
