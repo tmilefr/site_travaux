@@ -39,4 +39,3 @@ application/config/production/database.php
 
 /public/files/img/team
 php_errors.log
-*.log

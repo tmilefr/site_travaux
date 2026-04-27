@@ -20,6 +20,47 @@ class CantineGeneration_model extends Core_model {
     }
 
     /**
+     * Retourne les sessions cantine à venir (et celles du mois en cours, même passées),
+     * indexées par 'Y-m-d', enrichies du nombre d'inscrits.
+     *
+     * Utilisé pour l'agenda mensuel de la vue config.
+     *
+     * @param string $ecole
+     * @param string $civil_year
+     * @param string $date_from   Date de début (Y-m-d). Par défaut : 1er du mois courant.
+     * @return array  [ 'Y-m-d' => [ {id, heure_deb, heure_fin, nb_max, nb_inscrits}, ... ] ]
+     */
+    function GetSessionsByDate($ecole, $civil_year, $date_from = null){
+        if (!$date_from){
+            $date_from = date('Y-m-01');
+        }
+
+        $rows = $this->db->select('
+                t.id,
+                t.date_travaux,
+                t.heure_deb_trav,
+                t.heure_fin_trav,
+                t.nb_inscrits_max,
+                (SELECT COUNT(*) FROM infos i WHERE i.id_travaux = t.id) AS nb_inscrits
+            ', false)
+            ->from('travaux t')
+            ->where('t.type', 'can')
+            ->where('t.accespar', $ecole)
+            ->where('t.civil_year', $civil_year)
+            ->where('t.archived !=', 1)
+            ->where('t.date_travaux >=', $date_from)
+            ->order_by('t.date_travaux','ASC')
+            ->order_by('t.heure_deb_trav','ASC')
+            ->get()->result();
+
+        $by_date = [];
+        foreach($rows AS $r){
+            $by_date[$r->date_travaux][] = $r;
+        }
+        return $by_date;
+    }
+
+    /**
      * Génère les sessions cantine entre 2 dates pour une école, selon la config.
      *
      * @param string $date_deb   format Y-m-d
