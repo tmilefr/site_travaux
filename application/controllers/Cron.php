@@ -3,7 +3,7 @@
 
 class Cron extends MY_Controller {
     
-    protected $lockFile = '';  
+    protected $lockFile = '';
     public $Sendmail_model = NULL;
     public $Sendmail_statut_model = NULL;
     public $render_object = NULL;
@@ -17,15 +17,17 @@ class Cron extends MY_Controller {
     function __construct()
     {
         parent::__construct();
+        // MY_Controller charge déjà app.php + secured.php, donc les
+        // config_item('smtp_*') et mail_from_* sont disponibles ici.
         $this->lockFile = str_replace('application','',APPPATH).'/process.loc';
     }
-   
+
 
 
     /**
      * Cron SendMail ( bypass right use ACL exception ACL::$guestPages TODO : use cron-key ? )
-     * @param int $size 
-     * @return void 
+     * @param int $size
+     * @return void
      */
     function sendmail($size = 10){
 		$this->_setLock();
@@ -36,24 +38,47 @@ class Cron extends MY_Controller {
 
         $this->load->library('email');
 
+        // Initialisation explicite avec les valeurs venues de
+        // app.php (non-sensibles) + secured.php (sensibles, non versionné).
+        // On force ici plutôt que de dépendre de l'auto-init de la lib,
+        // pour rendre l'origine de la config tracable.
+        $this->email->initialize($this->_buildEmailConfig());
+
+        // Adresse expéditeur : on la lit en config (secured.php).
+        // Fallback explicite pour ne pas envoyer avec un From vide
+        // si l'environnement n'a pas été configuré.
+        $fromEmail = $this->config->item('mail_from_email');
+        $fromName  = $this->config->item('mail_from_name');
+        if (empty($fromEmail)) {
+            log_message('error', 'Cron sendmail : mail_from_email non configuré dans secured.php, abandon.');
+            echo "Erreur : mail_from_email non configuré (voir secured.php)\n";
+            return;
+        }
+        $replyTo = $this->config->item('mail_reply_to');
+
         $listemails = $this->Sendmail_model->get4send($size);
         foreach($listemails as $key=>$listemail){
-           
+
             $this->email->clear(TRUE);
-            $this->email->from('noreply@mulhouse-travaux.abcmzwei.eu', 'Regio MLH ABCM');
+            $this->email->from($fromEmail, $fromName ?: $fromEmail);
+            if (!empty($replyTo)) {
+                $this->email->reply_to($replyTo);
+            }
             $this->email->to($listemail->email);
             $this->email->subject($listemail->object);
             $this->email->message($listemail->message);
 
             $listemail->statut = (($this->email->send()) ? 1:2);
-            $listemail->updated = date('Y-m-d h:i:s');
-            
+            // Bug fix : 'h' = format 12h (sans AM/PM), donc 14h devenait 02h.
+            // 'H' = format 24h, qui est le bon pour un timestamp en BDD.
+            $listemail->updated = date('Y-m-d H:i:s');
+
             /* MAJ send mail */
             $sendmail = [];
             foreach( $listemail AS $field=>$value){
                 $sendmail[$field] = $value;
             }
-            $this->Sendmail_model->_set('key_value', $listemail->id);	
+            $this->Sendmail_model->_set('key_value', $listemail->id);
             $this->Sendmail_model->_set('datas', $sendmail);
             $this->Sendmail_model->put();
 
@@ -62,7 +87,7 @@ class Cron extends MY_Controller {
             $statut['id_sen'] = $listemail->id;
             $statut['date'] = date('Y-m-d H:i:s');
             $statut['sendstatut'] = $listemail->statut; //nouveau
-            $statut['created'] = date('Y-m-d h:i:s');
+            $statut['created'] = date('Y-m-d H:i:s');
             $statut['error'] = $this->email->print_debugger();
             $statut['sendstatut'] = $listemail->statut;
             $this->Sendmail_statut_model->post($statut);
@@ -70,7 +95,33 @@ class Cron extends MY_Controller {
         }
 	}
 
-    function __destruct() 
+    /**
+     * Construit le tableau de config attendu par CI_Email à partir des
+     * config items chargés (app.php + secured.php).
+     *
+     * Centraliser ce mapping ici évite que les futures fonctions cron
+     * (send_ref_validation_mails, etc.) aient à le re-faire chacune.
+     *
+     * @return array
+     */
+    protected function _buildEmailConfig()
+    {
+        return [
+            'protocol'    => $this->config->item('protocol')    ?: 'smtp',
+            'smtp_host'   => $this->config->item('smtp_host'),
+            'smtp_port'   => $this->config->item('smtp_port'),
+            'smtp_user'   => $this->config->item('smtp_user'),
+            'smtp_pass'   => $this->config->item('smtp_pass'),
+            'smtp_crypto' => $this->config->item('smtp_crypto') ?: 'tls',
+            'charset'     => $this->config->item('charset')     ?: 'utf-8',
+            'mailtype'    => $this->config->item('mailtype')    ?: 'html',
+            'wordwrap'    => $this->config->item('wordwrap'),
+            'newline'     => $this->config->item('newline')     ?: "\r\n",
+            'crlf'        => $this->config->item('crlf')        ?: "\r\n",
+        ];
+    }
+
+    function __destruct()
     {
         if (file_exists($this->lockFile)) {
             unlink($this->lockFile);
@@ -81,7 +132,7 @@ class Cron extends MY_Controller {
 		if (file_exists($this->lockFile)) {
 			echo 'Un autre processus est déjà en cours d\'exécution. Veuillez réessayer plus tard.';
 			die();
-		}		
+		}
 		// Créer le fichier de verrouillage
 		if (!touch($this->lockFile)) {
 			echo 'Impossible de créer le fichier de verrouillage.';

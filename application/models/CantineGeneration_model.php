@@ -52,7 +52,6 @@ class CantineGeneration_model extends Core_model {
             ->order_by('t.date_travaux','ASC')
             ->order_by('t.heure_deb_trav','ASC')
             ->get()->result();
-
         $by_date = [];
         foreach($rows AS $r){
             $by_date[$r->date_travaux][] = $r;

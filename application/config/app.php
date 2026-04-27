@@ -13,18 +13,10 @@ $config['civil_year'] = '2025-2026';
 
 $config['role_famille'] = 2;
 
-$config['crlf'] = '';
-
-/* EMAIL */
-$config['protocol'] = 'smtp';
-$config['smtp_host'] = 'dev-asso.fr';
-$config['smtp_port'] = '587';
-$config['smtp_user'] = 'noreply@dev-asso.fr';
-$config['smtp_pass'] = '7$Y6w4e7y';
-$config['smtp_crypto'] = 'tls';
-$config['charset'] = 'utf-8';
-$config['mailtype'] = 'html';
-$config['wordwrap'] = TRUE;
-$config['newline'] = "\r\n";
-$config['crlf'] = "\r\n";
+$config['protocol']    = 'smtp';
+$config['charset']     = 'utf-8';
+$config['mailtype']    = 'html';
+$config['wordwrap']    = TRUE;
+$config['newline']     = "\r\n";
+$config['crlf']        = "\r\n";
 

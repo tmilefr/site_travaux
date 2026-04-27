@@ -1,34 +1,56 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
-/* GENERIC LIST VIEW
- * -----------------
+/* GENERIC LIST VIEW — version v2
+ * ------------------------------
  * Variables disponibles (héritées de MY_Controller::list()) :
- *   - $datas              : lignes à afficher
- *   - $_model_name        : nom du modèle courant
- *   - $total_rows         : nombre total de résultats (avant pagination)
- *   - $per_page           : nombre courant de lignes par page
- *   - $per_page_options   : tableau des choix possibles (15, 30, 50, 100)
- *   - $cur_page           : numéro de page courante
- *   - $active_filters     : tableau associatif champ => valeur des filtres posés
- *   - $global_search      : chaîne de recherche globale courante
- *   - $footer_line        : ligne de footer (compatibilité existante)
+ *
+ *   Vague 1
+ *   - $datas, $_model_name, $footer_line
+ *   - $total_rows, $per_page, $per_page_options, $cur_page
+ *   - $active_filters, $global_search
+ *
+ *   Vague 2
+ *   - $order_stack, $direction_stack    : pile de tris courante
+ *   - $hidden_columns                   : colonnes masquées (session)
+ *   - $hideable_columns                 : whitelist (vide = toutes masquables)
+ *   - $bulk_actions                     : actions disponibles en lot
  */
 
 $controller_name = $this->render_object->_getCi('_controller_name');
 $action          = $this->render_object->_getCi('_action');
 $base            = base_url($controller_name . '/' . $action);
+$base_ctrl       = base_url($controller_name);
 
-// Y a-t-il quelque chose qui réduit la liste ?
 $has_filters = (is_array($active_filters) && count($active_filters) > 0)
             || (isset($global_search) && $global_search !== '');
 
-// Calcul page x sur n
+$has_sort = is_array($order_stack) && count($order_stack) > 0;
+
 $nb_pages = ($per_page > 0) ? (int) ceil($total_rows / $per_page) : 1;
 if ($nb_pages < 1) { $nb_pages = 1; }
+
+// Détermine si une colonne est masquable
+$is_hideable = function($field) use ($hideable_columns) {
+    return empty($hideable_columns) || in_array($field, $hideable_columns, true);
+};
+
+// Récupère les définitions de champs une seule fois
+$defs = $this->{$_model_name}->_get('defs');
+
+// Liste des champs visibles dans le tableau (list:true et non masqué)
+$visible_fields = array();
+foreach ($defs as $field => $def) {
+    if ($def->list === true && !in_array($field, $hidden_columns, true)) {
+        $visible_fields[] = $field;
+    }
+}
+
+// Bulk actions activées ?
+$has_bulk = is_array($bulk_actions) && count($bulk_actions) > 0;
 ?>
+
 <!--start section-->
-<section class="nicdark_section ">
-    <!--start nicdark_container-->
+<section class="nicdark_section list-view-v2">
     <div class="nicdark_container nicdark_clearfix">
     <div class="nicdark_space30"></div>
 
@@ -52,11 +74,95 @@ if ($nb_pages < 1) { $nb_pages = 1; }
     </div>
 
     <?php /* ---------------------------------------------------------------
-         BANDEAU FILTRES ACTIFS
-         Affiché uniquement si au moins un filtre ou une recherche globale
-         est en cours. Chaque badge contient une croix qui supprime ce
-         filtre précis ; un bouton "Tout réinitialiser" appelle l'action
-         clear_filters du contrôleur.
+         FLASH MESSAGES (bulk actions)
+       ---------------------------------------------------------------- */ ?>
+    <?php if ($flash = $this->session->flashdata('bulk_success')) { ?>
+        <div class="grid grid_12">
+            <div class="alert alert-success"><?php echo htmlspecialchars($flash, ENT_QUOTES, 'UTF-8'); ?></div>
+        </div>
+    <?php } ?>
+    <?php if ($flash = $this->session->flashdata('bulk_error')) { ?>
+        <div class="grid grid_12">
+            <div class="alert alert-danger"><?php echo htmlspecialchars($flash, ENT_QUOTES, 'UTF-8'); ?></div>
+        </div>
+    <?php } ?>
+
+    <?php /* ---------------------------------------------------------------
+         BARRE D'OUTILS : tri actif, colonnes, export
+       ---------------------------------------------------------------- */ ?>
+    <div class="grid grid_12 list-toolbar">
+        <div class="d-flex flex-wrap" style="gap:0.5em; margin-bottom:0.7em; align-items:center;">
+
+            <?php /* Indicateur de tri courant + bouton reset */ ?>
+            <?php if ($has_sort) { ?>
+                <span class="navbar-text">
+                    <strong><?php echo $this->lang->line('LIST_SORTED_BY'); ?> :</strong>
+                    <?php
+                    foreach ($order_stack as $i => $f) {
+                        $arrow = (isset($direction_stack[$i]) && $direction_stack[$i] === 'desc') ? '↓' : '↑';
+                        $label = $this->lang->line($f) ?: $f;
+                        echo '<span class="badge badge-info" style="margin-left:0.3em;">'
+                            . ($i + 1) . '. ' . htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . ' ' . $arrow
+                            . '</span>';
+                    }
+                    ?>
+                </span>
+                <a href="<?php echo $base; ?>/order_clear/1"
+                   class="btn btn-light btn-sm" title="<?php echo $this->lang->line('LIST_RESET_SORT'); ?>">
+                    <span class="oi oi-circle-x"></span>
+                </a>
+            <?php } ?>
+
+            <?php /* Dropdown colonnes (uniquement s'il y a des colonnes masquables) */ ?>
+            <?php
+            $any_hideable = false;
+            foreach ($defs as $field => $def) {
+                if ($def->list === true && $is_hideable($field)) { $any_hideable = true; break; }
+            }
+            ?>
+            <?php if ($any_hideable) { ?>
+                <div class="dropdown" style="margin-left:auto;">
+                    <button class="btn btn-light btn-sm dropdown-toggle"
+                            type="button" data-toggle="dropdown" aria-expanded="false">
+                        <span class="oi oi-cog"></span> <?php echo $this->lang->line('LIST_COLUMNS'); ?>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-right" style="padding:0.5em 1em;">
+                        <?php foreach ($defs as $field => $def) { ?>
+                            <?php if ($def->list === true && $is_hideable($field)) { ?>
+                                <?php
+                                $is_visible = !in_array($field, $hidden_columns, true);
+                                $label = $this->lang->line($field) ?: $field;
+                                ?>
+                                <div class="form-check">
+                                    <input class="form-check-input"
+                                           type="checkbox"
+                                           id="col_<?php echo htmlspecialchars($field, ENT_QUOTES, 'UTF-8'); ?>"
+                                           <?php echo $is_visible ? 'checked' : ''; ?>
+                                           onchange="window.location.href='<?php echo $base; ?>/column_toggle/<?php echo urlencode($field); ?>';">
+                                    <label class="form-check-label"
+                                           for="col_<?php echo htmlspecialchars($field, ENT_QUOTES, 'UTF-8'); ?>">
+                                        <?php echo htmlspecialchars($label, ENT_QUOTES, 'UTF-8'); ?>
+                                    </label>
+                                </div>
+                            <?php } ?>
+                        <?php } ?>
+                    </div>
+                </div>
+            <?php } ?>
+
+            <?php /* Bouton export CSV */ ?>
+            <?php if ($total_rows > 0) { ?>
+                <a href="<?php echo $base_ctrl; ?>/export_csv"
+                   class="btn btn-success btn-sm">
+                    <span class="oi oi-data-transfer-download"></span>
+                    <?php echo $this->lang->line('LIST_EXPORT_CSV'); ?>
+                </a>
+            <?php } ?>
+        </div>
+    </div>
+
+    <?php /* ---------------------------------------------------------------
+         BANDEAU FILTRES ACTIFS (vague 1)
        ---------------------------------------------------------------- */ ?>
     <?php if ($has_filters) { ?>
         <div class="grid grid_12">
@@ -68,8 +174,7 @@ if ($nb_pages < 1) { $nb_pages = 1; }
                         <?php echo $this->lang->line('LIST_SEARCH'); ?> :
                         &laquo;&nbsp;<?php echo htmlspecialchars($global_search, ENT_QUOTES, 'UTF-8'); ?>&nbsp;&raquo;
                         <a href="<?php echo $base; ?>/search/reset"
-                           class="text-white" style="margin-left:0.4em;"
-                           title="<?php echo $this->lang->line('LIST_REMOVE_FILTER'); ?>">
+                           class="text-white" style="margin-left:0.4em;">
                             <span class="oi oi-circle-x"></span>
                         </a>
                     </span>
@@ -77,13 +182,8 @@ if ($nb_pages < 1) { $nb_pages = 1; }
 
                 <?php
                 if (is_array($active_filters)) {
-                    $defs = $this->{$_model_name}->_get('defs');
                     foreach ($active_filters as $field => $value) {
-                        // Libellé champ
-                        $field_label = $this->lang->line($field);
-                        if (!$field_label) { $field_label = $field; }
-
-                        // Libellé valeur (via les "values" du champ si dispo)
+                        $field_label = $this->lang->line($field) ?: $field;
                         $value_label = $value;
                         if (isset($defs[$field])) {
                             $values = $defs[$field]->_get('values');
@@ -96,8 +196,7 @@ if ($nb_pages < 1) { $nb_pages = 1; }
                             <?php echo htmlspecialchars($field_label, ENT_QUOTES, 'UTF-8'); ?> :
                             <?php echo htmlspecialchars($value_label, ENT_QUOTES, 'UTF-8'); ?>
                             <a href="<?php echo $base; ?>/filter/<?php echo urlencode($field); ?>/filter_value/all"
-                               class="text-white" style="margin-left:0.4em;"
-                               title="<?php echo $this->lang->line('LIST_REMOVE_FILTER'); ?>">
+                               class="text-white" style="margin-left:0.4em;">
                                 <span class="oi oi-circle-x"></span>
                             </a>
                         </span>
@@ -106,7 +205,7 @@ if ($nb_pages < 1) { $nb_pages = 1; }
                 }
                 ?>
 
-                <a href="<?php echo base_url($controller_name . '/clear_filters'); ?>"
+                <a href="<?php echo $base_ctrl; ?>/clear_filters"
                    class="btn btn-warning btn-sm" style="margin-left:auto;">
                     <span class="oi oi-trash"></span>
                     <?php echo $this->lang->line('LIST_RESET_ALL'); ?>
@@ -117,6 +216,8 @@ if ($nb_pages < 1) { $nb_pages = 1; }
 
     <?php /* ---------------------------------------------------------------
          TABLEAU OU ÉTAT VIDE
+         La div .list-table-responsive bascule en mode "carte" sous 768px
+         via CSS pure (voir list_view_responsive.css).
        ---------------------------------------------------------------- */ ?>
     <?php if (empty($datas)) { ?>
 
@@ -129,8 +230,7 @@ if ($nb_pages < 1) { $nb_pages = 1; }
                     ); ?>
                 </p>
                 <?php if ($has_filters) { ?>
-                    <a href="<?php echo base_url($controller_name . '/clear_filters'); ?>"
-                       class="btn btn-warning">
+                    <a href="<?php echo $base_ctrl; ?>/clear_filters" class="btn btn-warning">
                         <span class="oi oi-trash"></span>
                         <?php echo $this->lang->line('LIST_RESET_ALL'); ?>
                     </a>
@@ -140,37 +240,91 @@ if ($nb_pages < 1) { $nb_pages = 1; }
 
     <?php } else { ?>
 
-        <table class="table table-striped table-sm">
+        <?php if ($has_bulk) { ?>
+        <form method="post" action="<?php echo $base_ctrl; ?>/bulk" id="bulkForm"
+              onsubmit="return listBulkSubmit(this);">
+        <?php } ?>
+
+        <div class="list-table-responsive grid grid_12">
+        <table class="table table-striped table-sm list-table-v2">
         <thead>
             <tr>
+                <?php if ($has_bulk) { ?>
+                    <th scope="col" class="bulk-col">
+                        <input type="checkbox" id="bulkSelectAll" aria-label="Tout sélectionner">
+                    </th>
+                <?php } ?>
                 <th scope="col">&nbsp;</th>
-                <?php
-                foreach($this->{$_model_name}->_get('defs') AS $field=>$defs){
-                    if ($defs->list === true){
-                        echo '<th scope="col">'.$this->render_object->render_link($field).'</th>';
-                    }
-                }
-                ?>
+                <?php foreach ($visible_fields as $field) { ?>
+                    <th scope="col"><?php echo $this->render_object->render_link($field); ?></th>
+                <?php } ?>
             </tr>
         </thead>
         <tbody>
         <?php
-        foreach($datas AS $key => $data){
+        $key = $this->{$_model_name}->_get('key');
+        foreach ($datas as $data) {
+            $row_id = isset($data->{$key}) ? $data->{$key} : '';
             echo '<tr>';
-            echo '<td>';
-                echo $this->render_object->render_element_menu($data, ((isset($data->blocked)) ?$data->blocked:null));
+
+            if ($has_bulk) {
+                echo '<td class="bulk-col" data-label="">';
+                echo '<input type="checkbox" class="bulk-row-check" name="bulk_ids[]" value="'
+                    . htmlspecialchars($row_id, ENT_QUOTES, 'UTF-8') . '">';
+                echo '</td>';
+            }
+
+            echo '<td data-label="" class="actions-col">';
+            echo $this->render_object->render_element_menu($data, ((isset($data->blocked)) ? $data->blocked : null));
             echo '</td>';
 
-            foreach($this->{$_model_name}->_get('defs') AS $field=>$defs){
-                if ($defs->list === true){
-                    echo '<td>'.$this->render_object->RenderElement($field, $data->{$field}, $data->{$this->{$_model_name}->_get('key')}).'</td>';
-                }
+            foreach ($visible_fields as $field) {
+                $label = $this->lang->line($field) ?: $field;
+                echo '<td data-label="' . htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . '">';
+                echo $this->render_object->RenderElement($field, $data->{$field}, $row_id);
+                echo '</td>';
             }
             echo '</tr>';
         }
         ?>
         </tbody>
         </table>
+        </div>
+
+        <?php /* Barre d'actions groupées (en bas, juste avant le footer) */ ?>
+        <?php if ($has_bulk) { ?>
+            <div class="grid grid_12 bulk-bar" id="bulkBar" style="display:none;">
+                <div class="alert alert-light" style="display:flex; align-items:center; gap:0.7em; flex-wrap:wrap;">
+                    <strong>
+                        <span id="bulkCount">0</span>
+                        <?php echo $this->lang->line('BULK_SELECTED'); ?>
+                    </strong>
+
+                    <?php foreach ($bulk_actions as $action_key => $opts) { ?>
+                        <?php
+                        $btn_class = isset($opts['class']) ? $opts['class'] : 'btn-secondary';
+                        $confirm   = !empty($opts['confirm']);
+                        $label     = $this->lang->line($opts['label_key']) ?: $action_key;
+                        ?>
+                        <button type="submit"
+                                name="bulk_action"
+                                value="<?php echo htmlspecialchars($action_key, ENT_QUOTES, 'UTF-8'); ?>"
+                                class="btn btn-sm <?php echo $btn_class; ?>"
+                                <?php if ($confirm) { ?>
+                                    onclick="return confirm('<?php
+                                        echo addslashes(
+                                            $this->lang->line('BULK_CONFIRM_PREFIX') . ' ' .
+                                            strtolower($label) . ' ?'
+                                        );
+                                    ?>');"
+                                <?php } ?>>
+                            <?php echo htmlspecialchars($label, ENT_QUOTES, 'UTF-8'); ?>
+                        </button>
+                    <?php } ?>
+                </div>
+            </div>
+            </form>
+        <?php } ?>
 
     <?php } ?>
 
@@ -179,16 +333,15 @@ if ($nb_pages < 1) { $nb_pages = 1; }
        ---------------------------------------------------------------- */ ?>
     <footer class="footer mt-auto py-3">
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
-            <ul class="navbar-nav mr-auto" style="align-items:center;">
+            <ul class="navbar-nav mr-auto" style="align-items:center; flex-wrap:wrap;">
                 <li class="nav-item">
-                    <?php echo ((isset($this->pagination)) ? $this->pagination->create_links():''); ?>
+                    <?php echo ((isset($this->pagination)) ? $this->pagination->create_links() : ''); ?>
                 </li>
 
                 <?php if ($total_rows > 0) { ?>
                     <li class="nav-item" style="margin-left:1em;">
                         <span class="navbar-text">
                             <?php
-                            // « 32 résultats — page 2 sur 4 »
                             printf(
                                 '%d %s',
                                 $total_rows,
@@ -196,11 +349,7 @@ if ($nb_pages < 1) { $nb_pages = 1; }
                             );
                             if ($nb_pages > 1) {
                                 echo ' &mdash; ';
-                                printf(
-                                    $this->lang->line('LIST_PAGE_X_OF_Y'),
-                                    $cur_page,
-                                    $nb_pages
-                                );
+                                printf($this->lang->line('LIST_PAGE_X_OF_Y'), $cur_page, $nb_pages);
                             }
                             ?>
                         </span>
@@ -208,31 +357,69 @@ if ($nb_pages < 1) { $nb_pages = 1; }
                 <?php } ?>
 
                 <li class="nav-item" style="margin-left:1em;">
-                    <form method="get" action="" class="form-inline" id="perPageForm">
-                        <label for="per_page_select" class="navbar-text" style="margin-right:0.5em;">
-                            <?php echo $this->lang->line('LIST_PER_PAGE'); ?>
-                        </label>
-                        <select id="per_page_select"
-                                class="form-control form-control-sm"
-                                onchange="window.location.href='<?php echo $base; ?>/per_page/' + this.value;">
-                            <?php foreach ($per_page_options as $opt) { ?>
-                                <option value="<?php echo (int) $opt; ?>"
-                                    <?php echo ((int) $opt === (int) $per_page) ? 'selected' : ''; ?>>
-                                    <?php echo (int) $opt; ?>
-                                </option>
-                            <?php } ?>
-                        </select>
-                    </form>
+                    <label for="per_page_select" class="navbar-text" style="margin-right:0.5em;">
+                        <?php echo $this->lang->line('LIST_PER_PAGE'); ?>
+                    </label>
+                    <select id="per_page_select"
+                            class="form-control form-control-sm"
+                            onchange="window.location.href='<?php echo $base; ?>/per_page/' + this.value;">
+                        <?php foreach ($per_page_options as $opt) { ?>
+                            <option value="<?php echo (int) $opt; ?>"
+                                <?php echo ((int) $opt === (int) $per_page) ? 'selected' : ''; ?>>
+                                <?php echo (int) $opt; ?>
+                            </option>
+                        <?php } ?>
+                    </select>
                 </li>
 
                 <li class="nav-item">
                     <?php echo $footer_line; ?>
                 </li>
             </ul>
-            <span class="navbar-text"></span>
         </nav>
     </footer>
 
-    <?php //echo $this->_render_debug(); ?>
     </div>
 </section>
+
+<?php /* ---------------------------------------------------------------
+     JS minimal pour les bulk actions (sélection + barre flottante)
+   ---------------------------------------------------------------- */ ?>
+<?php if ($has_bulk && !empty($datas)) { ?>
+<script>
+(function(){
+    var selectAll = document.getElementById('bulkSelectAll');
+    var rowChecks = document.querySelectorAll('.bulk-row-check');
+    var bulkBar   = document.getElementById('bulkBar');
+    var counter   = document.getElementById('bulkCount');
+
+    function refresh(){
+        var n = 0;
+        rowChecks.forEach(function(c){ if (c.checked) n++; });
+        counter.textContent = n;
+        bulkBar.style.display = n > 0 ? '' : 'none';
+        if (selectAll) {
+            selectAll.checked = (n === rowChecks.length && n > 0);
+            selectAll.indeterminate = (n > 0 && n < rowChecks.length);
+        }
+    }
+    if (selectAll) {
+        selectAll.addEventListener('change', function(){
+            rowChecks.forEach(function(c){ c.checked = selectAll.checked; });
+            refresh();
+        });
+    }
+    rowChecks.forEach(function(c){ c.addEventListener('change', refresh); });
+    refresh();
+})();
+
+function listBulkSubmit(form){
+    var n = form.querySelectorAll('.bulk-row-check:checked').length;
+    if (n === 0) {
+        alert('<?php echo addslashes($this->lang->line('BULK_NOTHING_SELECTED')); ?>');
+        return false;
+    }
+    return true;
+}
+</script>
+<?php } ?>
