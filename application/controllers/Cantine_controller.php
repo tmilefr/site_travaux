@@ -66,12 +66,14 @@ class Cantine_controller extends MY_Controller {
     // ---------------------------------------------------------------
     public function register($week_offset = 0){
         $week_offset = (int)$week_offset;
+        
+        $ecole = $this->input->get('ecole');
 
-        $ecole = 'B';
-        if ($this->acl->getType() == 'fam'){
+        if ($this->acl->getType() == 'fam' && !$ecole ){
             $family = $this->Familys_model->GetFamily($this->acl->getUserId());
             if ($family && !empty($family->ecole)) $ecole = $family->ecole;
         }
+        if (!in_array($ecole, ['M','L'])) $ecole = 'M';
 
         $civil_year = $this->config->item('civil_year');
         $id_fam = $this->acl->getUserId();
@@ -206,7 +208,6 @@ class Cantine_controller extends MY_Controller {
             'nb_participants'            => 1,
             'type_participant'           => 'Mr',
             'type_session'               => 1,
-            'civil_year'                 => $this->config->item('civil_year'),
             'created'                    => date('Y-m-d H:i:s'),
             'updated'                    => date('Y-m-d H:i:s'),
         ]);
@@ -239,10 +240,6 @@ class Cantine_controller extends MY_Controller {
     // VUE ADMIN : paramétrage des jours + génération
     // ---------------------------------------------------------------
     public function config(){
-        if ($this->acl->getType() != 'sys'){
-            redirect($this->_controller_name.'/register');
-        }
-
         $ecole = $this->input->get('ecole');
         if (!in_array($ecole, ['B','M','L'])) $ecole = 'M';
         $civil_year = $this->config->item('civil_year');
@@ -279,9 +276,6 @@ class Cantine_controller extends MY_Controller {
     }
 
     public function save_config(){
-        if ($this->acl->getType() != 'sys'){
-            redirect($this->_controller_name.'/register');
-        }
         $ecole = $this->input->post('ecole');
         if (!in_array($ecole, ['B','M','L'])) $ecole = 'B';
         $civil_year = $this->config->item('civil_year');
@@ -309,10 +303,6 @@ class Cantine_controller extends MY_Controller {
      *   - custom     : dates saisies par l'admin
      */
     public function generate(){
-        if ($this->acl->getType() != 'sys'){
-            redirect($this->_controller_name.'/register');
-        }
-
         $ecole = $this->input->post('ecole');
         if (!in_array($ecole, ['B','M','L'])) $ecole = 'B';
         $civil_year = $this->config->item('civil_year');

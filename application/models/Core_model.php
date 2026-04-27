@@ -320,33 +320,28 @@ class Core_model extends CI_Model {
 		} 
 	}
 	
-	/**
-	 * @brief 
-	 * @returns 
-	 * 
-	 * 
-	 */
-	function _set_group_by(){
-		if (is_array($this->group_by) AND count($this->group_by)){
-			foreach($this->group_by AS $key => $value){
-				$this->db->group_by($value);
-			}
-		} 	
-	}
-
-	/**
-	 * @brief 
-	 * @returns 
-	 * 
-	 * 
-	 */
 	function _set_order_by(){
 		if (is_array($this->order) AND count($this->order)){
-			foreach($this->order AS $key => $value){
-				$this->db->order_by($key, $value);
+			// Deux conventions acceptées :
+			// 1. tableau associatif [field => direction] (legacy)
+			// 2. tableau indexé aligné avec $this->direction (nouveau)
+			//    ex: order = ['name','created'], direction = ['asc','desc']
+			$is_indexed = array_keys($this->order) === range(0, count($this->order) - 1);
+
+			if ($is_indexed) {
+				$dirs = is_array($this->direction) ? $this->direction : array();
+				foreach ($this->order AS $i => $field) {
+					$dir = isset($dirs[$i]) ? $dirs[$i] : 'asc';
+					$this->db->order_by($field, $dir);
+				}
+			} else {
+				foreach ($this->order AS $key => $value) {
+					$this->db->order_by($key, $value);
+				}
 			}
-		} 	
-	}	
+		}
+	}
+
 
 	function _setField($field){
 		$def = $this->_get('defs')[$field];
@@ -427,18 +422,71 @@ class Core_model extends CI_Model {
 	 */
 	public function get(){
 		$this->_set_filter();
-		$this->_set_search();		  		
+		$this->_set_search();
 		if ($this->per_page  ){
 			if (!$this->page)
 				$this->page = 1 ;
 			$this->db->limit(intval($this->per_page), ($this->page - 1 ) * $this->per_page);
 		}
-        $datas = $this->db->select( $this->_set_list_fields()  )
-                           ->order_by($this->order, $this->direction )
-                           ->get($this->table);
+
+		$this->db->select( $this->_set_list_fields()  );
+
+		// Gestion d'une pile de tris : si $order est un tableau, on appelle
+		// order_by une fois par champ ; sinon comportement historique.
+		if (is_array($this->order) && count($this->order) > 0) {
+			$dirs = is_array($this->direction) ? $this->direction : array();
+			foreach ($this->order as $i => $field) {
+				$dir = isset($dirs[$i]) ? $dirs[$i] : 'asc';
+				$this->db->order_by($field, $dir);
+			}
+		} else {
+			$this->db->order_by($this->order, $this->direction);
+		}
+
+		$datas = $this->db->get($this->table);
 		$this->_debug_array[] = $this->db->last_query();
 		return $datas->result();
-    }
+	}
+
+	/**
+	 * @brief Variante de get() qui retourne TOUS les résultats filtrés/triés
+	 *        (pas de LIMIT). Utilisée pour l'export CSV.
+	 * @returns array
+	 */
+	public function get_all_filtered(){
+		$this->_set_filter();
+		$this->_set_search();
+		$this->db->select( $this->_set_list_fields() );
+		if (is_array($this->order) && count($this->order) > 0) {
+			$dirs = is_array($this->direction) ? $this->direction : array();
+			foreach ($this->order as $i => $field) {
+				$dir = isset($dirs[$i]) ? $dirs[$i] : 'asc';
+				$this->db->order_by($field, $dir);
+			}
+		} else {
+			$this->db->order_by($this->order, $this->direction);
+		}
+		$datas = $this->db->get($this->table);
+		$this->_debug_array[] = $this->db->last_query();
+		return $datas->result();
+	}
+
+	/**
+	 * @brief Supprime plusieurs lignes en une fois.
+	 * @param array $ids Liste d'identifiants de la clé primaire.
+	 * @returns int Nombre de lignes supprimées.
+	 */
+	public function delete_bulk(array $ids){
+		$ids = array_filter(array_map('intval', $ids));
+		if (empty($ids)) {
+			return 0;
+		}
+		$this->db->where_in($this->key, $ids)
+		         ->delete($this->table);
+		$this->_debug_array[] = $this->db->last_query();
+		return $this->db->affected_rows();
+	}
+
 
 	/**
 	 * @brief 
