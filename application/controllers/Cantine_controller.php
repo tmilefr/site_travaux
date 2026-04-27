@@ -5,13 +5,16 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  * Cantine_controller
  *
  * Gestion des inscriptions des parents à la garde du midi.
- *  - register : vue agenda semaine pour les familles (et consultation admin)
- *  - config   : paramétrage des jours nécessaires et du nombre de parents par jour (admin)
+ *  - register         : liste des sessions cantine à venir, pour s'inscrire (vue parent)
+ *  - register_one     : inscription à une session
+ *  - unregister_one   : désinscription
+ *  - config           : paramétrage des jours + formulaire de génération (admin)
+ *  - save_config      : sauvegarde config
+ *  - generate         : génère les sessions sur une période donnée
  *
- * Chaque inscription crée :
- *   - un pseudo-travail de type 'can' (Cantine) à cette date s'il n'existe pas,
- *   - une ligne dans `infos` avec nb_unites_valides > 0 et nb_unites_valides_effectif = 0,
- *   - puis le référent configuré valide l'unité via l'écran existant Units_controller/valid.
+ * Chaque session cantine = une ligne dans `travaux` de type 'can'. Une inscription
+ * = une ligne dans `infos` (comme pour les travaux classiques). Le référent valide
+ * via l'écran existant `Units_controller/valid`.
  *
  * @package     WebApp
  * @author      NL
@@ -19,24 +22,26 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 class Cantine_controller extends MY_Controller {
 
     public $CantineConfig_model = null;
-    public $CantineInscriptions_model = null;
+    public $CantineGeneration_model = null;
     public $Familys_model = null;
     public $Admwork_model = null;
     public $Infos_model   = null;
-    public $Trombi_model  = null;
 
     public function __construct(){
         parent::__construct();
+
+
         $this->_controller_name = 'Cantine_controller';
-        $this->_model_name      = 'CantineInscriptions_model';
+        $this->_model_name      = 'CantineConfig_model';
         $this->_edit_view       = 'edition/Cantine_form';
         $this->_list_view       = 'unique/Cantine_view.php';
         $this->_autorize        = [
             'register'       => true,
-            'register_day'   => true,
-            'unregister_day' => true,
+            'register_one'   => true,
+            'unregister_one' => true,
             'config'         => true,
             'save_config'    => true,
+            'generate'       => true,
         ];
         $this->_bg_color = 'nicdark_bg_green';
         $this->title = $this->lang->line('GESTION_'.$this->_controller_name);
@@ -44,11 +49,12 @@ class Cantine_controller extends MY_Controller {
         $this->init();
 
         $this->LoadModel('CantineConfig_model');
-        $this->LoadModel('CantineInscriptions_model');
+        $this->LoadModel('CantineGeneration_model');
         $this->LoadModel('Familys_model');
         $this->LoadModel('Admwork_model');
         $this->LoadModel('Infos_model');
-        $this->LoadModel('Trombi_model');
+
+        $this->lang->load('cantine');
     }
 
     public function index(){
@@ -56,7 +62,7 @@ class Cantine_controller extends MY_Controller {
     }
 
     // ---------------------------------------------------------------
-    // VUE PARENT : agenda hebdomadaire d'inscription
+    // VUE PARENT : agenda hebdomadaire des sessions cantine
     // ---------------------------------------------------------------
     public function register($week_offset = 0){
         $week_offset = (int)$week_offset;
@@ -67,50 +73,85 @@ class Cantine_controller extends MY_Controller {
             if ($family && !empty($family->ecole)) $ecole = $family->ecole;
         }
 
-        $monday = $this->_getMonday($week_offset);
-        $friday = clone $monday;
-        $friday->modify('+4 days');
-
         $civil_year = $this->config->item('civil_year');
-        $config   = $this->CantineConfig_model->GetConfig($ecole, $civil_year);
-        $inscrits = $this->CantineInscriptions_model->GetByRange(
-            $monday->format('Y-m-d'),
-            $friday->format('Y-m-d'),
-            $ecole
-        );
-
-        $days = [];
         $id_fam = $this->acl->getUserId();
+
+        // Lundi → vendredi de la semaine demandée
+        $monday = $this->_getMonday($week_offset);
+        $friday = clone $monday; $friday->modify('+4 days');
+
+        // Récupère toutes les sessions cantine de la semaine pour l'école du parent
+        $schools = ($this->acl->getType() == 'fam') ? ['B', $ecole] : ['B','M','L'];
+        $sessions = $this->db->select('*')
+            ->from('travaux')
+            ->where('type', 'can')
+            ->where('statut', 1)
+            ->where('archived !=', 1)
+            ->where('date_travaux >=', $monday->format('Y-m-d'))
+            ->where('date_travaux <=', $friday->format('Y-m-d'))
+            ->where('civil_year', $civil_year)
+            ->where_in('accespar', $schools)
+            ->order_by('date_travaux','ASC')
+            ->get()->result();
+
+        // Indexation par date Y-m-d (max 1 session par date par école côté règles,
+        // mais on supporte plusieurs au cas où écoles B+M+L cohabitent)
+        $by_date = [];
+        foreach($sessions AS $s){ $by_date[$s->date_travaux][] = $s; }
+
+        // Inscrits par session (id_travaux)
+        $session_ids = array_map(function($s){ return (int)$s->id; }, $sessions);
+        $inscrits_by_work = [];
+        if (!empty($session_ids)){
+            $rows = $this->db->select('i.id, i.id_travaux, i.id_famille, i.nb_unites_valides_effectif, f.nom, f.login')
+                ->from('infos i')
+                ->join('famille f', 'f.id = i.id_famille', 'left')
+                ->where_in('i.id_travaux', $session_ids)
+                ->order_by('i.created','ASC')
+                ->get()->result();
+            foreach($rows AS $r){ $inscrits_by_work[(int)$r->id_travaux][] = $r; }
+        }
+
+        // Construction des 5 jours de la semaine
+        $days = [];
         for($i = 0; $i < 5; $i++){
             $date = clone $monday; $date->modify("+{$i} days");
-            $id_day = $i + 1;
             $key = $date->format('Y-m-d');
-            $cfg = $config[$id_day];
+            $id_day = $i + 1;
 
             $day = new stdClass();
-            $day->date        = $key;
-            $day->date_fr     = $this->_frDate($date);
-            $day->day_label   = $this->lang->line('cantine_day_'.$id_day);
-            $day->day_num     = $date->format('j');
-            $day->month_fr    = $this->_frMonth($date);
-            $day->active      = ((int)$cfg->active === 1);
-            $day->nb_slots    = (int)$cfg->nb_slots;
-            $day->nb_units    = (float)$cfg->nb_units;
-            $day->inscrits    = isset($inscrits[$key]) ? $inscrits[$key] : [];
-            $day->nb_inscrits = count($day->inscrits);
-            $day->full        = ($day->nb_inscrits >= $day->nb_slots);
-            $day->passed      = (strtotime($key) < strtotime(date('Y-m-d')));
-            $day->mine        = false;
-            foreach($day->inscrits AS $ins){
-                if ((int)$ins->id_famille === (int)$id_fam){ $day->mine = true; break; }
+            $day->date      = $key;
+            $day->day_label = $this->lang->line('cantine_day_'.$id_day);
+            $day->day_num   = $date->format('j');
+            $day->month_fr  = $this->_frMonth($date);
+            $day->passed    = (strtotime($key) < strtotime(date('Y-m-d')));
+            $day->session   = isset($by_date[$key]) ? $by_date[$key][0] : null;
+
+            if ($day->session){
+                $sid = (int)$day->session->id;
+                $day->inscrits    = isset($inscrits_by_work[$sid]) ? $inscrits_by_work[$sid] : [];
+                $day->nb_inscrits = count($day->inscrits);
+                $day->nb_slots    = (int)$day->session->nb_inscrits_max;
+                $day->nb_units    = (float)$day->session->nb_units;
+                $day->full        = ($day->nb_inscrits >= $day->nb_slots);
+                $day->mine        = false;
+                $day->my_validated= false;
+                foreach($day->inscrits AS $ins){
+                    if ((int)$ins->id_famille === (int)$id_fam){
+                        $day->mine = true;
+                        if ((float)$ins->nb_unites_valides_effectif > 0) $day->my_validated = true;
+                        break;
+                    }
+                }
             }
             $days[] = $day;
         }
 
+        // Stats
         $stats = new stdClass();
         $stats->active_days = 0; $stats->mine = 0; $stats->open = 0;
         foreach($days AS $d){
-            if ($d->active){
+            if ($d->session){
                 $stats->active_days++;
                 $stats->open += max(0, $d->nb_slots - $d->nb_inscrits);
                 if ($d->mine) $stats->mine++;
@@ -124,114 +165,78 @@ class Cantine_controller extends MY_Controller {
         $this->data_view['is_admin']     = ($this->acl->getType() == 'sys');
         $this->data_view['id_fam']       = $id_fam;
         $this->data_view['ecole']        = $ecole;
+        $this->data_view['can_register'] = ($this->acl->getType() == 'fam');
 
         $this->_set('view_inprogress','unique/Cantine_controller_register');
         $this->render_view();
     }
 
     /**
-     * Inscription du parent connecté à une date donnée (YYYY-MM-DD).
-     * Crée la ligne dans infos pour générer une unité à valider.
+     * Inscription à une session cantine donnée (id du travail).
      */
-    public function register_day($date = null){
-        $date = $this->_sanitize_date($date);
-        if (!$date){ redirect($this->_controller_name.'/register'); }
-
-        if ($this->acl->getType() != 'fam'){
+    public function register_one($id_work = null){
+        $id_work = (int)$id_work;
+        if (!$id_work || $this->acl->getType() != 'fam'){
             redirect($this->_controller_name.'/register');
         }
 
         $id_fam = $this->acl->getUserId();
-        $family = $this->Familys_model->GetFamily($id_fam);
-        $ecole = ($family && !empty($family->ecole)) ? $family->ecole : 'B';
-        $civil_year = $this->config->item('civil_year');
 
-        $id_day = (int)date('N', strtotime($date));
-        if ($id_day < 1 || $id_day > 5){ redirect($this->_controller_name.'/register'); }
-        if (strtotime($date) < strtotime(date('Y-m-d'))){ redirect($this->_controller_name.'/register'); }
-
-        $config = $this->CantineConfig_model->GetConfig($ecole, $civil_year);
-        if (empty($config[$id_day]) || !$config[$id_day]->active){
-            redirect($this->_controller_name.'/register');
+        $work = $this->db->from('travaux')->where('id', $id_work)->where('type','can')->get()->row();
+        if (!$work){ redirect($this->_controller_name.'/register'); }
+        if (strtotime($work->date_travaux) < strtotime(date('Y-m-d'))){
+            redirect($this->_controller_name.'/register/'.$this->_weekOffsetFor($work->date_travaux));
         }
-        $nb = $this->CantineInscriptions_model->CountForDate($date, $ecole);
-        if ($nb >= $config[$id_day]->nb_slots){
-            redirect($this->_controller_name.'/register');
+        if ($this->Infos_model->IsRegister($id_fam, $id_work)){
+            redirect($this->_controller_name.'/register/'.$this->_weekOffsetFor($work->date_travaux));
         }
-        if ($this->CantineInscriptions_model->IsRegistered($id_fam, $date, $ecole)){
-            redirect($this->_controller_name.'/register');
+        $nb = (int) $this->db->from('infos')->where('id_travaux', $id_work)->count_all_results();
+        if ($nb >= (int)$work->nb_inscrits_max){
+            redirect($this->_controller_name.'/register/'.$this->_weekOffsetFor($work->date_travaux));
         }
 
-        // 1) Créer (ou récupérer) le pseudo-travail pour cette date de cantine
-        $id_travaux = $this->_ensureWork($date, $ecole, $civil_year, $config[$id_day]);
+        // Création de l'inscription (ligne infos) = unité à valider
+        $this->db->insert('infos', [
+            'id_famille'                 => $id_fam,
+            'id_travaux'                 => $id_work,
+            'heure_debut_prevue'         => $work->heure_deb_trav,
+            'heure_fin_prevue'           => $work->heure_fin_trav,
+            'nb_unites_valides'          => (float)$work->nb_units,
+            'nb_unites_valides_effectif' => 0,
+            'nb_participants'            => 1,
+            'type_participant'           => 'Mr',
+            'type_session'               => 1,
+            'civil_year'                 => $this->config->item('civil_year'),
+            'created'                    => date('Y-m-d H:i:s'),
+            'updated'                    => date('Y-m-d H:i:s'),
+        ]);
 
-        // 2) Créer la ligne infos (= unité à valider)
-        $id_info = $this->_createInfoUnit($id_fam, $id_travaux, $config[$id_day], $family);
-
-        // 3) Créer l'inscription cantine en liant les deux
-        $this->CantineInscriptions_model->Register(
-            $id_fam, $date, $ecole, $civil_year, $id_info, $id_travaux
-        );
-
-        redirect($this->_controller_name.'/register/'.$this->_weekOffsetFor($date));
+        redirect($this->_controller_name.'/register/'.$this->_weekOffsetFor($work->date_travaux));
     }
 
     /**
-     * Désinscription du parent connecté pour une date.
-     * Retire aussi la ligne infos associée (si l'unité n'est pas déjà validée).
+     * Désinscription d'une session (refusée si unité déjà validée).
      */
-    public function unregister_day($date = null){
-        $date = $this->_sanitize_date($date);
-        if (!$date){ redirect($this->_controller_name.'/register'); }
-        if ($this->acl->getType() != 'fam'){
+    public function unregister_one($id_work = null){
+        $id_work = (int)$id_work;
+        if (!$id_work || $this->acl->getType() != 'fam'){
             redirect($this->_controller_name.'/register');
         }
 
         $id_fam = $this->acl->getUserId();
-        $family = $this->Familys_model->GetFamily($id_fam);
-        $ecole = ($family && !empty($family->ecole)) ? $family->ecole : 'B';
+        $work = $this->db->from('travaux')->where('id', $id_work)->get()->row();
 
-        // Récupérer l'inscription avec les ids liés avant suppression
-        $ins = $this->CantineInscriptions_model->GetOne($id_fam, $date, $ecole);
+        $this->db->where('id_travaux', $id_work)
+            ->where('id_famille', $id_fam)
+            ->where('nb_unites_valides_effectif', 0)
+            ->delete('infos');
 
-        // Ne pas permettre la désinscription si l'unité a déjà été validée
-        $locked = false;
-        if ($ins && !empty($ins->id_info)){
-            $info = $this->db->select('nb_unites_valides_effectif')
-                ->from('infos')->where('id', $ins->id_info)->get()->row();
-            if ($info && (float)$info->nb_unites_valides_effectif > 0){
-                $locked = true;
-            }
-        }
-
-        if (!$locked){
-            // Supprimer la ligne infos si elle existe et n'est pas validée
-            if ($ins && !empty($ins->id_info)){
-                $this->db->where('id', $ins->id_info)
-                    ->where('nb_unites_valides_effectif', 0)
-                    ->delete('infos');
-            }
-            $this->CantineInscriptions_model->Unregister($id_fam, $date, $ecole);
-
-            // Si plus personne n'est inscrit sur cette date, supprimer le pseudo-travail
-            if ($ins && !empty($ins->id_travaux)){
-                $still = $this->db->from('cantine_inscriptions')
-                    ->where('id_travaux', $ins->id_travaux)
-                    ->count_all_results();
-                $has_infos = $this->db->from('infos')
-                    ->where('id_travaux', $ins->id_travaux)
-                    ->count_all_results();
-                if ($still == 0 && $has_infos == 0){
-                    $this->db->where('id', $ins->id_travaux)->delete('travaux');
-                }
-            }
-        }
-
-        redirect($this->_controller_name.'/register/'.$this->_weekOffsetFor($date));
+        $offset = $work ? $this->_weekOffsetFor($work->date_travaux) : 0;
+        redirect($this->_controller_name.'/register/'.$offset);
     }
 
     // ---------------------------------------------------------------
-    // VUE ADMIN : paramétrage des jours
+    // VUE ADMIN : paramétrage des jours + génération
     // ---------------------------------------------------------------
     public function config(){
         if ($this->acl->getType() != 'sys'){
@@ -242,10 +247,16 @@ class Cantine_controller extends MY_Controller {
         if (!in_array($ecole, ['B','M','L'])) $ecole = 'B';
         $civil_year = $this->config->item('civil_year');
 
-        $this->data_view['config']     = $this->CantineConfig_model->GetConfig($ecole, $civil_year);
-        $this->data_view['ecole']      = $ecole;
-        $this->data_view['civil_year'] = $civil_year;
-        $this->data_view['referents']  = $this->_getReferents();
+        $this->data_view['config']      = $this->CantineConfig_model->GetConfig($ecole, $civil_year);
+        $this->data_view['ecole']       = $ecole;
+        $this->data_view['civil_year']  = $civil_year;
+        $this->data_view['referents']   = $this->_getReferents();
+        $this->data_view['generations'] = $this->CantineGeneration_model->GetLastGenerations($ecole, $civil_year, 5);
+        $this->data_view['nb_upcoming'] = $this->CantineGeneration_model->CountUpcoming($ecole, $civil_year);
+
+        // Dates par défaut pour le formulaire de génération : aujourd'hui -> fin d'année scolaire
+        $this->data_view['default_date_deb'] = date('Y-m-d');
+        $this->data_view['default_date_fin'] = $this->_endOfSchoolYear($civil_year);
 
         $this->_set('view_inprogress','unique/Cantine_controller_config');
         $this->render_view();
@@ -275,80 +286,47 @@ class Cantine_controller extends MY_Controller {
         redirect($this->_controller_name.'/config?ecole='.$ecole);
     }
 
-    // ---------------------------------------------------------------
-    // Helpers : intégration au système unités/travaux existant
-    // ---------------------------------------------------------------
-
     /**
-     * Crée (ou récupère) le pseudo-travail cantine pour une date + école donnée.
-     * Le titre est normalisé pour pouvoir le retrouver : 'Cantine YYYY-MM-DD'.
-     *
-     * @return int id du travail
+     * Génère les sessions cantine pour une période donnée, selon la config.
+     * Deux modes de période :
+     *   - school_end : aujourd'hui → 31/05 de l'année scolaire (par défaut)
+     *   - custom     : dates saisies par l'admin
      */
-    private function _ensureWork($date, $ecole, $civil_year, $cfg){
-        $titre = 'Cantine '.$date;
+    public function generate(){
+        if ($this->acl->getType() != 'sys'){
+            redirect($this->_controller_name.'/register');
+        }
 
-        // Recherche d'un travail existant pour cette date, cette école, de type 'can'
-        $existing = $this->db->select('id')
-            ->from('travaux')
-            ->where('date_travaux', $date)
-            ->where('type', 'can')
-            ->where('accespar', $ecole)
-            ->where('civil_year', $civil_year)
-            ->get()->row();
+        $ecole = $this->input->post('ecole');
+        if (!in_array($ecole, ['B','M','L'])) $ecole = 'B';
+        $civil_year = $this->config->item('civil_year');
 
-        if ($existing){ return (int)$existing->id; }
+        $mode = $this->input->post('period_mode');
+        if ($mode === 'custom'){
+            $date_deb = $this->_sanitize_date($this->input->post('date_deb'));
+            $date_fin = $this->_sanitize_date($this->input->post('date_fin'));
+        } else {
+            // Mode school_end par défaut : aujourd'hui → 31/05 de l'année scolaire
+            $date_deb = date('Y-m-d');
+            $date_fin = $this->_endOfSchoolYear($civil_year);
+        }
 
-        // Création
-        $this->db->insert('travaux', [
-            'date_travaux'     => $date,
-            'heure_deb_trav'   => !empty($cfg->heure_deb) ? $cfg->heure_deb : '11:45',
-            'heure_fin_trav'   => !empty($cfg->heure_fin) ? $cfg->heure_fin : '13:30',
-            'type'             => 'can',
-            'nb_units'         => (float)$cfg->nb_units,
-            'titre'            => $titre,
-            'description'      => 'Garde du midi - inscription automatique depuis l\'agenda cantine.',
-            'nb_inscrits_max'  => (int)$cfg->nb_slots,
-            'referent_travaux' => !empty($cfg->id_referent) ? $cfg->id_referent : '',
-            'ecole'            => $ecole,
-            'accespar'         => $ecole,
-            'type_session'     => 1,     // 1 = Horaire (cohérent avec travaux existants)
-            'statut'           => 1,     // 1 = publié
-            'archived'         => 0,
-            'civil_year'       => $civil_year,
-            'created'          => date('Y-m-d H:i:s'),
-            'updated'          => date('Y-m-d H:i:s'),
-        ]);
-        return (int)$this->db->insert_id();
+        if (!$date_deb || !$date_fin){
+            redirect($this->_controller_name.'/config?ecole='.$ecole);
+        }
+
+        $config = $this->CantineConfig_model->GetConfig($ecole, $civil_year);
+        $this->CantineGeneration_model->Generate($date_deb, $date_fin, $ecole, $config, $civil_year);
+
+        redirect($this->_controller_name.'/config?ecole='.$ecole);
     }
 
-    /**
-     * Crée une ligne dans `infos` : ça génère une unité à valider pour la famille.
-     *  - nb_unites_valides          = nb_units du jour (unité déclarée par le parent)
-     *  - nb_unites_valides_effectif = 0 (pas encore validée par le référent)
-     *
-     * @return int id de l'info
-     */
-    private function _createInfoUnit($id_fam, $id_travaux, $cfg, $family){
-        $this->db->insert('infos', [
-            'id_famille'                 => $id_fam,
-            'id_travaux'                 => $id_travaux,
-            'heure_debut_prevue'         => !empty($cfg->heure_deb) ? $cfg->heure_deb : '11:45',
-            'heure_fin_prevue'           => !empty($cfg->heure_fin) ? $cfg->heure_fin : '13:30',
-            'nb_unites_valides'          => (float)$cfg->nb_units,
-            'nb_unites_valides_effectif' => 0,
-            'nb_participants'            => 1,
-            'type_participant'           => 'Mr',
-            'type_session'               => 1,
-            'civil_year'                 => $this->config->item('civil_year'),
-            'created'                    => date('Y-m-d H:i:s'),
-            'updated'                    => date('Y-m-d H:i:s'),
-        ]);
-        return (int)$this->db->insert_id();
-    }
+    // ---------------------------------------------------------------
+    // Helpers
+    // ---------------------------------------------------------------
 
     /**
-     * Récupère la liste des référents possibles (classif reftra/RT) pour le select admin.
+     * Liste des référents (classif reftra/RT) pour le select admin.
      */
     private function _getReferents(){
         $rows = $this->db->select('tr.id, CONCAT_WS(" ", gr.short, gm.name, gm.surname) AS title', false)
@@ -363,8 +341,26 @@ class Cantine_controller extends MY_Controller {
         return $out;
     }
 
+    /**
+     * Retourne la date de fin de l'année scolaire en cours (31 mai de l'année de fin).
+     * civil_year format : "2025-2026" → "2026-05-31"
+     */
+    private function _endOfSchoolYear($civil_year){
+        if (preg_match('/^\d{4}-(\d{4})$/', $civil_year, $m)){
+            return $m[1].'-05-31';
+        }
+        return date('Y-m-d', strtotime('+6 months'));
+    }
+
+    private function _sanitize_date($date){
+        if (!$date) return null;
+        $d = DateTime::createFromFormat('Y-m-d', $date);
+        if (!$d || $d->format('Y-m-d') !== $date) return null;
+        return $date;
+    }
+
     // ---------------------------------------------------------------
-    // Helpers date
+    // Helpers date (agenda hebdo)
     // ---------------------------------------------------------------
     private function _getMonday($week_offset = 0){
         $d = new DateTime('today');
@@ -388,13 +384,6 @@ class Cantine_controller extends MY_Controller {
         return (int) round($days / 7);
     }
 
-    private function _sanitize_date($date){
-        if (!$date) return null;
-        $d = DateTime::createFromFormat('Y-m-d', $date);
-        if (!$d || $d->format('Y-m-d') !== $date) return null;
-        return $date;
-    }
-
     private function _frMonth(DateTime $d){
         $names = ['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
         return $names[(int)$d->format('n')-1];
@@ -402,5 +391,10 @@ class Cantine_controller extends MY_Controller {
 
     private function _frDate(DateTime $d){
         return $d->format('j').' '.$this->_frMonth($d);
+    }
+
+    private function _frWeekday(DateTime $d){
+        $names = [1=>'Lundi',2=>'Mardi',3=>'Mercredi',4=>'Jeudi',5=>'Vendredi',6=>'Samedi',7=>'Dimanche'];
+        return $names[(int)$d->format('N')];
     }
 }

@@ -17,7 +17,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
             <div class="nicdark_space10"></div>
         </div>
 
-        <!-- Barre navigation semaine + lien config admin -->
+        <!-- Barre navigation semaine -->
         <div class="grid grid_12">
             <div class="nicdark_space20"></div>
             <a href="<?php echo base_url('Cantine_controller/register/'.($week_offset - 1));?>"
@@ -68,18 +68,24 @@ defined('BASEPATH') OR exit('No direct script access allowed');
             <div class="nicdark_space30"></div>
         </div>
 
-        <!-- Grille des jours de la semaine -->
+        <!-- Cartes des 5 jours -->
         <?php foreach($days AS $day){
-            // Détermination de la couleur de la carte
-            if (!$day->active){
+            $has_session = ($day->session !== null);
+
+            // Couleur de carte selon l'état
+            if (!$has_session){
                 $card_color = 'nicdark_bg_grey2';
                 $btn_color  = 'nicdark_bg_greydark';
                 $text_color = 'greydark';
-            } elseif ($day->mine){
+            } elseif (!empty($day->my_validated)){
+                $card_color = 'nicdark_bg_greendark';
+                $btn_color  = 'nicdark_bg_greendark';
+                $text_color = 'white';
+            } elseif (!empty($day->mine)){
                 $card_color = 'nicdark_bg_green';
                 $btn_color  = 'nicdark_bg_greendark';
                 $text_color = 'white';
-            } elseif ($day->full){
+            } elseif (!empty($day->full)){
                 $card_color = 'nicdark_bg_red';
                 $btn_color  = 'nicdark_bg_reddark';
                 $text_color = 'white';
@@ -98,7 +104,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                 </a>
 
                 <!-- Ratio inscrits/capacité en haut à droite -->
-                <?php if ($day->active){ ?>
+                <?php if ($has_session){ ?>
                 <a href="#" class="nicdark_btn <?php echo $btn_color;?> white small nicdark_radius nicdark_absolute_right">
                     <?php echo $day->nb_inscrits.'/'.$day->nb_slots;?>
                 </a>
@@ -111,7 +117,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
                 <!-- Corps -->
                 <div class="nicdark_margin20">
-                    <?php if (!$day->active){ ?>
+                    <?php if (!$has_session){ ?>
                         <div class="nicdark_space20"></div>
                         <h5 class="<?php echo $text_color;?>">
                             <i class="icon-minus-circled"></i> <?php echo $this->lang->line('cantine_day_inactive');?>
@@ -120,32 +126,37 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                     <?php } else { ?>
 
                         <div class="nicdark_space10"></div>
+
+                        <!-- Horaires -->
+                        <p class="<?php echo $text_color;?>" style="font-size:12px;">
+                            <i class="icon-clock-1"></i>
+                            <?php echo html_escape($day->session->heure_deb_trav);?>
+                            →
+                            <?php echo html_escape($day->session->heure_fin_trav);?>
+                            &nbsp;·&nbsp;
+                            <b><?php echo (float)$day->nb_units;?></b> u.
+                        </p>
+
+                        <div class="nicdark_space10"></div>
                         <h5 class="<?php echo $text_color;?>">
                             <i class="icon-users"></i> <?php echo $this->lang->line('cantine_registered');?>
                         </h5>
                         <div class="nicdark_space10"></div>
 
-                        <!-- Info unité -->
-                        <?php if ($day->nb_units > 0){ ?>
-                        <p class="<?php echo $text_color;?>" style="font-size:12px; opacity:0.85;">
-                            <i class="icon-star"></i>
-                            <?php echo sprintf($this->lang->line('cantine_unit_info'), $day->nb_units);?>
-                        </p>
-                        <div class="nicdark_space10"></div>
-                        <?php } ?>
-
-                        <!-- Liste des inscrits -->
+                        <!-- Liste des inscrits (slots) -->
                         <ul class="nicdark_ul">
                             <?php for($i = 0; $i < $day->nb_slots; $i++){
                                 $ins = isset($day->inscrits[$i]) ? $day->inscrits[$i] : null;
                                 if ($ins){
                                     $name = !empty($ins->nom) ? $ins->nom : $ins->login;
                                     $is_me = ((int)$ins->id_famille === (int)$id_fam);
+                                    $validated = ((float)$ins->nb_unites_valides_effectif > 0);
                             ?>
                                 <li class="<?php echo $text_color;?>">
                                     <i class="icon-user"></i>
-                                    <?php echo html_escape($name); ?>
+                                    <?php echo html_escape($name);?>
                                     <?php if ($is_me){ echo ' <b>('.$this->lang->line('cantine_you').')</b>'; } ?>
+                                    <?php if ($validated){ echo ' <i class="icon-ok" title="'.$this->lang->line('cantine_validated').'"></i>'; } ?>
                                 </li>
                             <?php } else { ?>
                                 <li class="<?php echo $text_color;?>" style="opacity:0.7;">
@@ -159,25 +170,29 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                         <div class="nicdark_space20"></div>
 
                         <!-- Boutons d'action -->
-                        <?php if ($this->acl->getType() == 'fam' && !$day->passed){ ?>
-                            <?php if ($day->mine){ ?>
-                                <a href="<?php echo base_url('Cantine_controller/unregister_day/'.$day->date);?>"
+                        <?php if ($can_register && !$day->passed){ ?>
+                            <?php if (!empty($day->my_validated)){ ?>
+                                <span class="nicdark_btn nicdark_bg_greendark white nicdark_radius small">
+                                    <i class="icon-ok"></i> <?php echo $this->lang->line('cantine_validated');?>
+                                </span>
+                            <?php } elseif (!empty($day->mine)){ ?>
+                                <a href="<?php echo base_url('Cantine_controller/unregister_one/'.$day->session->id);?>"
                                    onclick="return confirm('<?php echo $this->lang->line('cantine_confirm_cancel');?>');"
-                                   class="nicdark_press nicdark_btn nicdark_bg_red white nicdark_radius nicdark_shadow medium">
+                                   class="nicdark_press nicdark_btn nicdark_bg_red white nicdark_radius nicdark_shadow small">
                                     <i class="icon-cancel"></i> <?php echo $this->lang->line('cantine_btn_cancel');?>
                                 </a>
-                            <?php } elseif ($day->full){ ?>
-                                <span class="nicdark_btn nicdark_bg_greydark white nicdark_radius medium">
+                            <?php } elseif (!empty($day->full)){ ?>
+                                <span class="nicdark_btn nicdark_bg_greydark white nicdark_radius small">
                                     <?php echo $this->lang->line('cantine_full');?>
                                 </span>
                             <?php } else { ?>
-                                <a href="<?php echo base_url('Cantine_controller/register_day/'.$day->date);?>"
-                                   class="nicdark_press nicdark_btn nicdark_bg_green white nicdark_radius nicdark_shadow medium">
+                                <a href="<?php echo base_url('Cantine_controller/register_one/'.$day->session->id);?>"
+                                   class="nicdark_press nicdark_btn nicdark_bg_green white nicdark_radius nicdark_shadow small">
                                     <i class="icon-ok"></i> <?php echo $this->lang->line('cantine_btn_register');?>
                                 </a>
                             <?php } ?>
                         <?php } elseif ($day->passed){ ?>
-                            <span class="nicdark_btn nicdark_bg_greydark white nicdark_radius medium">
+                            <span class="nicdark_btn nicdark_bg_greydark white nicdark_radius small">
                                 <?php echo $this->lang->line('cantine_passed');?>
                             </span>
                         <?php } ?>
