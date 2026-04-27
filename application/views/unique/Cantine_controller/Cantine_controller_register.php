@@ -17,6 +17,21 @@ defined('BASEPATH') OR exit('No direct script access allowed');
             <div class="nicdark_space10"></div>
         </div>
 
+        <!-- Sélecteur d'école -->
+        <div class="grid grid_12">
+            <h4 class="greydark"><?php echo $this->lang->line('cantine_school');?> :</h4>
+            <div class="nicdark_space10"></div>
+            <?php foreach(['M' => 'Mulhouse', 'L' => 'Lutterbach'] AS $code => $label){
+                $active = ($ecole === $code);
+            ?>
+                <a href="<?php echo base_url('Cantine_controller/register?ecole='.$code);?>"
+                   class="nicdark_btn small nicdark_shadow nicdark_radius <?php echo $active ? 'nicdark_bg_blue white' : 'nicdark_bg_grey grey';?>">
+                    <?php echo $label;?>
+                </a>
+            <?php } ?>
+            <div class="nicdark_space30"></div>
+        </div>
+
         <!-- Barre navigation semaine -->
         <div class="grid grid_12">
             <div class="nicdark_space20"></div>

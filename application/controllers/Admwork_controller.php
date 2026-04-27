@@ -60,7 +60,10 @@ class Admwork_controller extends MY_Controller {
 	public function list()
 	{
 		$this->_set('render_view', false);
+
+		//->where('type', 'can')
 		parent::list();
+
 		$this->data_view['civil_year'] = $this->{$this->_model_name}->_get('defs')['civil_year']->_get('values');
 		$this->data_view['filter_ec'] = $this->set_civil_years();
 

@@ -1,69 +1,125 @@
-/**
- * assets/js/admwork_register.js — v3
- *
- * CORRECTIONS v3 :
- *  · Filtrage via data-attributes (pas Isotope) → compatible flex/inline-block
- *  · awToggleMonth() exposé globalement pour onclick HTML
- *  · FullCalendar : init différée robuste (attend que la lib soit prête)
- *  · Tooltip en position fixed (pas absolute) → pas de scroll-offset bug
+/*
+ * assets/js/admwork_register.js — v5
+ * · Toggle Cartes / Liste avec mémorisation localStorage
+ * · Filtrage et recherche appliqués aux deux vues simultanément
+ * · Accordéons passées
  */
-
 (function () {
-    "use strict";
+    'use strict';
+
+    var LS_KEY       = 'aw_view_pref';   // clé localStorage
+    var currentView  = 'cards';          // valeur par défaut
+    var currentFilter= '*';
+    var currentSearch= '';
 
     /* ============================================================
-       STATE
+       1. TOGGLE VUE CARTES / LISTE
        ============================================================ */
-    var currentFilter = '*';
-    var currentSearch = '';
-    var calInitialized = false;
+
+    window.awSetView = function (view) {
+        currentView = view;
+
+        var elCards  = document.getElementById('aw-view-cards');
+        var elList   = document.getElementById('aw-view-list');
+        var btnCards = document.getElementById('btn-cards');
+        var btnList  = document.getElementById('btn-list');
+        if (!elCards || !elList) return;
+
+        if (view === 'list') {
+            elCards.style.display = 'none';
+            elList.style.display  = 'block';
+            btnCards.classList.remove('active');
+            btnList.classList.add('active');
+        } else {
+            elList.style.display  = 'none';
+            elCards.style.display = 'block';
+            btnList.classList.remove('active');
+            btnCards.classList.add('active');
+        }
+
+        /* Mémorise le choix */
+        try { localStorage.setItem(LS_KEY, view); } catch(e) {}
+
+        /* Réapplique le filtre dans la nouvelle vue */
+        applyFilters();
+    };
 
     /* ============================================================
-       1. FILTRAGE + RECHERCHE
+       2. FILTRAGE + RECHERCHE
+          Agit sur :
+          · .aw-card        (vue cartes, à venir)
+          · .aw-list-row    (vue liste à venir + accordéons passées)
+          · .aw-list-sep    (séparateurs de mois liste)
        ============================================================ */
+
+    function matchesFilter(el) {
+        var f = currentFilter;
+        var q = currentSearch;
+        var ok = true;
+
+        if (f !== '*') {
+            switch (f) {
+                case 'dispo': ok = el.classList.contains('dispo'); break;
+                case 'mine':  ok = el.classList.contains('mine');  break;
+                default:
+                    if (f.indexOf('type:') === 0) {
+                        ok = el.dataset.type === f.slice(5);
+                    }
+            }
+        }
+        if (ok && q) {
+            var t = el.dataset.title || '';
+            var e = el.dataset.ecole || '';
+            ok = t.indexOf(q) !== -1 || e.indexOf(q) !== -1;
+        }
+        return ok;
+    }
 
     function applyFilters() {
-        var f = currentFilter;  // ex: '*', 'dispo', 'mine', 'archived', 'TRA'
-        var q = currentSearch;
-
-        document.querySelectorAll('.aw-card').forEach(function (card) {
-            var show = true;
-
-            /* Filtre par catégorie */
-            if (f !== '*') {
-                switch (f) {
-                    case 'dispo':    show = card.classList.contains('dispo');    break;
-                    case 'mine':     show = card.classList.contains('mine');     break;
-                    case 'archived': show = card.classList.contains('archived'); break;
-                    default:         show = (card.dataset.type === f);           break;
-                }
-            }
-
-            /* Filtre par recherche texte */
-            if (show && q) {
-                var title = (card.dataset.title || '');
-                var ecole = (card.dataset.ecole || '');
-                show = title.indexOf(q) !== -1 || ecole.indexOf(q) !== -1;
-            }
-
-            card.style.display = show ? '' : 'none';
+        /* Cartes à venir */
+        document.querySelectorAll('.aw-cards-grid .aw-card').forEach(function (c) {
+            c.style.display = matchesFilter(c) ? '' : 'none';
         });
 
-        /* Masque les accordéons vides */
+        /* Lignes liste à venir */
+        document.querySelectorAll('#aw-view-list .aw-list-row').forEach(function (r) {
+            r.style.display = matchesFilter(r) ? '' : 'none';
+        });
+
+        /* Séparateurs de mois : masquer si toutes leurs lignes sont cachées */
+        document.querySelectorAll('.aw-list-sep').forEach(function (sep) {
+            var sib = sep.nextElementSibling;
+            var vis = false;
+            while (sib && !sib.classList.contains('aw-list-sep')) {
+                if (sib.classList.contains('aw-list-row') && sib.style.display !== 'none') {
+                    vis = true; break;
+                }
+                sib = sib.nextElementSibling;
+            }
+            sep.style.display = vis ? '' : 'none';
+        });
+
+        /* Lignes passées dans accordéons */
+        document.querySelectorAll('.aw-month-body .aw-list-row').forEach(function (r) {
+            r.style.display = matchesFilter(r) ? '' : 'none';
+        });
+
+        /* Masque les accordéons entièrement vides */
         document.querySelectorAll('.aw-month-body').forEach(function (body) {
-            var visible = body.querySelectorAll('.aw-card:not([style*="display: none"])').length;
-            var id = body.id;
-            var header = document.querySelector('[onclick*="' + id + '"]');
-            if (header) header.style.display = (visible > 0) ? '' : 'none';
-            if (visible === 0 && body.classList.contains('is-open')) {
-                body.style.display = 'none';
-                body.classList.remove('is-open');
-                if (header) header.classList.remove('is-open');
+            var vis = Array.from(body.querySelectorAll('.aw-list-row'))
+                .some(function (r) { return r.style.display !== 'none'; });
+            var hdr = body.previousElementSibling;
+            if (hdr && hdr.classList.contains('aw-month-header')) {
+                hdr.style.display = vis ? '' : 'none';
+                if (!vis && body.classList.contains('is-open')) {
+                    body.style.display = 'none';
+                    body.classList.remove('is-open');
+                    hdr.classList.remove('is-open');
+                }
             }
         });
     }
 
-    /* Exposés globalement pour les onclick inline */
     window.awFilter = function (el, filter) {
         currentFilter = filter;
         document.querySelectorAll('.aw-chip').forEach(function (c) { c.classList.remove('is-active'); });
@@ -77,20 +133,20 @@
     };
 
     /* ============================================================
-       2. ACCORDÉONS MOIS
+       3. ACCORDÉONS PASSÉES
        ============================================================ */
 
     window.awToggleMonth = function (targetId, headerEl) {
         var body   = document.getElementById(targetId);
         var isOpen = headerEl.classList.contains('is-open');
 
-        /* Ferme tous les autres */
         document.querySelectorAll('.aw-month-header.is-open').forEach(function (h) {
-            if (h !== headerEl) {
-                h.classList.remove('is-open');
-                var otherId = h.getAttribute('onclick').match(/'([^']+)'/)[1];
-                var other = document.getElementById(otherId);
-                if (other) { other.style.display = 'none'; other.classList.remove('is-open'); }
+            if (h === headerEl) return;
+            h.classList.remove('is-open');
+            var b = h.nextElementSibling;
+            if (b && b.classList.contains('aw-month-body')) {
+                b.style.display = 'none';
+                b.classList.remove('is-open');
             }
         });
 
@@ -102,133 +158,17 @@
             headerEl.classList.add('is-open');
             body.style.display = 'block';
             body.classList.add('is-open');
-            applyFilters(); /* réapplique le filtre dans la section qui vient d'ouvrir */
+            applyFilters();
         }
     };
 
     /* ============================================================
-       3. BASCULE CARTES / CALENDRIER
-       ============================================================ */
-
-    window.awSwitchView = function (view) {
-        var cards = document.getElementById('view-cards');
-        var cal   = document.getElementById('view-calendar');
-        var btnC  = document.getElementById('btn-view-cards');
-        var btnCal= document.getElementById('btn-view-calendar');
-
-        if (view === 'calendar') {
-            cards.style.display = 'none';
-            cal.style.display   = 'block';
-            btnC.classList.remove('active');
-            btnCal.classList.add('active');
-            initCalendar();
-        } else {
-            cal.style.display   = 'none';
-            cards.style.display = 'block';
-            btnCal.classList.remove('active');
-            btnC.classList.add('active');
-        }
-    };
-
-    /* ============================================================
-       4. FULLCALENDAR — init robuste
-          FullCalendar est chargé via le controller en <head>,
-          donc il est disponible dès que le DOM est prêt.
-          Si pour une raison quelconque il n'est pas encore parsé,
-          on réessaie toutes les 200ms (max 15s).
-       ============================================================ */
-
-    var calRetries = 0;
-
-    function initCalendar() {
-        if (calInitialized) {
-            /* Déjà initialisé : force un redimensionnement */
-            if (window._awCalendar) window._awCalendar.updateSize();
-            return;
-        }
-
-        if (typeof FullCalendar === 'undefined') {
-            if (calRetries < 75) {
-                calRetries++;
-                setTimeout(initCalendar, 200);
-            } else {
-                document.getElementById('aw-fullcalendar').innerHTML =
-                    '<p style="color:#e16c6c;padding:20px;">FullCalendar non chargé. Vérifiez la connexion.</p>';
-            }
-            return;
-        }
-
-        calInitialized = true;
-
-        var calEl = document.getElementById('aw-fullcalendar');
-        if (!calEl) return;
-
-        var cal = new FullCalendar.Calendar(calEl, {
-            locale: 'fr',
-            initialView: 'dayGridMonth',
-            firstDay: 1,
-            headerToolbar: {
-                left:   'prev,next today',
-                center: 'title',
-                right:  'dayGridMonth,listMonth'
-            },
-            buttonText: {
-                today: "Aujourd'hui",
-                month: 'Mois',
-                list:  'Liste'
-            },
-            events: window.awCalendarEvents || [],
-            height: 'auto',
-
-            eventDidMount: function (info) {
-                if (info.event.extendedProps.is_past) {
-                    info.el.classList.add('ev-past');
-                }
-
-                /* Tooltip */
-                var ep  = info.event.extendedProps;
-                var tip = document.createElement('div');
-                tip.className = 'aw-cal-tooltip';
-                var h = (ep.heure_deb && ep.heure_fin) ? ep.heure_deb + ' → ' + ep.heure_fin : '';
-                tip.innerHTML =
-                    '<strong>' + info.event.title + '</strong><br>' +
-                    (ep.ecole    ? ep.ecole + '<br>' : '') +
-                    (ep.type_lbl ? ep.type_lbl + '<br>' : '') +
-                    (h           ? '&#128336; ' + h + '<br>' : '') +
-                    ep.inscrits + ' / ' + ep.max + ' inscrits';
-
-                info.el.addEventListener('mouseenter', function (e) {
-                    document.body.appendChild(tip);
-                    moveTip(tip, e);
-                });
-                info.el.addEventListener('mousemove',  function (e) { moveTip(tip, e); });
-                info.el.addEventListener('mouseleave', function ()  {
-                    if (tip.parentNode) tip.parentNode.removeChild(tip);
-                });
-            },
-
-            eventClick: function (info) {
-                info.jsEvent.preventDefault();
-                var url = info.event.extendedProps.url;
-                if (url) window.location.href = url;
-            }
-        });
-
-        cal.render();
-        window._awCalendar = cal;
-    }
-
-    function moveTip(tip, e) {
-        var h = tip.offsetHeight || 80;
-        tip.style.top  = (e.clientY - h - 14) + 'px';
-        tip.style.left = (e.clientX - 14) + 'px';
-    }
-
-    /* ============================================================
-       5. INIT
+       4. INIT — restaure la préférence sauvegardée
        ============================================================ */
     document.addEventListener('DOMContentLoaded', function () {
-        applyFilters(); /* état initial = Tous */
+        var saved = 'cards';
+        try { saved = localStorage.getItem(LS_KEY) || 'cards'; } catch(e) {}
+        awSetView(saved);   /* positionne les boutons + applique les filtres */
     });
 
 })();

@@ -141,7 +141,7 @@ $_fr_days = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
         <div class="grid grid_12">
             <h4 class="greydark"><?php echo $this->lang->line('cantine_school');?> :</h4>
             <div class="nicdark_space10"></div>
-            <?php foreach(['B' => 'Mulhouse + Lutterbach', 'M' => 'Mulhouse', 'L' => 'Lutterbach'] AS $code => $label){
+            <?php foreach(['M' => 'Mulhouse', 'L' => 'Lutterbach'] AS $code => $label){
                 $active = ($ecole === $code);
             ?>
                 <a href="<?php echo base_url('Cantine_controller/config?ecole='.$code);?>"

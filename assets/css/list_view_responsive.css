@@ -1,0 +1,187 @@
+/* =========================================================================
+ *  list_view_responsive.css
+ *  ------------------------------------------------------------------------
+ *  Vague 2 — Mode "carte" automatique sous 768px pour les vues listes
+ *  génériques (unique/list_view.php). Aucune modification PHP nécessaire :
+ *  le PHP émet déjà des attributs data-label="..." sur chaque <td> et le
+ *  CSS s'occupe du reste.
+ *  ========================================================================= */
+
+/* ---- Desktop : on ajoute juste un overflow horizontal défensif ---- */
+.list-table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.list-table-v2 {
+    margin-bottom: 0;
+}
+
+.list-table-v2 .actions-col {
+    white-space: nowrap;
+    width: 1%;
+}
+
+.list-table-v2 .bulk-col {
+    width: 30px;
+    text-align: center;
+}
+
+/* Indicateur visuel du tri actif (badges info dans les en-têtes) */
+.list-table-v2 thead .badge-info {
+    font-weight: 500;
+    font-size: 0.78em;
+    margin-left: 0.3em;
+}
+
+/* Barre d'outils */
+.list-toolbar {
+    margin-top: 0.5em;
+}
+
+.list-toolbar .navbar-text {
+    line-height: 1.6;
+}
+
+/* ---- Tablette : colonnes plus serrées ---- */
+@media (max-width: 992px) {
+    .list-table-v2 {
+        font-size: 0.92em;
+    }
+    .list-table-v2 td,
+    .list-table-v2 th {
+        padding: 0.4rem 0.5rem;
+    }
+}
+
+/* =========================================================================
+ *  MODE "CARTE" — < 768px
+ *  Chaque ligne du tableau devient une carte empilée. Les cellules se
+ *  mettent en deux colonnes (label / valeur) grâce au data-label injecté
+ *  par list_view.php.
+ *  ========================================================================= */
+@media (max-width: 767.98px) {
+
+    /* Les colonnes d'en-tête (sauf checkbox de tri global) sont masquées :
+       on ne montre que la barre de tri compacte au-dessus. */
+    .list-table-v2 thead {
+        display: none;
+    }
+
+    /* La table devient une pile verticale. */
+    .list-table-v2,
+    .list-table-v2 tbody,
+    .list-table-v2 tr,
+    .list-table-v2 td {
+        display: block;
+        width: 100%;
+    }
+
+    /* Chaque <tr> = une carte */
+    .list-table-v2 tr {
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        margin-bottom: 0.7em;
+        padding: 0.6em 0.8em;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+
+    /* Striping : on garde l'alternance, mais en background plus doux */
+    .list-table-v2 tbody tr:nth-of-type(odd) {
+        background-color: #fafafa;
+    }
+
+    /* Chaque cellule devient une ligne label / valeur */
+    .list-table-v2 td {
+        padding: 0.35em 0;
+        border: none;
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 0.8em;
+        text-align: right;
+    }
+    .list-table-v2 tr td:last-child {
+        border-bottom: none;
+    }
+
+    /* Le label vient du data-label */
+    .list-table-v2 td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #555;
+        text-transform: uppercase;
+        font-size: 0.78em;
+        letter-spacing: 0.02em;
+        text-align: left;
+        flex: 0 0 40%;
+        align-self: center;
+    }
+
+    /* Cellules sans label visible (actions, checkbox bulk) :
+       elles passent en pleine largeur, sans préfixe label */
+    .list-table-v2 td.actions-col,
+    .list-table-v2 td.bulk-col {
+        text-align: left;
+        justify-content: flex-start;
+        padding-top: 0.5em;
+    }
+    .list-table-v2 td.actions-col::before,
+    .list-table-v2 td.bulk-col::before {
+        content: none;
+    }
+    .list-table-v2 td.actions-col {
+        border-bottom: 2px solid #efefef;
+        padding-bottom: 0.6em;
+        margin-bottom: 0.3em;
+    }
+    .list-table-v2 td.bulk-col {
+        position: absolute;
+        right: 1em;
+        margin-top: -0.2em;
+        width: auto;
+        padding: 0;
+        border: none;
+    }
+    .list-table-v2 tr {
+        position: relative;
+    }
+
+    /* Footer pagination en colonne */
+    .list-view-v2 footer .navbar-nav {
+        flex-direction: column;
+        align-items: stretch !important;
+    }
+    .list-view-v2 footer .nav-item {
+        margin-left: 0 !important;
+        margin-bottom: 0.5em;
+        text-align: center;
+    }
+
+    /* Barre d'outils en colonne aussi */
+    .list-toolbar .d-flex {
+        flex-direction: column;
+        align-items: stretch !important;
+    }
+    .list-toolbar .dropdown,
+    .list-toolbar a.btn {
+        margin-left: 0 !important;
+        width: 100%;
+        margin-bottom: 0.4em;
+    }
+    .list-toolbar .navbar-text {
+        white-space: normal;
+    }
+}
+
+/* =========================================================================
+ *  Très petits écrans — < 480px
+ *  ========================================================================= */
+@media (max-width: 479.98px) {
+    .list-table-v2 td::before {
+        flex: 0 0 50%;
+    }
+}
