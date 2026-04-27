@@ -92,19 +92,15 @@
 				]
 			},
 			{
-				"url" : "Cantine_controller/index",
+				"url" : "Cantine_controller/register",
 				"opt" : "sys",
-				"name" : "Cantine_controller_index",
+				"name" : "Cantine_controller_register",
 				"color" : "orange",
 				"noright":false,
 				"items":[
 					{
-						"url":"Cantine_controller/register",
-						"name":"Cantine_controller_register",
-						"type":"link"
-					},{
 						"url":"Cantine_controller/config",
-						"name":"Units_controller_config",
+						"name":"Cantine_controller_config",
 						"type":"link"
 					}			
 				]
