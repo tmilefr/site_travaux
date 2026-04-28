@@ -86,80 +86,91 @@ class Units_controller extends MY_Controller {
 	}
 
 	/**
-	 * @param mixed $opt : options dans le  model Infos_model
-	 * @return stdClass $res->works //travaux dans les sessions de temps
-	 * 					$res->familys //famille dans les sessions de temps
-	 * 					$res->sessions //session de temps
-	 * 
+	 * @param mixed $opt : options dans le model Infos_model
+	 * @return stdClass $res->works    //travaux dans les sessions de temps (un par id_travaux)
+	 *                  $res->familys  //famille dans les sessions de temps
+	 *                  $res->sessions //une entrée par id_travaux (les unités du travail)
+	 *                  $res->dates    //dates distinctes
 	 */
 	private function populate($opt){
-		//pour le filtrage des familles dans la vue.
-		$this->Infos_model->_set('order','travaux.date_travaux');
-		$this->Infos_model->_set('direction','desc');
-				
+		// pour le filtrage des familles dans la vue
+		$this->Infos_model->_set('order',     'travaux.date_travaux');
+		$this->Infos_model->_set('direction', 'desc');
+
 		$familys = $this->Infos_model->_get('defs')['id_famille']->_get('values');
+
 		$res = new stdclass();
-		$res->works = [];
+		$res->works    = [];
 		$res->sessions = [];
-		$res->familys = [];
-		$res->dates = [];
+		$res->familys  = [];
+		$res->dates    = [];
+
 		$units = $this->Infos_model->GetUnits($opt);
-		if (count($units))
-			foreach($units AS $key => $unit){
-				//groupement par id_travaux ou par type action
-				//echo debug($unit);
-				if ($unit->type_session != 1){
-					$ref = "s".$unit->type_session;
-				} else {
-					$ref = $unit->id_travaux;
-				}
+		if (count($units)) {
+			foreach ($units as $unit) {
+				// Groupement systématique par id_travaux, peu importe le type_session.
+				// Le type_session ne sert qu'à savoir si on affiche les heures dans la vue.
+				$ref = $unit->id_travaux;
+
 				$res->sessions[$ref][] = $unit;
-				
-				//infos pour les groupement
-				if (isset($familys[$unit->id_famille])) 
+
+				// Familles concernées (utile pour les filtres)
+				if (isset($familys[$unit->id_famille])) {
 					$res->familys[$unit->id_famille] = $familys[$unit->id_famille];
-				$res->dates[$unit->date_travaux] = $unit->date_travaux;	
-				//infos travaux
-				if (!isset($res->works[$ref])){ 
+				}
+
+				// Dates distinctes (utile pour les filtres)
+				$res->dates[$unit->date_travaux] = $unit->date_travaux;
+
+				// Métadonnées du travail (un seul jeu par id_travaux)
+				if (!isset($res->works[$ref])) {
 					$def = new stdClass();
-					$def->titre =  $unit->titre;
+					$def->titre            = $unit->titre;
 					$def->referent_travaux = $unit->referent_travaux;
-					$def->type_session = $unit->type_session;
-					$def->date_travaux = $unit->date_travaux;
-					$res->works[$ref] = $def;
+					$def->type_session     = $unit->type_session;
+					$def->date_travaux     = $unit->date_travaux;
+					$res->works[$ref]      = $def;
 				}
 			}
-		//echo debug($res);
+		}
+
 		return $res;
 	}
 
 
 	/**
-	 * @return void 
-	 * @throws RuntimeException 
+	 * @return void
+	 * @throws RuntimeException
 	 */
 	public function valid(){
 		$this->LoadModel('Infos_model');
 		$this->LoadModel('Admwork_model');
-		//js for check all input
-		$this->bootstrap_tools->_SetHead('assets/js/checkall.js','js');
-		$this->_set('view_inprogress','unique/'.$this->_controller_name.'_valid');
-		//var are stored in session
-		$this->Infos_model->_set('global_search'	, $this->session->userdata($this->set_ref_field('global_search')));
-		$this->Infos_model->_set('order'			, $this->session->userdata($this->set_ref_field('order')));
-		$this->Infos_model->_set('filter'			, $this->session->userdata($this->set_ref_field('filter')));
-		$this->Infos_model->_set('direction'		, $this->session->userdata($this->set_ref_field('direction')));
-		//options dans le  model Infos_model
+
+		// JS / CSS dédiés à la refonte
+		$this->bootstrap_tools->_SetHead('assets/js/modeucheckall.js'    , 'js');  // conservé pour compat éventuelle
+		$this->bootstrap_tools->_SetHead('assets/js/units_valid.js' , 'js');
+		$this->bootstrap_tools->_SetHead('assets/css/units_valid.css', 'css');
+
+		$this->_set('view_inprogress', 'unique/'.$this->_controller_name.'_valid');
+
+		// var are stored in session
+		$this->Infos_model->_set('global_search', $this->session->userdata($this->set_ref_field('global_search')));
+		$this->Infos_model->_set('order'        , $this->session->userdata($this->set_ref_field('order')));
+		$this->Infos_model->_set('filter'       , $this->session->userdata($this->set_ref_field('filter')));
+		$this->Infos_model->_set('direction'    , $this->session->userdata($this->set_ref_field('direction')));
+
+		// options dans le model Infos_model
 		$opt = new StdClass();
 		$opt->context = 'pending';
-		$opt->full = false;
+		$opt->full    = false;
+
 		$units = $this->populate($opt);
 		$this->data_view['units'] = $units;
-		//filtrage des familles pour la vue.
-		$this->Infos_model->_get('defs')['id_famille']->_set('values', $units->familys);
-		//filtrage des dates pour la vue.
+
+		// filtrage des familles / dates pour la vue
+		$this->Infos_model->_get('defs')['id_famille']->_set('values'   , $units->familys);
 		$this->Admwork_model->_get('defs')['date_travaux']->_set('values', $units->dates);
-		//$this->Admwork_model->_get('defs')['referent_travaux']->_set('values', $comissions);
+
 		$this->render_view();
 	}
 }
