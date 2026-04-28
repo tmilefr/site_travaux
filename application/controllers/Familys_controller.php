@@ -100,7 +100,7 @@ class Familys_controller extends MY_Controller {
 		$this->data_view['civil_year'] = $this->Familys_model->_get('defs')['civil_year']->_get('values');
 		$this->data_view['filter_ec'] = $this->set_civil_years();
 
-		$this->_set('view_inprogress','unique/'.$this->_controller_name.'_list');
+		//$this->_set('view_inprogress','unique/'.$this->_controller_name.'_list');
 		$this->render_view();
 	}
 

@@ -133,7 +133,7 @@
 	"archived":{
 		"type": "select",
 		"sql":"ALTER TABLE `travaux` ADD `archived` INT(10) NOT NULL AFTER `type` DEFAULT '0';",
-		"list": true,
+		"list": false,
 		"search": false,
 		"rules": "trim",
 		"values": {
@@ -149,7 +149,7 @@
 	"civil_year":{
 		"type": "select",
 		"sql":"ALTER TABLE `travaux` ADD `civil_year` VARCHAR(255) NULL AFTER `archived`;",
-		"list": true,
+		"list": false,
 		"search": false,
 		"rules": "trim|required",
 		"values": {
@@ -189,7 +189,8 @@
 		"since": 1,
 		"values": {
 			"L": "Lutterbach",
-			"M": "Mulhouse"
+			"M": "Mulhouse",
+			"B": "Les deux"
 		},		
 		"dbforge": {
 			"type": "VARCHAR",
