@@ -701,10 +701,6 @@ class MY_Controller extends CI_Controller {
 			}
 		}
 
-
-		echo debug($datas);
-		die();
-
 		if ($this->input->post('form_mod') == 'edit'){
 			if (isset($datas['id']) AND $id = $datas['id']){
 				$this->{$model_name}->_set('key_value', $id);	

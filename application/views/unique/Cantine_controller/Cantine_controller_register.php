@@ -8,7 +8,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
         <div class="nicdark_space30"></div>
 
         <!-- Titre + sous-titre -->
-        <div class="grid grid_12">
+        <div class="grid grid_9">
             <h1 class="subtitle greydark"><?php echo $this->lang->line('cantine_title');?></h1>
             <div class="nicdark_space20"></div>
             <h3 class="subtitle grey"><?php echo $this->lang->line('cantine_subtitle');?></h3>
@@ -18,7 +18,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
         </div>
 
         <!-- Sélecteur d'école -->
-        <div class="grid grid_12">
+        <div class="grid grid_3">
             <h4 class="greydark"><?php echo $this->lang->line('cantine_school');?> :</h4>
             <div class="nicdark_space10"></div>
             <?php foreach(['M' => 'Mulhouse', 'L' => 'Lutterbach'] AS $code => $label){
