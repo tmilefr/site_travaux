@@ -21,14 +21,27 @@ class Admwork_model extends Core_model{
 		$this->db->update($this->table);
 	}
 
-	function GetFiltered($civil_year, $schools){
+/**
+	 * Liste des travaux filtrés par année et école(s).
+	 *
+	 * @param string  $civil_year
+	 * @param array   $schools         codes école acceptés (B/M/L)
+	 * @param array   $exclude_types   types à exclure ; par défaut on retire 'can'
+	 *                                 (les sessions cantine ont leur propre vue
+	 *                                 Cantine_controller/register).
+	 * @return array|false
+	 */
+	function GetFiltered($civil_year, $schools, $exclude_types = ['can']){
 		$this->db->order_by('date_travaux','DESC');
-		$query = $this->db->select('*')
-		->from($this->table)
-		->where("civil_year IN ('".$civil_year."','2025-2026')")
-		->where("statut", 1 )
-		->where_in('accespar',$schools)
-		->get();
+		$this->db->select('*')
+			->from($this->table)
+			->where("civil_year IN ('".$civil_year."','2025-2026')")
+			->where("statut", 1 )
+			->where_in('accespar', $schools);
+		if (!empty($exclude_types)){
+			$this->db->where_not_in('type', $exclude_types);
+		}
+		$query = $this->db->get();
 		$this->_debug_array[] = $this->db->last_query();
 		if ($query->num_rows() > 0)
 		{
@@ -143,6 +156,29 @@ class Admwork_model extends Core_model{
 		$this->_debug_array[] = $this->db->last_query();
 
 		return ($data->num_rows()) ? $data->result() : [];
+	}
+
+	/**
+	 * Archive automatiquement les travaux dont la date est passée depuis
+	 * $grace_days jours. On conserve un délai de grâce pour permettre la
+	 * validation des unités a posteriori par le référent.
+	 *
+	 * - Ne touche pas aux travaux URG (pas de date significative).
+	 * - Ne ré-archive pas les travaux déjà archivés (idempotent).
+	 *
+	 * @param int $grace_days  jours après la date où l'on archive (défaut 30)
+	 * @return int  nombre de lignes archivées
+	 */
+	function ArchiveOldWorks($grace_days = 30){
+		$cutoff = date('Y-m-d', strtotime('-'.(int)$grace_days.' days'));
+		$this->db->set('archived', 1)
+			->set('updated', date('Y-m-d H:i:s'))
+			->where('archived !=', 1)
+			->where('type !=', 'URG')
+			->where('date_travaux <', $cutoff)
+			->update($this->table);
+		$this->_debug_array[] = $this->db->last_query();
+		return $this->db->affected_rows();
 	}
 
 	/**

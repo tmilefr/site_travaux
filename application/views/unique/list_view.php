@@ -54,7 +54,7 @@ $has_bulk = is_array($bulk_actions) && count($bulk_actions) > 0;
     <div class="nicdark_container nicdark_clearfix">
     <div class="nicdark_space30"></div>
 
-    <div class="grid grid_12">
+    <div class="grid <?php echo (isset($civil_year)) ? "grid_5":"grid_7";?>">
         <h1 class="subtitle greydark"><?php echo $this->lang->line($controller_name . '_' . $action); ?></h1>
         <div class="nicdark_space20"></div>
         <h3 class="subtitle grey">
@@ -72,6 +72,17 @@ $has_bulk = is_array($bulk_actions) && count($bulk_actions) > 0;
         <div class="nicdark_divider left big"><span class="<?php echo $this->render_object->_getCi('_bg_color');?> nicdark_radius"></span></div>
         <div class="nicdark_space10"></div>
     </div>
+    <?php if (isset($civil_year)){ ?>
+    <div class="grid grid_7">
+        <ul class="nav nav-pills">
+            <?php 
+            foreach($civil_year AS $key=>$value){
+                echo '<li class="nav-item" ><a  class="nav-link '.(($filter_ec == $key) ? 'active':'').'" href="'.base_url($this->render_object->_getCi('_controller_name').'/'.$this->render_object->_getCi('_action')).'/filter/civil_year/filter_value/'.$key.'">'.$value.'</a></li>';
+            }
+            ?>
+        </ul>
+    </div>
+    <?php } ?>
 
     <?php /* ---------------------------------------------------------------
          FLASH MESSAGES (bulk actions)
@@ -102,7 +113,7 @@ $has_bulk = is_array($bulk_actions) && count($bulk_actions) > 0;
                         $arrow = (isset($direction_stack[$i]) && $direction_stack[$i] === 'desc') ? '↓' : '↑';
                         $label = $this->lang->line($f) ?: $f;
                         echo '<span class="badge badge-info" style="margin-left:0.3em;">'
-                            . ($i + 1) . '. ' . htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . ' ' . $arrow
+                            . ($i + 1) . '. ' . $label . ' ' . $arrow
                             . '</span>';
                     }
                     ?>
@@ -141,7 +152,7 @@ $has_bulk = is_array($bulk_actions) && count($bulk_actions) > 0;
                                            onchange="window.location.href='<?php echo $base; ?>/column_toggle/<?php echo urlencode($field); ?>';">
                                     <label class="form-check-label"
                                            for="col_<?php echo htmlspecialchars($field, ENT_QUOTES, 'UTF-8'); ?>">
-                                        <?php echo htmlspecialchars($label, ENT_QUOTES, 'UTF-8'); ?>
+                                        <?php echo $label; ?>
                                     </label>
                                 </div>
                             <?php } ?>

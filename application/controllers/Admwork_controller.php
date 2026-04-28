@@ -40,11 +40,11 @@ class Admwork_controller extends MY_Controller {
 		$this->LoadModel('Infos_model');
 		$this->LoadModel('Admwork_model');
 		$this->LoadModel('Familys_model');
+		$this->LoadModel('Trombi_model');
+		
 
 		$this->render_object->_set('_not_link_list', ['add','view','list','draftvalidation']);
 	}
-
-
 
 	/** @return void  */
 	public function index(){
@@ -67,7 +67,7 @@ class Admwork_controller extends MY_Controller {
 		$this->data_view['civil_year'] = $this->{$this->_model_name}->_get('defs')['civil_year']->_get('values');
 		$this->data_view['filter_ec'] = $this->set_civil_years();
 
-		$this->_set('view_inprogress','unique/'.$this->_controller_name.'_list');		
+		//$this->_set('view_inprogress','unique/'.$this->_controller_name.'_list');		
 		foreach($this->data_view['datas'] AS $key=>$data){
 			$have =  $this->Infos_model->GetRegistred($data->id);
 			//echo debug($have);
@@ -107,9 +107,11 @@ class Admwork_controller extends MY_Controller {
 		/* --- Nouveaux assets à ajouter --- */
 		$this->bootstrap_tools->_SetHead('assets/css/admwork_register.css', 'css');
 		$this->bootstrap_tools->_SetHead('assets/js/admwork_register.js',   'js');
-    	$this->bootstrap_tools->_SetHead('assets/js/index.global.min.js', 'js');
+    	//$this->bootstrap_tools->_SetHead('assets/js/index.global.min.js', 'js');
 	
-		/* --- Code existant inchangé --- */
+		/* Archivage automatique des anciens travaux (1 fois / jour max) */
+		$this->_maybe_archive_old_works(30);
+
 		$this->data_view['WorkType'] = $this->Admwork_model->_get('defs')['type']->_get('values');
 		$this->_set('view_inprogress','unique/'.$this->_controller_name.'_register');
 		$this->{$this->_model_name}->_set('order','date_travaux');
@@ -122,6 +124,7 @@ class Admwork_controller extends MY_Controller {
 			$works = $this->{$this->_model_name}->GetFiltered($this->config->item('civil_year'), ['B','M','L']);
 		}
 	
+		$today = date('Y-m-d');
 		$planified_works = [];
 		foreach ($works as $key => $work) {
 			if ($work->type == 'URG') {
@@ -137,7 +140,10 @@ class Admwork_controller extends MY_Controller {
 			if ($work->registreds >= $work->nb_inscrits_max) {
 				$work->register = false;
 			}
-			if ($work->archived != 1) {
+
+			$is_archived = ((int)$work->archived === 1);
+			$is_past     = ($work->type !== 'URG' && $work->date_travaux < $today);
+			if (!$is_archived && !$is_past) {
 				$planified_works[] = $work;
 			}
 		}
@@ -145,6 +151,21 @@ class Admwork_controller extends MY_Controller {
 		$this->render_view();
 	}
 
+
+	/**
+	 * Lance l'archivage des anciens travaux au plus une fois par jour.
+	 * Utilise un fichier témoin dans application/cache/ pour éviter de
+	 * solliciter la base à chaque requête.
+	 */
+	private function _maybe_archive_old_works($grace_days = 30){
+		$flag = APPPATH.'cache/last_archive_run.txt';
+		$today = date('Y-m-d');
+		if (is_file($flag) && trim(@file_get_contents($flag)) === $today){
+			return;
+		}
+		$this->Admwork_model->ArchiveOldWorks($grace_days);
+		@file_put_contents($flag, $today);
+	}
 	
 	/**
 	 * Method register_one : user view
