@@ -40,3 +40,35 @@ $lang['INFO_WHO_MANAGE']                    = 'Pilote de la session';
 
 // Erreur métier (inscriptions)
 $lang['TOO_MANY_PEOPLE']                    = '<div class="alert alert-danger" role="alert">Trop de personne inscrite!</div>';
+
+// Sous-titre actualisé
+$lang['Units_controller_valid_subtitle']    = 'Cochez les unités à valider, puis cliquez sur "Valider".';
+
+// État vide (rien à valider)
+$lang['UV_EMPTY_TITLE']                     = 'Aucune unité en attente de validation';
+$lang['UV_EMPTY_HELP']                      = 'Toutes les sessions ont été traitées. Revenez après la prochaine session.';
+
+// Barre de filtres
+$lang['UV_SEARCH_PLACEHOLDER']              = 'Rechercher (titre, famille, référent...)';
+$lang['UV_ALL_DATES']                       = 'Toutes les dates';
+$lang['UV_ALL_FAMILYS']                     = 'Toutes les familles';
+$lang['UV_ALL_TYPES']                       = 'Tous les types';
+$lang['UV_RESET']                           = 'Réinitialiser';
+
+// Compteurs
+$lang['UV_LBL_SESSIONS']                    = 'sessions';
+$lang['UV_LBL_UNITS']                       = 'unités à valider';
+$lang['UV_LBL_SELECTED']                    = 'sélectionnées';
+$lang['UV_LBL_SELECTED_LONG']               = 'unité(s) sélectionnée(s)';
+$lang['UV_LBL_REGISTERED']                  = 'inscrits';
+
+// Carte de session
+$lang['UV_OPEN_SESSION']                    = 'Ouvrir';
+$lang['UV_CHECK_ALL']                       = 'Tout cocher';
+
+// Type de session (libellés courts utilisés dans la vue)
+$lang['type_session_horaire']               = 'Horaire';
+$lang['type_session_action']                = 'Action';
+
+// Aucun résultat (filtres)
+$lang['UV_NO_RESULT']                       = 'Aucune session ne correspond aux filtres en cours.';
