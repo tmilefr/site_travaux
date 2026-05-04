@@ -266,6 +266,7 @@ class Admwork_controller extends MY_Controller {
 
 	private function GET_registration($id_work){
 		$this->data_view['work'] = $this->GetWork($id_work);
+		
 		$this->data_view['id_fam'] = $this->acl->getUserId();
 		$this->data_view['design'] = $this->render_object->GetDesign($this->data_view['work']->type);
 	}
@@ -299,14 +300,18 @@ class Admwork_controller extends MY_Controller {
 
 			$this->{$this->_model_name}->_set('key_value',$id_work);
 			$work = $this->{$this->_model_name}->get_one();
+
+
+
 			$work->already_registred = $this->Infos_model->IsRegister($this->acl->getUserId(), $id_work);
 			$work->registred = [];
 
 			/* Récuperation du référent */
 			$work->pilot = $this->Trombi_model->GetConsolidateMember($work->referent_travaux);
 
+
 			//recupération de la liste des participants pour la vue admin
-			if ($this->acl->getType()  == "sys"){
+			if ($this->acl->hasAccess('Admwork_controller/managed_one')){
 				$registreds = $this->Infos_model->GetRegistred($id_work);
 				$this->load->model('Familys_model');
 				//on recherche la famille pour chaque inscription
@@ -323,15 +328,10 @@ class Admwork_controller extends MY_Controller {
 
 
 
-	/**
-	 * Point d'entrée GUEST : le référent arrive par un lien email.
-	 * Pas de login requis — la sécurité tient au token.
-	 *
-	 * URL type : /Admwork_controller/validate_by_token/abc123...
-	 *
-	 * @param string $token
-	 * @return void
-	 */
+	// -----------------------------------------------------------------------
+	// Point d'entrée GUEST : accès par lien email tokenisé
+	// -----------------------------------------------------------------------
+
 	public function validate_by_token($token = null)
 	{
 		$this->LoadModel('ValidationToken_model');
@@ -339,7 +339,7 @@ class Admwork_controller extends MY_Controller {
 		$this->LoadModel('Infos_model');
 		$this->LoadModel('Familys_model');
 		$this->LoadModel('Trombi_model');
-		
+
 		$tk = $this->ValidationToken_model->findValid($token);
 		if (!$tk) {
 			$this->data_view['error'] = $this->lang->line('REF_TOKEN_INVALID');
@@ -348,40 +348,13 @@ class Admwork_controller extends MY_Controller {
 			return;
 		}
 
-		// Session validée, on reproduit la logique de validate_one mais sans ACL
-		$this->data_view['msg']       = '';
-		$this->data_view['token']     = $tk->token;
-		$this->data_view['via_token'] = true;
-
-		// La validation n'est ouverte qu'à partir du jour de la session
-		$work = $this->_BuildWorkForRefView($tk->id_travaux);
-		$is_validation_open = (strtotime($work->date_travaux) <= strtotime('today'));
-		$this->data_view['is_validation_open'] = $is_validation_open;
-
-		// Traitement du POST — uniquement si la validation est ouverte
-		if ($is_validation_open && $this->input->post('elements')) {
-			$this->_ProcessRefValidation($tk->id_travaux, $tk->id_fam_ref);
-			$this->ValidationToken_model->markUsed($tk->id);
-			$this->data_view['msg'] = '<div class="alert alert-success">'
-				. $this->lang->line('REF_VALIDATE_SAVED') . '</div>';
-			// Recharger le work pour refléter les changements
-			$work = $this->_BuildWorkForRefView($tk->id_travaux);
-		}
-
-		$this->data_view['work']   = $work;
-		$this->data_view['design'] = $this->render_object->GetDesign($work->type);
-
-		$this->_set('view_inprogress', 'unique/Admwork_controller_validate_one_ref');
-		$this->render_view();
+		$this->_HandleRefActions($tk->id_travaux, $tk->id_fam_ref, $tk->token, $tk->id);
 	}
 
-	/**
-	 * Alternative (menu dans le site) : l'utilisateur connecté "fam"
-	 * qui est référent de la session peut aussi y accéder.
-	 *
-	 * @param int $id_work
-	 * @return void
-	 */
+	// -----------------------------------------------------------------------
+	// Point d'entrée connecté : l'utilisateur "fam" accède via le menu
+	// -----------------------------------------------------------------------
+
 	public function validate_one($id_work)
 	{
 		if (!$id_work || $this->acl->getType() !== 'fam') {
@@ -390,34 +363,13 @@ class Admwork_controller extends MY_Controller {
 		if (!$this->_IsReferentOfWork($id_work)) {
 			redirect('Home/no_right');
 		}
-
-		$this->data_view['msg']       = '';
-		$this->data_view['via_token'] = false;
-		$this->data_view['token']     = null;
-
-		$work = $this->_BuildWorkForRefView($id_work);
-		$is_validation_open = (strtotime($work->date_travaux) <= strtotime('today'));
-		$this->data_view['is_validation_open'] = $is_validation_open;
-
-		if ($is_validation_open && $this->input->post('elements')) {
-			$this->_ProcessRefValidation($id_work, $this->acl->getUserId());
-			$this->data_view['msg'] = '<div class="alert alert-success">'
-				. $this->lang->line('REF_VALIDATE_SAVED') . '</div>';
-			$work = $this->_BuildWorkForRefView($id_work);
-		}
-
-		$this->data_view['work']   = $work;
-		$this->data_view['design'] = $this->render_object->GetDesign($work->type);
-
-		$this->_set('view_inprogress', 'unique/Admwork_controller_validate_one_ref');
-		$this->render_view();
+		$this->_HandleRefActions($id_work, $this->acl->getUserId(), null, null);
 	}
 
-	/**
-	 * Liste des sessions où l'utilisateur connecté est référent.
-	 *
-	 * @return void
-	 */
+	// -----------------------------------------------------------------------
+	// Liste des sessions où l'utilisateur connecté est référent
+	// -----------------------------------------------------------------------
+
 	public function my_sessions()
 	{
 		if ($this->acl->getType() !== 'fam') {
@@ -431,7 +383,186 @@ class Admwork_controller extends MY_Controller {
 	}
 
 	// -----------------------------------------------------------------------
-	// Helpers privés
+	// Orchestration commune aux deux points d'entrée
+	// -----------------------------------------------------------------------
+
+	/**
+	 * Gère l'affichage + les actions POST (add / remove / validate).
+	 *
+	 * @param int    $id_work    Session concernée
+	 * @param int    $id_fam_ref famille.id du référent qui agit
+	 * @param string $token      Token si accès par lien email, null sinon
+	 * @param int    $token_id   PK du token en base (pour markUsed), null sinon
+	 * @return void
+	 */
+	private function _HandleRefActions($id_work, $id_fam_ref, $token, $token_id)
+	{
+		$this->data_view['msg']       = '';
+		$this->data_view['via_token'] = ($token !== null);
+		$this->data_view['token']     = $token;
+
+		// Pré-chargement pour connaître la date
+		$this->Admwork_model->_set('key_value', $id_work);
+		$work_meta = $this->Admwork_model->get_one();
+		$is_open   = (strtotime($work_meta->date_travaux) <= strtotime('today'));
+		$this->data_view['is_validation_open'] = $is_open;
+
+		// ---- Traitement du POST ----
+		$action = $this->input->post('action');
+
+		if ($action === 'validate' && $is_open && $this->input->post('elements')) {
+			$this->_ProcessRefValidation($id_work, $id_fam_ref);
+			if ($token_id) {
+				$this->ValidationToken_model->markUsed($token_id);
+			}
+			$this->data_view['msg'] = '<div class="alert alert-success">'
+				. $this->lang->line('REF_VALIDATE_SAVED') . '</div>';
+
+		} elseif ($action === 'remove' && !$is_open) {
+			$this->_ProcessRefRemove($id_work);
+			$this->data_view['msg'] = '<div class="alert alert-success">'
+				. $this->lang->line('REF_REMOVE_SAVED') . '</div>';
+
+		} elseif ($action === 'add' && !$is_open) {
+			$added = $this->_ProcessRefAdd($id_work);
+			if ($added === true) {
+				$this->data_view['msg'] = '<div class="alert alert-success">'
+					. $this->lang->line('REF_ADD_SAVED') . '</div>';
+			} else {
+				$this->data_view['msg'] = '<div class="alert alert-warning">'
+					. $added . '</div>';
+			}
+		}
+
+		// ---- Rechargement complet après toute action ----
+		$work = $this->_BuildWorkForRefView($id_work);
+		$this->data_view['work']   = $work;
+		$this->data_view['design'] = $this->render_object->GetDesign($work->type);
+
+		// ---- Familles disponibles pour inscription (mode gestion) ----
+		if (!$is_open) {
+			$this->data_view['available_families'] = $this->_GetFamiliesAvailableForWork($work);
+			// Options pour type_participant (depuis Infos_model)
+			$this->data_view['type_participant_values'] =
+				$this->Infos_model->_get('defs')['type_participant']->_get('values');
+		}
+
+		$this->_set('view_inprogress', 'unique/Admwork_controller_validate_one_ref');
+		$this->render_view();
+	}
+
+	// -----------------------------------------------------------------------
+	// Traitements POST
+	// -----------------------------------------------------------------------
+
+	/**
+	 * Inscrit une famille à la session (mode gestion).
+	 *
+	 * @param int $id_work
+	 * @return true|string  true si OK, message d'erreur sinon
+	 */
+	private function _ProcessRefAdd($id_work)
+	{
+		$id_fam            = (int) $this->input->post('id_famille');
+		$type_participant  = $this->input->post('type_participant');
+		if (!$id_fam || !$type_participant) {
+			return $this->lang->line('REF_ADD_MISSING_FIELDS');
+		}
+
+		// Déjà inscrite ?
+		if ($this->Infos_model->IsRegister($id_fam, $id_work)) {
+			return $this->lang->line('REF_ADD_ALREADY_REGISTERED');
+		}
+
+		// Capacité disponible ?
+		$nb_participants = ($type_participant === 'Both') ? 2 : 1;
+		$current = $this->Infos_model->Decompte($id_work);
+		$current = $current ? (int) $current->nb_participants : 0;
+		$max     = (int) $this->Admwork_model->GetMax($id_work)->nb_inscrits_max;
+		if (($current + $nb_participants) > $max) {
+			return $this->lang->line('TOO_MANY_PEOPLE');
+		}
+
+		// Insertion directe dans infos
+		$this->db->insert('infos', [
+			'id_famille'            => $id_fam,
+			'id_travaux'            => $id_work,
+			'type_participant'      => $type_participant,
+			'nb_participants'       => $nb_participants,
+			'nb_unites_valides'     => 0,
+			'type_session'          => (int) $this->input->post('type_session') ?: 1,
+		]);
+		return true;
+	}
+
+	/**
+	 * Retire une famille de la session (mode gestion).
+	 *
+	 * @param int $id_work
+	 * @return void
+	 */
+	private function _ProcessRefRemove($id_work)
+	{
+		$id_info = (int) $this->input->post('id_info');
+		if (!$id_info) return;
+
+		// Sécurité : l'info doit bien appartenir à CETTE session
+		$info = $this->db->select('*')
+			->from('infos')
+			->where('id', $id_info)
+			->where('id_travaux', $id_work)
+			->get()
+			->row();
+		if (!$info) return;
+
+		$this->Infos_model->_set('key_value', $id_info);
+		$this->Infos_model->delete();
+	}
+
+	/**
+	 * Traitement du POST de validation des présences (jour J et après).
+	 *
+	 * @param int $id_work
+	 * @param int $id_fam_ref
+	 * @return void
+	 */
+	private function _ProcessRefValidation($id_work, $id_fam_ref)
+	{
+		$elements    = $this->input->post('elements');
+		$to_delete   = (array) $this->input->post('unregister');
+		$global_com  = $this->input->post('commentaire_global');
+
+		if (!is_array($elements)) $elements = [];
+
+		foreach ($elements as $id_info) {
+			$id_info = (int) $id_info;
+
+			if (in_array($id_info, $to_delete)) {
+				$this->Infos_model->_set('key_value', $id_info);
+				$this->Infos_model->delete();
+				continue;
+			}
+
+			$present     = $this->input->post('present_' . $id_info);
+			$nb_units    = $this->input->post('nb_unites_' . $id_info);
+			$commentaire = trim((string) $this->input->post('commentaire_' . $id_info));
+
+			if ($global_com) {
+				$commentaire = trim($global_com . ($commentaire ? ' | ' . $commentaire : ''));
+			}
+
+			$datas = [
+				'nb_unites_valides' => $present ? (float) $nb_units : 0,
+				'commentaire_ref'   => $commentaire ?: null,
+				'valide_par_ref'    => (int) $id_fam_ref,
+				'valide_ref_at'     => date('Y-m-d H:i:s'),
+			];
+			$this->Infos_model->valid_unit($id_info, $datas);
+		}
+	}
+
+	// -----------------------------------------------------------------------
+	// Helpers
 	// -----------------------------------------------------------------------
 
 	/**
@@ -454,6 +585,12 @@ class Admwork_controller extends MY_Controller {
 			}
 		}
 		$work->registred = $registreds ?: [];
+
+		// Décompte des places
+		$decompte = $this->Infos_model->Decompte($id_work);
+		$work->nb_inscrits = $decompte ? (int) $decompte->nb_participants : 0;
+		$work->places_restantes = max(0, (int) $work->nb_inscrits_max - $work->nb_inscrits);
+
 		return $work;
 	}
 
@@ -471,50 +608,31 @@ class Admwork_controller extends MY_Controller {
 	}
 
 	/**
-	 * Traitement commun du POST de validation référent.
-	 * Gère : présence, nb d'unités, commentaire, désinscription.
+	 * Liste des familles non encore inscrites à cette session et
+	 * compatibles avec l'école de la session (accespar).
 	 *
-	 * @param int $id_work
-	 * @param int $id_fam_ref  famille.id du référent qui valide
-	 * @return void
+	 * @param stdClass $work
+	 * @return array
 	 */
-	private function _ProcessRefValidation($id_work, $id_fam_ref)
+	private function _GetFamiliesAvailableForWork($work)
 	{
-		$elements    = $this->input->post('elements');
-		$to_delete   = (array) $this->input->post('unregister');
-		$global_com  = $this->input->post('commentaire_global');
+		$this->db->select('famille.id, famille.nom, famille.ecole')
+			->from('famille')
+			->where("famille.id NOT IN (SELECT id_famille FROM infos WHERE id_travaux = " . (int) $work->id . ")", null, false);
 
-		if (!is_array($elements)) $elements = [];
-
-		foreach ($elements as $id_info) {
-			$id_info = (int) $id_info;
-
-			// 1) Désinscription prioritaire
-			if (in_array($id_info, $to_delete)) {
-				$this->Infos_model->_set('key_value', $id_info);
-				$this->Infos_model->delete();
-				continue;
-			}
-
-			// 2) Sinon, mise à jour présence + commentaire
-			$present     = $this->input->post('present_' . $id_info);
-			$nb_units    = $this->input->post('nb_unites_' . $id_info);
-			$commentaire = trim((string) $this->input->post('commentaire_' . $id_info));
-
-			// préfixe de commentaire global si fourni
-			if ($global_com) {
-				$commentaire = trim($global_com . ($commentaire ? ' | ' . $commentaire : ''));
-			}
-
-			$datas = [
-				'nb_unites_valides' => $present ? (float) $nb_units : 0,
-				'commentaire_ref'   => $commentaire ?: null,
-				'valide_par_ref'    => (int) $id_fam_ref,
-				'valide_ref_at'     => date('Y-m-d H:i:s'),
-			];
-
-			$this->Infos_model->valid_unit($id_info, $datas);
+		// Filtre école : si la session est sur une école spécifique, seules
+		// les familles compatibles sont affichées (B = les deux, L ou M = une seule)
+		if (!empty($work->accespar) && $work->accespar !== 'B') {
+			$this->db->group_start()
+				->where('famille.ecole', $work->accespar)
+				->or_where('famille.ecole', 'B')
+				->group_end();
 		}
+
+		$this->db->order_by('famille.nom', 'ASC');
+		$rows = $this->db->get()->result();
+
+		return $rows ?: [];
 	}
 
 }
