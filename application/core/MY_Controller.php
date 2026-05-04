@@ -308,18 +308,28 @@ class MY_Controller extends CI_Controller {
 	 */
 	function render_view(){
 		if ($this->input->is_ajax_request()){
-			$this->load->view($this->view_inprogress,	$this->data_view);
+			$this->load->view($this->view_inprogress, $this->data_view);
 		} else {
-			$this->load->view('template/head',			$this->data_view);
-
-			$view = str_replace('application', 'application\\views\\unique\\'.$this->_controller_name.'\\', APPPATH ).str_replace('unique/','',$this->view_inprogress).'.php';
+			$this->load->view('template/head', $this->data_view);
+	
+			//echo debug($this->view_inprogress);
+			// Nettoie le préfixe 'unique/' s'il est déjà présent
+			$view_clean = str_replace('unique/', '', $this->view_inprogress);
+	
+			// Construit le chemin de manière portable avec DIRECTORY_SEPARATOR
+			$view = rtrim(APPPATH, '/\\') . DIRECTORY_SEPARATOR
+				  . 'views' . DIRECTORY_SEPARATOR
+				  . 'unique' . DIRECTORY_SEPARATOR
+				  . $this->_controller_name . DIRECTORY_SEPARATOR
+				  . $view_clean . ((strpos($this->view_inprogress,'.php')) ? '':'.php');
+			//echo debug($view);
 			if (is_file($view)){
-				$this->view_inprogress = 'unique\\'.$this->_controller_name.'\\'.str_replace('unique/','',$this->view_inprogress);
-			} 
-			
-
-			$this->load->view($this->view_inprogress,	$this->data_view);
-			$this->load->view('template/footer',		$this->data_view);	
+				// Pour CodeIgniter, les chemins de vues utilisent toujours '/' (peu importe l'OS)
+				$this->view_inprogress = 'unique/' . $this->_controller_name . '/' . $view_clean;
+			}
+	
+			$this->load->view($this->view_inprogress, $this->data_view);
+			$this->load->view('template/footer', $this->data_view);
 		}
 	}
 
@@ -420,7 +430,7 @@ class MY_Controller extends CI_Controller {
 	 */
 	protected function _get_bulk_actions(){
 		$actions = $this->_bulk_actions;
-		if (!empty($this->_autorize['delete'])) {
+		if (!empty($this->_autorize['delete']) && $this->acl->hasAccess($this->_controller_name.'/delete')) {
 			$actions = array_merge(
 				array('delete' => array(
 					'label_key' => 'BULK_DELETE',

@@ -24,6 +24,8 @@ $lang['work_planned_subtitle']                  = 'voici les prochains travaux '
 $lang['ADM_WORK']                               = 'Administration';
 $lang['DO_PDF']                                 = 'Imprimer un PDF';
 
+$lang['EDIT_WORK']                              = 'Editer';
+
 // Inscription / désinscription
 $lang['REGISTER_WORK']                          = 'S\'inscrire';
 $lang['SEE_YOUR_REGISTRED_WORK']                = 'Votre inscription';
@@ -107,3 +109,73 @@ $lang['LOGIN_TO_CONTINUE']                          = 'Se connecter';
 
 // Trace côté admin (vue sys)
 $lang['VALIDATED_BY_REF']                           = 'Validé par le référent le';
+
+// Liste "Mes sessions"
+$lang['REF_MY_SESSIONS_TITLE']    = 'Mes sessions à animer';
+$lang['REF_MY_SESSIONS_SUBTITLE'] = 'Retrouvez ici les sessions où vous êtes référent : gérez les inscrits avant la session, validez les présences le jour J.';
+$lang['REF_NO_SESSIONS']          = 'Vous n\'êtes référent d\'aucune session pour le moment.';
+$lang['REF_VALIDATE_ACTION']      = 'Valider les présences';
+$lang['REF_PREVIEW_ACTION']       = 'Gérer les inscrits';
+
+// Mode APERÇU / GESTION (avant la session)
+$lang['REF_PREVIEW_PAGE_TITLE']    = 'Votre session à venir';
+$lang['REF_PREVIEW_INTRO']         = 'Vous êtes référent de cette session.';
+$lang['REF_PREVIEW_DAYS_LEFT']     = 'Elle aura lieu dans %d jours.';
+$lang['REF_PREVIEW_TOMORROW']      = 'Elle aura lieu demain.';
+$lang['REF_PREVIEW_TODAY']         = 'Elle a lieu aujourd\'hui !';
+$lang['REF_PREVIEW_FOOTER']        = 'La validation des présences sera activée à partir du jour de la session.';
+
+$lang['REF_MANAGE_HELP']           = 'Vous pouvez ajouter ou retirer des parents inscrits jusqu\'à la veille de la session. Le jour J, ce même lien vous permettra de valider les présences réelles.';
+$lang['REF_REGISTERED_LIST']       = 'Parents inscrits';
+$lang['REF_PLACES_TAKEN']          = 'Places prises :';
+$lang['REF_PLACES_LEFT']           = 'place(s) restante(s)';
+$lang['REF_NO_PLACES_LEFT']        = 'La session est complète. Pour ajouter quelqu\'un, retirez d\'abord un inscrit.';
+
+// Retrait d'un inscrit
+$lang['REF_REMOVE_BTN']            = 'Retirer';
+$lang['REF_REMOVE_CONFIRM']        = 'Retirer cette famille de la session ?';
+$lang['REF_REMOVE_SAVED']          = 'Famille retirée de la session.';
+
+// Ajout d'un inscrit
+$lang['REF_ADD_FAMILY']            = 'Ajouter une famille';
+$lang['REF_ADD_BTN']               = 'Ajouter';
+$lang['REF_ADD_SAVED']             = 'Famille inscrite à la session.';
+$lang['REF_ADD_MISSING_FIELDS']    = 'Veuillez sélectionner une famille et un type de participation.';
+$lang['REF_ADD_ALREADY_REGISTERED']= 'Cette famille est déjà inscrite à la session.';
+$lang['SELECT_FAMILY']             = 'Choisir une famille';
+$lang['REQUIRED_FIELDS']           = 'champs obligatoires';
+$lang['ACTION']                    = 'Action';
+$lang['horaires']                  = 'Horaires';
+
+// Mode VALIDATION (jour J et après)
+$lang['REF_VALIDATE_PAGE_TITLE']   = 'Validation des présences';
+$lang['REF_VALIDATE_INTRO']        = 'En tant que référent de cette session, merci de valider la présence des parents inscrits.';
+$lang['REF_VALIDATE_HELP']         = 'Cochez les parents présents, ajustez le nombre d\'unités effectives si besoin, ajoutez un commentaire, et signalez les absences non excusées. Votre validation sera ensuite confirmée par le bureau.';
+$lang['REF_VALIDATE_SUBMIT']       = 'Enregistrer les présences';
+$lang['REF_VALIDATE_CONFIRM']      = 'Confirmer l\'enregistrement des présences ?';
+$lang['REF_VALIDATE_SAVED']        = 'Présences enregistrées. Merci !';
+
+$lang['PRESENT']                   = 'Présent';
+$lang['REF_COMMENT']               = 'Commentaire';
+$lang['REF_COMMENT_PLACEHOLDER']   = 'ex: en retard, est reparti plus tôt…';
+$lang['REF_COMMENT_GLOBAL']        = 'Commentaire général sur la session (optionnel)';
+$lang['REF_COMMENT_GLOBAL_PLACEHOLDER'] = 'Ambiance, points à signaler au bureau…';
+$lang['REF_NO_SHOW']               = 'No-show';
+$lang['REF_NO_SHOW_LABEL']         = 'Désinscrire';
+
+// Token / accès par lien email
+$lang['REF_TOKEN_ERROR_TITLE']     = 'Lien invalide ou expiré';
+$lang['REF_TOKEN_INVALID']         = 'Ce lien n\'est plus valide. Il a peut-être expiré ou est incorrect.';
+$lang['REF_TOKEN_ERROR_HELP']      = 'Vous pouvez vous connecter à votre espace pour retrouver vos sessions, ou contacter le bureau.';
+$lang['LOGIN_TO_CONTINUE']         = 'Se connecter';
+
+// Trace côté admin (vue sys)
+$lang['VALIDATED_BY_REF']          = 'Validé par le référent le';
+
+
+//administration travail
+$lang['MANAGED_REGISTER_WORK'] = 'Gestion de la session : ajout d\'une famille sur la session';
+$lang['id_famille'] = 'Famille';
+$lang['help_id_famille'] = 'nom de famille, prénom ...';
+$lang['MANAGED_REGISTER_WORK'] = 'Gestion de la session';
+$lang['nb_unites_valides'] = 'Nombre d\'unité';

@@ -177,9 +177,13 @@ $acl = $this->acl->getType();
                         <?php if (!empty($w->already_registred)): ?>&nbsp;<span class="aw-badge-inscrit">&#10003; Inscrit</span><?php endif; ?>
                     </span>
                     <div class="aw-footer-actions">
-                        <?php if ($acl==='sys'): ?>
+                        <?php if ($this->acl->hasAccess('Admwork_controller/managed_one')): ?>
                             <a href="<?php echo base_url('Admwork_controller/managed_one/'.$w->id); ?>" class="aw-btn adm"><?php echo $this->lang->line('ADM_WORK'); ?></a>
-                        <?php elseif ($w->register): ?>
+                        <?php endif;
+                        if ($this->acl->hasAccess('Admwork_controller/edit')): ?>
+                            <a href="<?php echo base_url('Admwork_controller/edit/'.$w->id); ?>" class="aw-btn adm"><?php echo $this->lang->line('EDIT_WORK'); ?></a>
+                        <?php endif;
+                        if ($w->register): ?>
                             <a href="<?php echo base_url('Admwork_controller/register_one/'.$w->id); ?>" class="aw-btn<?php echo !empty($w->already_registred)?' inscrit':''; ?>">
                                 <?php echo !empty($w->already_registred) ? '&#10003; '.$this->lang->line('SEE_YOUR_REGISTRED_WORK') : $this->lang->line('REGISTER_WORK'); ?>
                             </a>
