@@ -130,3 +130,36 @@ $lang['COUNT_AGO_DAYS']     = 'il y a %d j';
 $lang['COUNT_AGO_DAY']      = 'hier';
 $lang['COUNT_AGO_MONTH']    = 'il y a ~1 mois';
 $lang['COUNT_AGO_MONTHS']   = 'il y a %d mois';
+
+// Données famille (édition)
+$lang['idfamille']                              = 'R&eacute;f&eacute;rence DELTA';
+$lang['e_mail']                                 = 'E-mail principal (Login delta enfance)';
+$lang['e_mail_comp']                            = 'E-mail compl&eacute;mentaire';
+$lang['e_mail_comp_AddRow']                     = 'Ajouter un e-mail';
+$lang['FAMILY']                                 = 'Famille';
+$lang['FAMILY_DATA']                            = 'Donn&eacute;es de la famille';
+$lang['FAMILY_MEMBER']                          = 'Membres de la famille';
+$lang['DELTA_ENFANCE_DATA']                     = 'Donn&eacute;es dans DELTA ENFANCE';
+$lang['MY_FAMILY_EDITION']                      = 'Sauver mes modifications';
+
+// Vues "côté famille connectée"
+$lang['YOUR_FAMILY_DATA']                       = 'Vos Donn&eacute;es compl&eacute;mentaires';
+$lang['YOUR_FAMILY_MEMBER']                     = 'Membres de votre famille';
+$lang['YOUR_DELTA_ENFANCE_DATA']                = 'Donn&eacute;es dans DELTA ENFANCE';
+
+// Encarts d'aide
+$lang['INFO_FAMILLE_TITLE']                     = 'Aidez nous !';
+$lang['INFO_FAMILLE']                           = 'Plus nous avons d\'information sur votre famille et plus il nous sera ais&eacute; de remplir notre mission. ';
+$lang['INFO_FAMILLE_FOOTER']                    = 'Par exemple, sur la fiche de cantine, tr&eacute;s souvent nous avons un nom qui ne correspond &agrave; rien dans ce site. Merci de votre compr&eacute;hension !';
+
+// Encarts "Mon compte" / Delta Enfance
+$lang['INFO_ACCOUNT_FORM_TITLE']                = 'Relation avec Delta Enfance';
+$lang['INFO_ACCOUNT_FORM_BODY']                 = 'A chaque connection avec delta enfance, votre mot de passe est mis &agrave; jour dans ce site.';
+$lang['INFO_ACCOUNT_FORM_FOOTER']               = 'Ainsi, si la connection avec delta enfance ne fonctionne plus, vous pouvez utiliser le login local avec le mot de passe de delta enfance';
+$lang['password_change']                        = 'Cocher pour changer le mot de passe';
+
+// Membres de la famille (table members)
+$lang['members']                                = 'Membres de la famille';
+$lang['members_AddRow']                         = 'Ajouter un membre &agrave; la famille';
+$lang['nom_Members_model[]']                    = 'Nom';
+$lang['prenom_Members_model[]']                 = 'Pr&eacute;nom';

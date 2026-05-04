@@ -114,6 +114,11 @@
 				"noright":false,
 				"items":[
 					{
+						"url":"Admwork_controller/my_sessions",
+						"name":"Admwork_controller_my_sessions",
+						"type":"link"
+					},
+					{
 						"url":"Familys_controller/list",
 						"name":"Familys_controller_list",
 						"type":"link"
@@ -155,13 +160,7 @@
 						"url":"Admwork_controller/worker",
 						"name":"Admwork_controller_worker",
 						"type":"link"
-					},
-					{
-						"url":"Admwork_controller/my_sessions",
-						"name":"Admwork_controller_my_sessions",
-						"type":"link"
-					}		
-										
+					}										
 				]
 			},
 			{

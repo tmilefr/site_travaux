@@ -379,18 +379,173 @@
 }
 
 /* =====================================================================
-   RESPONSIVE
+   13. RESPONSIVE — à placer EN FIN de assets/css/admwork_register.css
+   (remplace la section 13 actuelle)
    ===================================================================== */
-@media (max-width:900px) {
-    .aw-card { width:calc(50% - 10px); }
+
+/* ---- Tablette : 2 colonnes ---- */
+@media (max-width: 900px) and (min-width: 581px) {
+    .aw-card { width: calc(50% - 10px); margin: 0 5px 14px; }
 }
-@media (max-width:600px) {
-    .aw-card    { width:100%; margin:0 0 14px; }
-    .aw-stats   { flex-wrap:wrap; }
-    .aw-stat    { flex:0 0 50%; border-bottom:1px solid #e8e8e8; }
-    .aw-list-cd { display:none; }
-    .aw-list-day { font-size:16px; }
-    .aw-search  { width:130px; }
-    .aw-btn     { font-size:11px; padding:5px 10px; }
-    .aw-toggle-btn span { display:none; }
+
+/* =====================================================================
+   MOBILE ≤ 580px — VUE LISTE COMPACTE
+   Bascule purement CSS : aucun changement HTML / JS.
+   Le bouton "Cartes" devient "Liste", les .aw-card deviennent des lignes.
+   ===================================================================== */
+@media (max-width: 580px) {
+
+    /* ---------- 1. BOUTON "CARTES" → "LISTE" ---------- */
+    .aw-stats { flex-wrap: wrap; }
+    .aw-stat  { flex: 0 0 50%; border-bottom: 1px solid #e8e8e8; }
+    .aw-search { width: 140px; }
+
+    /* On masque le <span>Cartes</span> et on injecte "Liste" à la place */
+    #btn-view-cards span { display: none; }
+    #btn-view-cards::after {
+        content: "Liste";
+        font-size: 13px;
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 600;
+    }
+    /* Changement d'icône : on masque l'icône layout, on ajoute une icône liste via ::before */
+    #btn-view-cards i.icon-layout { display: none; }
+    #btn-view-cards::before {
+        content: "\2630"; /* trois barres ≡ ; remplaçable par icon-list si disponible */
+        margin-right: 4px;
+        font-size: 14px;
+    }
+    /* Le bouton "Calendrier" garde son icône, on masque juste son libellé */
+    #btn-view-calendar span { display: none; }
+
+    /* ---------- 2. FILTRES : scroll horizontal ---------- */
+    .aw-filters-bar {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 4px;
+    }
+    .aw-filters-bar::-webkit-scrollbar { display: none; }
+    .aw-chip { flex-shrink: 0; }
+
+    /* ---------- 3. GRILLE → LISTE VERTICALE ---------- */
+    .aw-cards-grid { font-size: 14px; /* on restaure la font-size */ }
+    .aw-card {
+        display: block;
+        width: 100%;
+        margin: 0 0 8px;
+    }
+
+    /* ---------- 4. CARTE → LIGNE COMPACTE ---------- */
+    .aw-card-inner {
+        flex-direction: row !important;
+        align-items: stretch !important;
+        border-radius: 6px !important;
+        min-height: 58px;
+    }
+
+    .aw-card-inner:hover {
+        transform: none; /* pas d'effet hover tactile */
+        box-shadow: 0 1px 4px rgba(0,0,0,.06) !important;
+    }
+
+    /* Corps = zone principale (date+titre+badge en ligne) */
+    .aw-card-body {
+        padding: 8px 10px !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 10px !important;
+        flex-wrap: wrap;
+        flex: 1 1 auto !important;
+        min-width: 0;
+    }
+
+    /* Date compacte à gauche, largeur fixe pour alignement */
+    .aw-card-dateline {
+        flex: 0 0 64px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+    }
+    .aw-card-date {
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1.2;
+        white-space: nowrap;
+    }
+    .aw-countdown {
+        font-size: 10px;
+        line-height: 1;
+    }
+
+    /* Titre : prend l'espace restant, tronqué si trop long */
+    .aw-card-title {
+        font-size: 14px;
+        margin: 0;
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        line-height: 1.3;
+    }
+
+    /* Badge type : petit, à droite du titre */
+    .aw-type-badge {
+        font-size: 9px;
+        padding: 2px 6px;
+        flex-shrink: 0;
+    }
+
+    /* Méta (école, heure, type session) cachées en mode liste
+       → on garde l'info essentielle seulement. Si besoin, retirer
+       ces lignes pour afficher l'école sous le titre. */
+    .aw-card-meta { display: none; }
+
+    /* ---------- 5. FOOTER : COMPACT SUR LE CÔTÉ DROIT ---------- */
+    .aw-card-footer {
+        flex-direction: column !important;
+        justify-content: center !important;
+        padding: 6px 10px !important;
+        border-top: none !important;
+        border-left: 1px solid #f0f0f0 !important;
+        background: #fafafa !important;
+        min-width: 72px;
+        gap: 4px;
+    }
+    .aw-card.is-past .aw-card-footer {
+        background: #f3f3f3 !important;
+        border-left-color: #ebebeb !important;
+    }
+
+    .aw-slots {
+        font-size: 11px;
+        line-height: 1.1;
+        text-align: center;
+    }
+    .aw-badge-inscrit { display: block; font-size: 10px; margin-top: 2px; }
+
+    /* Bouton d'action : icône seule (texte masqué) pour gagner de la place */
+    .aw-footer-actions { width: 100%; justify-content: center; }
+    .aw-btn {
+        font-size: 11px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        border-width: 1px;
+        line-height: 1.2;
+    }
+
+    /* ---------- 6. ACCORDÉONS MOIS PASSÉS : plus compacts ---------- */
+    .aw-month-header { padding: 8px 12px; }
+    .aw-month-title { font-size: 13px; gap: 8px; }
+    .aw-month-body  { padding: 10px 8px 8px; }
+
+    /* ---------- 7. SECTIONS ---------- */
+    .aw-section-head h2 { font-size: 13px; }
+
+    /* ---------- 8. CALENDRIER : vue liste FullCalendar par défaut ---------- */
+    /* Rien à faire côté CSS — FullCalendar gère déjà 'listMonth'.
+       Optionnel : si vous voulez forcer la vue liste au lieu de dayGridMonth
+       sur mobile, voir le patch JS optionnel ci-dessous. */
 }
+
