@@ -13,10 +13,4 @@ $config['civil_year'] = '2025-2026';
 
 $config['role_famille'] = 2;
 
-$config['protocol']    = 'smtp';
-$config['charset']     = 'utf-8';
-$config['mailtype']    = 'html';
-$config['wordwrap']    = TRUE;
-$config['newline']     = "\r\n";
-$config['crlf']        = "\r\n";
 

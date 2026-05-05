@@ -547,5 +547,8 @@
     /* Rien à faire côté CSS — FullCalendar gère déjà 'listMonth'.
        Optionnel : si vous voulez forcer la vue liste au lieu de dayGridMonth
        sur mobile, voir le patch JS optionnel ci-dessous. */
+
+    .aw-btn.validate { background:#e16c6c; color:#fff; border-color:#e16c6c; }
+    .aw-btn.validate:hover { background:#cc5959; border-color:#cc5959; }
 }
 

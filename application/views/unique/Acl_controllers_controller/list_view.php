@@ -134,6 +134,12 @@ $acl_warnings = isset($acl_warnings) ? $acl_warnings : array();
             <?php echo $this->lang->line('Acl_controllers_controller_bulk_add_action'); ?>
         </a>
         <?php } ?>
+        <?php if ($this->acl->hasAccess('Acl_controllers_controller/scan')){ ?>
+        <a href="<?php echo site_url('Acl_controllers_controller/scan'); ?>" class="btn btn-warning">
+            <i class="oi oi-plus"></i>
+            <?php echo $this->lang->line('Acl_controllers_controller_scan'); ?>
+        </a>
+        <?php } ?>
     </div>
 </section>
 

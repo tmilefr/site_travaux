@@ -75,6 +75,7 @@ class Home extends MY_Controller {
 	//gestion de mon compte 
 	public function myaccount(){
 		$this->LoadModel('Capacity_model');
+		$this->LoadModel('AlertPref_model');  
 		
 		//compte de type admin
 		if ($this->acl->getType()  == "sys"){

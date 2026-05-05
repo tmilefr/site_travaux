@@ -111,24 +111,26 @@ class Orgchart_controller extends MY_Controller {
 		return $comissions;		
 	}
 
-	public function organisation(){
-		$this->LoadModel('Files_model');
-		$this->LoadModel('Event_model');
+    public function organisation(){
+        $this->LoadModel('Files_model');
+        $this->LoadModel('Event_model');
 
-		$view_name = 'unique/'.$this->_controller_name.'_organisation';
-		
-		$this->data_view['featured'] 	= $this->{$this->_model_name}->GetHit();
-		$this->data_view['organisations'] 	= $this->PolulateCommission('org');
-		$this->data_view['stats'] 	= $this->_GetSessionStat();
+        // Feuille de style dédiée à la nouvelle vue (ergonomie + mobile)
+        $this->bootstrap_tools->_SetHead('assets/css/orgchart_organisation.css','css');
 
-		$this->data_view['pvca'] 	= $this->Files_model->GetFilesByType('pvca","pub','P');
-		$this->data_view['reubur'] 	= $this->Event_model->GetEventByType('reubur','P');
-		$this->data_view['reuca'] 	= $this->Event_model->GetEventByType('reuca','P');
+        $view_name = 'unique/'.$this->_controller_name.'_organisation';
 
-		
-		$this->_set('view_inprogress', $view_name );
-		$this->render_view();
-	}
+        $this->data_view['featured']        = $this->{$this->_model_name}->GetHit();
+        $this->data_view['organisations']   = $this->PolulateCommission('org');
+        $this->data_view['stats']           = $this->_GetSessionStat();
+
+        $this->data_view['pvca']    = $this->Files_model->GetFilesByType('pvca","pub','P');
+        $this->data_view['reubur']  = $this->Event_model->GetEventByType('reubur','P');
+        $this->data_view['reuca']   = $this->Event_model->GetEventByType('reuca','P');
+
+        $this->_set('view_inprogress', $view_name );
+        $this->render_view();
+    }
 
 	private function _GetSessionStat(){
 		/* STATS sur la page */		

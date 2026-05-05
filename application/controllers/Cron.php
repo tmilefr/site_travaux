@@ -231,4 +231,160 @@ class Cron extends MY_Controller {
                . "(session #{$work->id} '{$work->titre}' du {$date_fr}).\n";
         }
     }
+
+    /**
+     * Envoie aux familles abonnées une alerte e-mail pour chaque nouvelle
+     * session publiée correspondant à un type qu'elles ont coché dans
+     * Home/myaccount.
+     *
+     * Marque la session via `travaux.alert_sent_at` pour ne pas envoyer
+     * deux fois la même alerte.
+     *
+     * @param int $lookahead_days  ne notifie que les sessions dont la date est
+     *                             dans les $lookahead_days prochains jours.
+     *                             0 = pas de borne supérieure (défaut).
+     * @return void
+     */
+    public function send_new_session_alerts($lookahead_days = 0)
+    {
+        $this->_setLock();
+
+        $this->LoadModel('Admwork_model');
+        $this->LoadModel('AlertPref_model');
+        $this->LoadModel('Sendmail_model');
+
+        $works = $this->_GetSessionsNeedingAlert((int) $lookahead_days);
+        if (empty($works)) {
+            echo "Aucune nouvelle session à signaler.\n";
+            return;
+        }
+
+        $base_url = config_item('base_url') ?: base_url();
+        $register_url = rtrim($base_url, '/') . '/Admwork_controller/register';
+
+        $total_mails  = 0;
+        $total_works  = 0;
+
+        foreach ($works as $work) {
+
+            // 1) Récupère les familles abonnées à ce type, filtrées par école
+            $subs = $this->AlertPref_model->GetSubscribers($work->type, $work->ecole);
+
+            if (empty($subs)) {
+                // Aucun abonné : on marque quand même comme traitée pour ne
+                // pas re-scanner à l'infini cette session.
+                $this->Admwork_model->MarkAlertSent($work->id);
+                echo "Session #{$work->id} : aucun abonné pour le type {$work->type}.\n";
+                continue;
+            }
+
+            // 2) Préparation du libellé du type (depuis options)
+            $type_label = $this->_GetTypeLabel($work->type);
+
+            // 3) Construit le mail (commun à tous les abonnés, expéditeur unique)
+            $date_fr = date('d/m/Y', strtotime($work->date_travaux));
+            $heures = '';
+            if ($work->type_session == 1 && $work->heure_deb_trav) {
+                $heures = ' de ' . substr($work->heure_deb_trav, 0, 5)
+                        . ' à '  . substr($work->heure_fin_trav, 0, 5);
+            }
+
+            $ecole_label = '';
+            switch ($work->ecole) {
+                case 'M': $ecole_label = 'Mulhouse';   break;
+                case 'L': $ecole_label = 'Lutterbach'; break;
+                case 'B': $ecole_label = 'Mulhouse et Lutterbach'; break;
+            }
+
+            $subject = 'Nouvelle session ' . $type_label . ' du ' . $date_fr;
+
+            $message_template =
+                "Bonjour,\n\n"
+                . "Une nouvelle session correspondant à vos préférences vient d'être publiée :\n\n"
+                . "  - Titre : " . $work->titre . "\n"
+                . "  - Type  : " . $type_label . "\n"
+                . "  - Date  : " . $date_fr . $heures . "\n"
+                . ($ecole_label ? "  - École : " . $ecole_label . "\n" : "")
+                . "  - Places : " . (int) $work->nb_inscrits_max . "\n\n"
+                . "Pour vous inscrire, rendez-vous sur :\n"
+                . $register_url . "\n\n"
+                . "Vous recevez cet e-mail parce que vous avez activé l'alerte pour ce "
+                . "type de session dans votre compte. Pour modifier vos préférences :\n"
+                . rtrim($base_url, '/') . "/Home/myaccount\n\n"
+                . "L'association ABCM Mulhouse-Lutterbach";
+
+            // 4) Empilement d'un e-mail par abonné
+            foreach ($subs as $fam) {
+                $this->Sendmail_model->post([
+                    'reference' => 'new_session_alert',
+                    'email'     => $fam->e_mail,
+                    'object'    => $subject,
+                    'message'   => $message_template,
+                    'created'   => date('Y-m-d H:i:s'),
+                ]);
+                $total_mails++;
+            }
+
+            // 5) Marque la session comme notifiée (idempotence)
+            $this->Admwork_model->MarkAlertSent($work->id);
+            $total_works++;
+
+            echo "Session #{$work->id} ({$work->titre}) : "
+                . count($subs) . " famille(s) notifiée(s).\n";
+        }
+
+        echo "Total : {$total_mails} e-mail(s) programmé(s) sur {$total_works} session(s).\n";
+    }
+
+
+    /**
+     * Récupère les sessions qui doivent déclencher une alerte e-mail.
+     *
+     * @param int $lookahead_days  0 = pas de borne, sinon limite supérieure
+     * @return array
+     */
+    private function _GetSessionsNeedingAlert($lookahead_days = 0)
+    {
+        $today = date('Y-m-d');
+
+        $this->db->select('travaux.*')
+            ->from('travaux')
+            ->where('travaux.archived !=', 1)
+            ->where('travaux.alert_sent_at IS NULL', null, false)
+            ->where('travaux.statut', '1')        // Publié uniquement
+            ->where('travaux.date_travaux >=', $today)
+            ->where('travaux.type IS NOT NULL', null, false)
+            ->where('travaux.type !=', '');
+
+        if ($lookahead_days > 0) {
+            $this->db->where(
+                'travaux.date_travaux <=',
+                date('Y-m-d', strtotime('+'.(int) $lookahead_days.' days'))
+            );
+        }
+
+        $data = $this->db->order_by('travaux.date_travaux', 'ASC')->get();
+        return ($data->num_rows()) ? $data->result() : [];
+    }
+
+
+    /**
+     * Renvoie le libellé humain d'un type de travail (depuis options).
+     * Fallback sur la cle elle-même si introuvable.
+     *
+     * @param string $cle  ex. 'MEN', 'TRA'
+     * @return string
+     */
+    private function _GetTypeLabel($cle)
+    {
+        $row = $this->db->select('value')
+            ->from('options')
+            ->where('cle', $cle)
+            ->where('filter', 'type')
+            ->limit(1)
+            ->get()
+            ->row();
+        return $row ? $row->value : $cle;
+    }
+
 }

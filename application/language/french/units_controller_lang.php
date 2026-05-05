@@ -72,3 +72,8 @@ $lang['type_session_action']                = 'Action';
 
 // Aucun résultat (filtres)
 $lang['UV_NO_RESULT']                       = 'Aucune session ne correspond aux filtres en cours.';
+
+$lang['VALID_UNIT'] = 'VALIDER les unités';
+$lang['heure_debut_prevue'] ='Début';
+$lang['heure_fin_prevue'] = 'Fin';
+$lang['nb_units'] = 'Unités';

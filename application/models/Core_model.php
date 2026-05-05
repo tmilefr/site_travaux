@@ -169,6 +169,7 @@ class Core_model extends CI_Model {
 			}
 			$obj = new $object_name;
 			foreach($defs AS $key => $value){
+				//echo "<p>$this->json set $key , ".debug($value)."</p>";
 				$obj->_set($key , $value);
 			}			
 			if ($obj->_get('param')){

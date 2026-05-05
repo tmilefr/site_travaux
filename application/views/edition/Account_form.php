@@ -80,6 +80,25 @@
 						?>
 					</div>									
 				</div>
+				<div class="form-row">
+					<div class="form-group col-md-12">
+						<div class="alert alert-info" role="alert">
+							<h5 class="alert-heading">
+								<i class="icon-bell"></i>
+								<?php echo $this->lang->line('ALERT_PREFS_TITLE'); ?>
+							</h5>
+							<p class="mb-0"><?php echo $this->lang->line('ALERT_PREFS_HELP'); ?></p>
+						</div>
+					</div>
+				</div>
+				<div class="form-row">
+					<div class="form-group col-md-12">
+						<?php
+							echo $this->render_object->label('alert_types');
+							echo $this->render_object->RenderFormElement('alert_types', null, 'Familys_model', false);
+						?>
+					</div>
+				</div>		
 			</div>
 			<div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">
 				<div class="form-row">	
@@ -149,7 +168,7 @@
 							echo $this->render_object->RenderFormElement('ville', null, 'Familys_model', true);
 						?>
 					</div>				
-				</div>					
+				</div>			
 			</div>
 		</div>
 	</div>

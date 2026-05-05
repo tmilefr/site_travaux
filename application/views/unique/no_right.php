@@ -16,8 +16,11 @@ defined('BASEPATH') OR exit('No direct script access allowed');
         <div class="nicdark_space20"></div>
         <div class="nicdark_divider left big"><span class="nicdark_bg_green nicdark_radius"></span></div>
         <div class="nicdark_space10"></div>
-		
-		<?php echo '<pre>'.print_r($routes_history, TRUE).'</pre>';?>
+    <?php 
+    foreach($routes_history AS $route){
+        echo '<p>'.$route.'</p>';
+    }
+    ?>
 
 	</div>
 <!--end nicdark_container-->

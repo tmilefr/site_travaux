@@ -163,3 +163,22 @@ $lang['members']                                = 'Membres de la famille';
 $lang['members_AddRow']                         = 'Ajouter un membre &agrave; la famille';
 $lang['nom_Members_model[]']                    = 'Nom';
 $lang['prenom_Members_model[]']                 = 'Pr&eacute;nom';
+
+$lang['NO_RIGHT']   = 'Page non accessible';
+$lang['Home_no_right_subtitle'] =  'Si vous pensez que cela devrait marcher, envoter un email avec la liste des routes ci-après a l\'administrateur du site';
+$lang['CA_DOWNLOAD'] = 'Télécharger';
+
+// =====================================================================
+// Préférences d'alerte e-mail "Nouvelle session disponible"
+// =====================================================================
+
+// Libellé du champ checkboxdb (clé = nom du champ JSON)
+$lang['alert_types']        = 'Types de travaux pour les alertes e-mail';
+
+// Bloc info présenté au-dessus de la liste de cases à cocher
+$lang['ALERT_PREFS_TITLE']  = 'Mes alertes par e-mail';
+$lang['ALERT_PREFS_HELP']   = 'Cochez les types de sessions pour lesquels vous souhaitez recevoir une alerte e-mail dès qu\'une nouvelle session est publiée. Vous pouvez modifier ces préférences à tout moment.';
+
+// Si vous souhaitez un libellé "neutre" si la famille n'a rien coché
+// (utilisé par element_checkboxdb::Render() en mode lecture seule)
+$lang['alert_types_NO']     = 'Aucune alerte activée';

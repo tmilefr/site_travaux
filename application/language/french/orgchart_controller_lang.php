@@ -48,3 +48,7 @@ $lang['CANDIDATE_COM']                      = 'Candidature ';
 // Helpers de membres (table trombi)
 $lang['email_Trombi_model[]']               = 'Email de contact';
 $lang['help_nom_Trombi_model[]']            = 'famille';
+$lang['CA_DOCUMENTS']                       = 'Documents disponibles';
+
+$lang['reubur'] = '';
+$lang['reuca'] = '';
