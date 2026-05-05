@@ -54,7 +54,7 @@ $has_bulk = is_array($bulk_actions) && count($bulk_actions) > 0;
     <div class="nicdark_container nicdark_clearfix">
     <div class="nicdark_space30"></div>
 
-    <div class="grid <?php echo (isset($civil_year)) ? "grid_5":"grid_7";?>">
+    <div class="grid <?php echo (isset($civil_year)) ? "grid_5":"grid_12";?>">
         <h1 class="subtitle greydark"><?php echo $this->lang->line($controller_name . '_' . $action); ?></h1>
         <div class="nicdark_space20"></div>
         <h3 class="subtitle grey">
@@ -342,7 +342,7 @@ $has_bulk = is_array($bulk_actions) && count($bulk_actions) > 0;
     <?php /* ---------------------------------------------------------------
          FOOTER : pagination + compteur + sélecteur per_page
        ---------------------------------------------------------------- */ ?>
-    <footer class="footer mt-auto py-3">
+    <footer class="footer grid grid_12 mt-auto py-3">
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
             <ul class="navbar-nav mr-auto" style="align-items:center; flex-wrap:wrap;">
                 <li class="nav-item">

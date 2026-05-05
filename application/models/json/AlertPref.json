@@ -12,25 +12,22 @@
 			"auto_increment": true
 		}
 	},
-	"controller": {
+	"id_fam": {
 		"type": "input",
 		"list": true,
 		"search": true,
-		"rules": "trim|required|min_length[2]|max_length[255]",
+		"rules": "trim|required",
 		"since": 1,
 		"dbforge": {
-			"type": "VARCHAR",
-			"constraint": "255"
+			"type": "INT",
+			"constraint": "11"
 		}
 	},
-	"actions": {
-		"type": "actions_pills",
-		"model": "Acl_actions_model",
-		"ref":"action",
-		"foreignkey":"id_ctrl",		
+	"id_type": {
+		"type": "input",
 		"list": true,
 		"search": true,
-		"rules": null,
+		"rules": "trim|required",
 		"since": 1,
 		"dbforge": {
 			"type": "VARCHAR",

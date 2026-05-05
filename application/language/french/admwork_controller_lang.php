@@ -179,3 +179,6 @@ $lang['id_famille'] = 'Famille';
 $lang['help_id_famille'] = 'nom de famille, prénom ...';
 $lang['MANAGED_REGISTER_WORK'] = 'Gestion de la session';
 $lang['nb_unites_valides'] = 'Nombre d\'unité';
+
+
+$lang['EDIT_VALID_UNIT'] = 'Validation des unités';

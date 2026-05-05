@@ -40,9 +40,6 @@ $lang['_title_ecole']                           = 'Ecole';
 $lang['Familys_controller_units']               = 'Gestion des Unit&eacute;s';
 $lang['Familys_controller_check']               = 'Gestion des Ch&egrave;ques';
 
-
-
-
 // Compteurs d'unités
 $lang['UNIT_TITLE']                             = 'Etat des compteurs';
 $lang['UNIT_TODO']                              = 'Unités à faire';
@@ -65,3 +62,4 @@ $lang['ville']                                  = 'Ville';
 $lang['nb_enfants']                             = 'Nombre d\'enfant';
 $lang['capacity']                               = 'Comp&eacute;tences';
 $lang['civil_year']                             = 'Année civile';
+

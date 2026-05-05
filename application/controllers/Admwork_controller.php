@@ -375,9 +375,20 @@ class Admwork_controller extends MY_Controller {
 		if ($this->acl->getType() !== 'fam') {
 			redirect('Home/no_right');
 		}
-		$this->data_view['my_works'] = $this->Admwork_model->GetWorksAsReferent(
-			$this->acl->getUserId()
-		);
+
+		/* Mêmes assets que la vue register pour profiter du toggle / filtres / accordéons */
+		$this->bootstrap_tools->_SetHead('assets/css/admwork_register.css', 'css');
+		$this->bootstrap_tools->_SetHead('assets/js/admwork_register.js',   'js');
+
+		$my_works = $this->Admwork_model->GetWorksAsReferent($this->acl->getUserId());
+
+		/* Enrichissement attendu par la vue */
+		foreach ($my_works as $key => $w) {
+			$decompte = $this->Infos_model->Decompte($w->id);
+			$my_works[$key]->participant = $decompte ? (int)$decompte->nb_participants : 0;
+		}
+
+		$this->data_view['my_works'] = $my_works;
 		$this->_set('view_inprogress', 'unique/' . $this->_controller_name . '_my_sessions');
 		$this->render_view();
 	}
