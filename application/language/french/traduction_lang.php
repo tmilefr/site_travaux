@@ -182,3 +182,20 @@ $lang['ALERT_PREFS_HELP']   = 'Cochez les types de sessions pour lesquels vous s
 // Si vous souhaitez un libellé "neutre" si la famille n'a rien coché
 // (utilisé par element_checkboxdb::Render() en mode lecture seule)
 $lang['alert_types_NO']     = 'Aucune alerte activée';
+
+// Sections de l'onglet "Vos données complémentaires"
+$lang['ACCOUNT_SECTION_CONTACT']    = 'Vos e-mails de contact';
+$lang['ACCOUNT_SECTION_SKILLS']     = 'Vos compétences';
+$lang['ACCOUNT_SKILLS_HELP']        = 'Cochez les domaines dans lesquels vous pouvez aider. Cela nous permet de vous solliciter prioritairement sur les sessions correspondantes.';
+
+// Sections de l'onglet "Données dans Delta Enfance"
+$lang['ACCOUNT_SECTION_LOGIN']      = 'Identifiants de connexion';
+$lang['ACCOUNT_SECTION_IDENTITY']   = 'Identité de la famille';
+$lang['ACCOUNT_SECTION_ADDRESS']    = 'Adresse postale';
+
+// Libellé du champ "capacity" (jusqu'ici manquant -> rendu en italique
+// par le fallback de label() qui renvoyait le nom brut "capacity")
+// NB : ce libellé n'est plus affiché dans Account_form.php (le fieldset
+// le remplace via son legend), mais reste utilisé partout ailleurs
+// (Familys_form.php, Familys_controller_skills, etc.).
+$lang['capacity']                   = 'Compétences';
