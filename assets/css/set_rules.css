@@ -1,0 +1,253 @@
+/* =====================================================================
+ * set_rules.css
+ * Styles de la vue Acl_roles_controller/set_rules.
+ *
+ * Objectifs :
+ *   - Lisibilité accrue : grouper les contrôleurs par zone fonctionnelle,
+ *     avec un en-tête de couleur cohérent (charte nicdark_bg_*).
+ *   - Affichage compact des switches d'action (grille auto-fit) là où la
+ *     version d'origine consommait toute la largeur en grid_2.
+ *   - Sticky footer avec le compteur global et le bouton Valider, pour
+ *     éviter de descendre en bas de page sur les rôles très chargés.
+ *   - Toolbar de recherche / actions de masse au-dessus des cartes.
+ *
+ * S'appuie sur Bootstrap 4 (custom-control, badge, card, collapse) et
+ * Open Iconic (.oi).
+ * ===================================================================== */
+
+
+/* ============== Toolbar globale ============== */
+.acl-rules-toolbar {
+    margin-bottom: 1rem;
+    border: 1px solid #e5e7eb;
+}
+
+.acl-rules-toolbar__search {
+    position: relative;
+    flex: 0 0 auto;
+}
+
+.acl-rules-toolbar__search .oi {
+    position: absolute;
+    top: 50%;
+    left: 0.5rem;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    pointer-events: none;
+}
+
+.acl-rules-toolbar__search input {
+    padding-left: 1.75rem;
+    width: 280px;
+    max-width: 100%;
+}
+
+.acl-rules-toolbar__buttons .btn {
+    margin-right: 0.25rem;
+}
+
+.acl-rules-toolbar__counter .badge {
+    font-size: 0.85rem;
+    padding: 0.4rem 0.7rem;
+}
+
+
+/* ============== Carte zone ============== */
+.acl-zone-card {
+    margin-bottom: 1rem;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.acl-zone-header {
+    color: #fff;
+    padding: 0.6rem 1rem;
+}
+
+.acl-zone-header strong {
+    font-size: 1.05rem;
+    margin-left: 0.25rem;
+}
+
+.acl-zone-header .acl-zone-toggle {
+    color: #fff;
+    text-decoration: none;
+    box-shadow: none;
+}
+
+.acl-zone-header .acl-zone-toggle:hover,
+.acl-zone-header .acl-zone-toggle:focus {
+    color: #fff;
+    text-decoration: none;
+}
+
+/* Chevron qui pivote suivant l'état du collapse */
+.acl-zone-toggle .acl-zone-chevron {
+    transition: transform 0.2s ease;
+    font-size: 0.7em;
+    opacity: 0.85;
+}
+
+.acl-zone-toggle[aria-expanded="false"] .acl-zone-chevron {
+    transform: rotate(-90deg);
+}
+
+.acl-zone-badge {
+    font-size: 0.85em;
+    color: #2c3e50;
+}
+
+/* Le label du master switch zone est blanc dans l'en-tête coloré */
+.acl-zone-actions .custom-control-label {
+    cursor: pointer;
+    user-select: none;
+}
+
+.acl-zone-actions .custom-control-label::before {
+    border-color: rgba(255, 255, 255, 0.7);
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+
+/* ============== Table de contrôleurs ============== */
+.acl-rules-table {
+    margin-bottom: 0;
+    font-size: 0.9rem;
+}
+
+.acl-rules-table thead th {
+    border-top: 0;
+    background: #fafbfc;
+    color: #4b5563;
+    font-weight: 600;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.acl-rules-table .acl-col-master {
+    width: 56px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.acl-rules-table .acl-col-name {
+    width: 220px;
+    vertical-align: middle;
+}
+
+.acl-rules-table tbody tr.acl-rules-row td {
+    vertical-align: middle;
+}
+
+.acl-ctrl-name {
+    font-weight: 500;
+    color: #1f2937;
+}
+
+
+/* ============== Grille des actions ============== */
+.acl-actions-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 4px 12px;
+}
+
+.acl-action-item {
+    min-width: 0;
+}
+
+.acl-action-item .custom-control-label {
+    cursor: pointer;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    user-select: none;
+    word-break: break-word;
+}
+
+/* Lignes / actions cachées par la recherche */
+.acl-rules-row.is-hidden,
+.acl-action-item.is-hidden {
+    display: none !important;
+}
+
+
+/* ============== Footer sticky ============== */
+.acl-rules-footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 50;
+    margin: 1rem 0 0;
+    background: #fff;
+    border-top: 1px solid #e5e7eb;
+    box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.05);
+    padding: 0.75rem 1rem;
+}
+
+.acl-rules-footer__inner {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.acl-rules-footer__count {
+    flex: 1 1 auto;
+    color: #374151;
+    font-weight: 500;
+}
+
+.acl-rules-footer__count .oi {
+    color: #2563eb;
+    margin-right: 0.4em;
+}
+
+.acl-rules-footer .btn {
+    flex: 0 0 auto;
+    min-width: 180px;
+}
+
+
+/* ============== Responsive ============== */
+@media (max-width: 768px) {
+    .acl-rules-toolbar__search input {
+        width: 100%;
+    }
+
+    .acl-rules-toolbar__buttons {
+        width: 100%;
+        margin-top: 0.5rem;
+    }
+
+    .acl-rules-toolbar__counter {
+        margin-top: 0.5rem;
+    }
+
+    .acl-rules-table .acl-col-name {
+        width: auto;
+        min-width: 140px;
+    }
+
+    .acl-actions-list {
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    }
+
+    .acl-rules-footer__inner {
+        justify-content: space-between;
+    }
+
+    .acl-rules-footer .btn {
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .acl-zone-actions .custom-control-label {
+        font-size: 0.85rem;
+    }
+
+    .acl-zone-header strong {
+        font-size: 0.95rem;
+    }
+}
