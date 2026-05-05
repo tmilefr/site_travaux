@@ -185,6 +185,19 @@ class Admwork_model extends Core_model{
 		$this->_debug_array[] = $this->db->last_query();
 	}
 
+	/**
+	 * Marque la session comme "alerte e-mail famille envoyée".
+	 * Utilisé par Cron::send_new_session_alerts pour garantir l'idempotence.
+	 *
+	 * @param int $id_travaux
+	 * @return void
+	 */
+	public function MarkAlertSent($id_travaux)
+	{
+		$this->db->where('id', (int) $id_travaux)
+			->update('travaux', ['alert_sent_at' => date('Y-m-d H:i:s')]);
+		$this->_debug_array[] = $this->db->last_query();
+	}
 
 }
 ?>

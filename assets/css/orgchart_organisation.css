@@ -1,0 +1,659 @@
+/* =====================================================================
+ *  orgchart_organisation.css
+ *  Feuille de style spécifique à la vue Orgchart_controller/organisation.
+ *
+ *  À charger APRÈS nicdark_style.css, nicdark_responsive.css, app.css,
+ *  mobile.css et mobile-override.css. Toutes les classes spécifiques sont
+ *  préfixées `org-` pour éviter toute collision.
+ *
+ *  Objectifs :
+ *   - moderniser la grille du trombinoscope (CSS Grid auto-fill)
+ *   - rendre les deux colonnes "actions / PV" et "agenda" pleinement
+ *     responsives (empilement < 768px, sans débordement)
+ *   - donner un peu plus de respiration et de hiérarchie visuelle
+ *     (cards uniformisées, hover subtil, dates en pill colorée)
+ * ===================================================================== */
+
+
+/* ------------------------------------------------------------------ */
+/* 0. Tokens locaux                                                    */
+/* ------------------------------------------------------------------ */
+:root {
+    --org-radius: 6px;
+    --org-radius-lg: 10px;
+    --org-shadow: 0 2px 6px rgba(0, 0, 0, .08);
+    --org-shadow-hover: 0 6px 14px rgba(0, 0, 0, .12);
+    --org-border: 1px solid #e5e8ec;
+    --org-bg-soft: #f7f8fa;
+    --org-text: #2c3e50;
+    --org-text-muted: #7a8a99;
+    --org-accent: #3498db;
+    --org-transition: all .18s ease-in-out;
+}
+
+
+/* ------------------------------------------------------------------ */
+/* 1. Sections & wrappers                                              */
+/* ------------------------------------------------------------------ */
+.org-section {
+    /* Le thème nicdark applique float:left; width:100% sur .nicdark_section.
+       On laisse, mais on neutralise les paddings parasites éventuels. */
+    box-sizing: border-box;
+}
+
+/* Le .nicdark_container interne aux sections org- doit absolument être
+   pleine largeur (le thème le fait déjà via .nicdark_container { width:1200px;
+   margin:auto } en desktop, mais on blinde si jamais une règle responsive
+   ne s'est pas appliquée). Et il doit faire clearfix pour ne pas se laisser
+   écraser par les .nicdark_spaceXX flottants placés à l'intérieur. */
+.org-section > .nicdark_container {
+    width: 100%;
+    max-width: 1200px;
+    box-sizing: border-box;
+}
+
+.org-section > .nicdark_container::after {
+    content: "";
+    display: block;
+    clear: both;
+}
+
+
+/* ------------------------------------------------------------------ */
+/* 2. Hero                                                             */
+/* ------------------------------------------------------------------ */
+.org-hero {
+    /* On garde l'effet parallax du thème, on ajoute juste un padding
+       vertical raisonnable (au lieu des 4 nicdark_space100 d'origine). */
+}
+
+.org-hero__inner {
+    padding: 80px 0 60px;
+}
+
+.org-hero__title {
+    margin: 0;
+    font-size: 36px;
+    line-height: 1.15;
+}
+
+.org-hero__intro {
+    margin: 12px 0 0;
+    font-size: 18px;
+    line-height: 1.4;
+    opacity: .92;
+}
+
+
+/* ------------------------------------------------------------------ */
+/* 3. Bloc "deux colonnes" (actions + documents)                       */
+/* ------------------------------------------------------------------ */
+/* IMPORTANT : .nicdark_section et les .nicdark_spaceXX du thème sont
+   tous en `float: left; width: 100%`. Sans `clear: both` + `width: 100%`
+   explicites sur le wrapper grid, celui-ci passe en shrink-to-fit et
+   se retrouve écrasé sur la droite (1 lettre de large par colonne).
+   Bug observé en prod le 04/05/2026, fix indispensable. */
+.org-twocol {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: stretch;
+    width: 100%;
+    box-sizing: border-box;
+    clear: both;
+    /* Neutraliser tout float résiduel posé par le thème sur un parent
+       qui aurait la classe .grid_X (ce n'est pas le cas ici, mais on
+       blinde) */
+    float: none;
+}
+
+.org-twocol__col {
+    background: #fff;
+    border: var(--org-border);
+    border-radius: var(--org-radius-lg);
+    box-shadow: var(--org-shadow);
+    padding: 22px 24px;
+    box-sizing: border-box;
+    /* Important : ne pas laisser flotter le thème nicdark */
+    float: none !important;
+    width: auto !important;
+    margin: 0 !important;
+    min-width: 0; /* permet le shrink correct dans la grid */
+}
+
+.org-block-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 14px;
+    padding-bottom: 12px;
+    border-bottom: var(--org-border);
+    color: var(--org-text);
+    font-size: 17px;
+    font-weight: 700;
+}
+
+.org-block-title__icon {
+    color: var(--org-accent);
+    font-size: 20px;
+}
+
+
+/* --- Colonne "actions" -------------------------------------------- */
+.org-actions__body {
+    color: #4a5568;
+    line-height: 1.55;
+}
+
+.org-actions__body p {
+    margin: 0;
+}
+
+
+/* --- Colonne "documents" ------------------------------------------ */
+.org-docs__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.org-docs__item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px dashed #e5e8ec;
+    font-size: 14px;
+}
+
+.org-docs__item:last-child {
+    border-bottom: none;
+}
+
+.org-docs__name {
+    flex: 1 1 auto;
+    color: var(--org-text);
+    word-break: break-word;
+}
+
+.org-docs__link {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 4px;
+    background: #f0f3f7;
+    color: var(--org-accent);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 13px;
+    transition: var(--org-transition);
+    white-space: nowrap;
+}
+
+.org-docs__link:hover,
+.org-docs__link:focus {
+    background: var(--org-accent);
+    color: #fff;
+    text-decoration: none;
+}
+
+.org-docs__link i {
+    font-size: 14px;
+}
+
+.org-docs__empty {
+    color: var(--org-text-muted);
+    padding: 12px 0;
+    text-align: center;
+}
+
+
+/* ------------------------------------------------------------------ */
+/* 4. Trombinoscope                                                    */
+/* ------------------------------------------------------------------ */
+.org-trombi__heading {
+    margin-bottom: 8px;
+}
+
+.org-trombi__group {
+    margin-top: 32px;
+}
+
+.org-trombi__group-head {
+    margin-bottom: 18px;
+}
+
+.org-trombi__group-title {
+    margin: 0 0 4px;
+    font-size: 22px;
+}
+
+.org-trombi__group-mission {
+    margin: 0;
+    font-size: 15px;
+    color: var(--org-text-muted);
+    font-style: italic;
+}
+
+.org-trombi__empty {
+    color: var(--org-text-muted);
+    padding: 12px 0;
+}
+
+
+/* --- Grille des acteurs (CSS Grid auto-fill) ---------------------- */
+.org-actors-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 18px;
+    width: 100%;
+    box-sizing: border-box;
+    clear: both;
+    float: none;
+}
+
+
+/* --- Carte d'un acteur -------------------------------------------- */
+.org-actor {
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    overflow: hidden;
+    border: var(--org-border);
+    transition: var(--org-transition);
+    /* Neutraliser les classes nicdark grid_3 héritées */
+    width: auto !important;
+    margin: 0 !important;
+    float: none !important;
+    min-width: 0;
+}
+
+.org-actor:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--org-shadow-hover);
+}
+
+.org-actor__head {
+    padding: 12px 14px;
+    text-align: center;
+}
+
+.org-actor__head h4 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.25;
+    color: #fff;
+    /* Empêche les noms longs de casser la carte */
+    word-break: break-word;
+    hyphens: auto;
+}
+
+.org-actor__picture {
+    background: var(--org-bg-soft);
+    text-align: center;
+    /* Hauteur cohérente sur toutes les cartes — la photo est centrée
+       sans déformation grâce à object-fit côté .org-actor__img */
+    height: 160px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.org-actor__picture img,
+.org-actor__img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover;
+    display: block;
+    margin: 0 !important;
+    /* Neutraliser .nicdark_opacity .height135 du thème */
+    opacity: 1 !important;
+}
+
+.org-actor__role {
+    position: relative;
+    padding: 10px 14px;
+    text-align: center;
+}
+
+.org-actor__role h5 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    line-height: 1.3;
+}
+
+.org-actor__role-icon {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 16px;
+    opacity: .8;
+}
+
+.org-actor__groups {
+    flex: 1 1 auto;
+    background: var(--org-bg-soft);
+    padding: 12px 12px 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-content: flex-start;
+    border-top: var(--org-border);
+}
+
+.org-actor__group-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    background: #fff;
+    border: var(--org-border);
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--org-text);
+    text-decoration: none;
+    line-height: 1.4;
+    transition: var(--org-transition);
+    /* Tronquer les titres trop longs sur les petites cartes */
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.org-actor__group-link span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 140px;
+}
+
+.org-actor__group-link:hover,
+.org-actor__group-link:focus {
+    background: var(--org-accent);
+    color: #fff;
+    border-color: var(--org-accent);
+    text-decoration: none;
+}
+
+.org-actor__group-link i {
+    font-size: 11px;
+}
+
+.org-actor__no-groups {
+    color: var(--org-text-muted);
+    font-size: 12px;
+    font-style: italic;
+}
+
+
+/* ------------------------------------------------------------------ */
+/* 5. Agenda                                                           */
+/* ------------------------------------------------------------------ */
+.org-agenda__heading {
+    margin-bottom: 8px;
+}
+
+.org-agenda__cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: stretch;
+    width: 100%;
+    box-sizing: border-box;
+    clear: both;
+    float: none;
+}
+
+.org-agenda__col {
+    background: #fff;
+    border: var(--org-border);
+    border-radius: var(--org-radius-lg);
+    box-shadow: var(--org-shadow);
+    padding: 18px 22px;
+    box-sizing: border-box;
+    float: none !important;
+    width: auto !important;
+    margin: 0 !important;
+    min-width: 0;
+}
+
+.org-agenda__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.org-agenda__item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 0;
+    border-bottom: 1px dashed #e5e8ec;
+    line-height: 1.4;
+}
+
+.org-agenda__item:last-child {
+    border-bottom: none;
+}
+
+.org-agenda__title {
+    flex: 1 1 60%;
+    color: var(--org-text);
+    font-weight: 500;
+    word-break: break-word;
+}
+
+.org-agenda__date {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    border-radius: 14px;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    /* Si pas de classe couleur : fallback */
+    background: var(--org-accent);
+}
+
+.org-agenda__date i {
+    font-size: 12px;
+}
+
+.org-agenda__empty {
+    color: var(--org-text-muted);
+    padding: 12px 0;
+    text-align: center;
+    font-size: 14px;
+}
+
+
+/* ====================================================================
+ * RESPONSIVE
+ * ==================================================================== */
+
+/* --- Tablettes paysage : on laisse la grille auto-fill jouer ------- */
+@media (max-width: 1024px) {
+    .org-hero__inner       { padding: 60px 0 40px; }
+    .org-hero__title       { font-size: 30px; }
+    .org-hero__intro       { font-size: 16px; }
+}
+
+
+/* --- Tablettes portrait & mobiles (<=768px) : empilement complet --- */
+@media (max-width: 768px) {
+
+    .org-twocol,
+    .org-agenda__cols {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .org-twocol__col,
+    .org-agenda__col {
+        padding: 16px;
+    }
+
+    .org-hero__inner {
+        padding: 40px 0 25px;
+        text-align: center;
+    }
+
+    .org-hero__title {
+        font-size: 24px !important; /* override mobile.css h1 */
+        text-align: center;
+    }
+
+    .org-hero__intro {
+        font-size: 15px;
+        text-align: center;
+    }
+
+    .org-hero .nicdark_divider {
+        text-align: center;
+    }
+
+    .org-trombi__group-title  { font-size: 20px; }
+    .org-trombi__group-mission { font-size: 14px; }
+
+    /* Trombinoscope : 2 colonnes en tablette portrait & smartphone large */
+    .org-actors-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .org-actor__head h4   { font-size: 14px; }
+    .org-actor__role h5   { font-size: 12px; }
+    .org-actor__picture   { height: 140px; }
+
+    /* Documents : titre + lien sur deux lignes pour ne jamais déborder */
+    .org-docs__item {
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .org-docs__link {
+        margin-left: auto;
+    }
+
+    /* Agenda : titre puis date sur deux lignes */
+    .org-agenda__item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+
+    .org-agenda__date {
+        align-self: flex-start;
+    }
+}
+
+
+/* --- Smartphones (<=480px) : 1 colonne pour le trombi -------------- */
+@media (max-width: 480px) {
+    .org-actors-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .org-actor__picture { height: 200px; }
+
+    .org-twocol__col,
+    .org-agenda__col {
+        padding: 14px;
+        border-radius: var(--org-radius);
+    }
+
+    .org-block-title {
+        font-size: 15px;
+    }
+
+    .org-hero__title { font-size: 22px !important; }
+    .org-hero__intro { font-size: 14px; }
+}
+
+
+/* --- Très petits écrans (<=380px) ---------------------------------- */
+@media (max-width: 380px) {
+    .org-hero__inner   { padding: 30px 0 20px; }
+    .org-hero__title   { font-size: 20px !important; }
+    .org-actor__head h4 { font-size: 13px; }
+}
+
+
+/* ====================================================================
+ * NEUTRALISATIONS DU THÈME (à garder en bas pour gagner la spécificité)
+ * ==================================================================== */
+
+/* Le thème nicdark force "float:left; width:100%; margin:10px;" sur les
+   .grid_*. Quand ces classes sont posées sur un enfant direct de notre
+   CSS Grid (ce qui n'est plus le cas dans la nouvelle vue, mais on
+   blinde), il faut les neutraliser. */
+.org-actors-grid > .org-actor,
+.org-twocol > .org-twocol__col,
+.org-agenda__cols > .org-agenda__col {
+    display: flex;
+    flex-direction: column;
+}
+
+/* `mobile.css` met les <table> en min-width:600px ; on n'a plus de
+   <table> dans cette vue, mais on s'assure qu'aucun reliquat ne casse
+   le layout des cartes. */
+.org-section table {
+    min-width: 0;
+}
+
+
+/* ----------------------------------------------------------------
+   FIX RACINE — neutralisation des `nicdark_spaceXX` flottants
+
+   Le thème pose `float:left; width:100%` sur tous les .nicdark_spaceXX
+   (cf. nicdark_shortcodes.css). Quand l'un d'eux se trouve juste avant
+   notre wrapper grid (.org-twocol, .org-agenda__cols, .org-actors-grid),
+   il crée un contexte de float qui fait passer la grid en
+   `shrink-to-fit` et l'écrase sur la droite (1 colonne d'1 lettre de
+   large par bloc). Symptôme observé en prod le 04/05/2026.
+
+   Solution : à l'intérieur des sections org-, on transforme tous les
+   spaces flottants en simples blocs verticaux (display: block;
+   float: none). Le clear:both de chaque grid wrapper est conservé en
+   ceinture-et-bretelles.
+   ---------------------------------------------------------------- */
+.org-section .nicdark_space3,
+.org-section .nicdark_space5,
+.org-section .nicdark_space10,
+.org-section .nicdark_space15,
+.org-section .nicdark_space20,
+.org-section .nicdark_space30,
+.org-section .nicdark_space40,
+.org-section .nicdark_space50,
+.org-section .nicdark_space60,
+.org-section .nicdark_space70,
+.org-section .nicdark_space80,
+.org-section .nicdark_space90,
+.org-section .nicdark_space100 {
+    display: block;
+    float: none;
+    width: 100%;
+    clear: both;
+}
+
+/* Idem pour .nicdark_divider qui hérite du même float */
+.org-section .nicdark_divider {
+    float: none;
+    width: 100%;
+    clear: both;
+    overflow: hidden; /* contient le span flottant interne */
+}
