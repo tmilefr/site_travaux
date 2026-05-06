@@ -28,11 +28,11 @@ CREATE TABLE `cantine_config` (
 
 -- Valeurs par défaut : lundi, mardi, jeudi, vendredi actifs (2 parents chacun, 1 unité)
 INSERT INTO `cantine_config` (`id_day`,`active`,`nb_slots`,`ecole`,`nb_units`,`civil_year`,`created`,`updated`) VALUES
-(1,1,2,'B',1,'2025-2026', NOW(), NOW()),
-(2,1,2,'B',1,'2025-2026', NOW(), NOW()),
-(3,0,0,'B',1,'2025-2026', NOW(), NOW()),
-(4,1,2,'B',1,'2025-2026', NOW(), NOW()),
-(5,1,2,'B',1,'2025-2026', NOW(), NOW());
+(1,1,2,'M',1,'2025-2026', NOW(), NOW()),
+(2,1,2,'M',1,'2025-2026', NOW(), NOW()),
+(3,0,0,'M',1,'2025-2026', NOW(), NOW()),
+(4,1,2,'M',1,'2025-2026', NOW(), NOW()),
+(5,1,2,'M',1,'2025-2026', NOW(), NOW());
 
 -- Inscriptions (1 ligne = 1 famille inscrite pour 1 date)
 --   id_info : lien vers la ligne infos créée (pour la validation référent)
@@ -54,8 +54,3 @@ CREATE TABLE `cantine_inscriptions` (
   KEY `idx_info` (`id_info`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
--- Déclaration du controller dans l'ACL
-INSERT INTO `acl_controllers` (`controller_name`, `controller_methods`, `created`, `updated`) VALUES
-('Cantine_controller',
- '["index","register","register_day","unregister_day","config","save_config"]',
- NOW(), NOW());

@@ -17,7 +17,11 @@ require_once(APPPATH.'libraries/Autoload.php');
 class MY_Controller extends CI_Controller {
 	
 	/* VARS*/
-	protected $_autorised_get_key 	= array('order','direction','filter','page','repertoire','search','id'); //autorised key in url
+	protected $_autorised_get_key 	= array(
+				'order','direction','filter','page','repertoire','search','id','per_page',
+				'order_push','order_clear','column_toggle'
+			);
+
 	protected $_redirect			= true; //redirect page after POST
 	protected $_model_name			= FALSE; 
 	protected $_debug_array  		= array();
@@ -59,6 +63,21 @@ class MY_Controller extends CI_Controller {
 	public $pagination = null;
 	
 	/**
+	 * Liste blanche des colonnes que l'utilisateur peut masquer dans la liste.
+	 * Vide par défaut : toutes les colonnes du JSON marquées "list:true" sont
+	 * masquables. Un contrôleur peut restreindre via :
+	 *   $this->_hideable_columns = ['email', 'phone'];
+	 */
+	protected $_hideable_columns = array();
+
+	/**
+	 * Actions groupées disponibles depuis la liste. Format :
+	 *   ['action_name' => ['label_key' => '...', 'class' => 'btn-warning', 'confirm' => true]]
+	 * 'delete' est inclus par défaut si $_autorize['delete'] = true.
+	 */
+	protected $_bulk_actions = array();
+
+	/**
 	 * @brief Generic Constructor
 	 * @returns  void()
 	 * 
@@ -76,9 +95,61 @@ class MY_Controller extends CI_Controller {
 		$this->load->library('Render_menu');
 
 		$this->lang->load('traduction');
-		
+		$this->lang->load('menu');
+
 		$this->config->load('app');
 		$this->config->load('secured');
+		// -------------------------------------------------------------
+		// Autoload du fichier de langue spécifique au contrôleur appelé.
+		//
+		// Convention : application/language/<idiom>/<controller>_lang.php
+		// (CodeIgniter ajoute "_lang" automatiquement si absent et
+		//  ajoute aussi l'extension .php).
+		//
+		// On utilise le routeur pour récupérer le nom de la classe
+		// effectivement instanciée (en minuscules), sans dépendre de
+		// $this->_controller_name qui n'est positionné qu'après cet
+		// appel à parent::__construct() dans les contrôleurs enfants.
+		//
+		// On vérifie au préalable l'existence du fichier sur disque
+		// pour éviter le show_error() de CI_Lang::load() quand un
+		// contrôleur n'a pas (encore) son propre fichier de langue.
+		// -------------------------------------------------------------
+		$this->_load_controller_lang();
+	}
+
+
+	/**
+	 * Charge le fichier de langue propre au contrôleur courant si présent.
+	 *
+	 * Idempotent : CI met en cache via $this->lang->is_loaded, donc un
+	 * éventuel double chargement n'est pas un problème.
+	 *
+	 * @return void
+	 */
+	protected function _load_controller_lang()
+	{
+		// Récupère le nom de la classe effectivement routée (sans l'éventuel
+		// sous-dossier) et le passe en minuscules pour s'aligner sur la
+		// convention de nommage des fichiers de langue.
+		$class = strtolower($this->router->fetch_class());
+		if ($class === '') {
+			return;
+		}
+
+		// L'idiome courant : valeur par défaut depuis config['language'].
+		$idiom = $this->config->item('language');
+		if (empty($idiom)) {
+			$idiom = 'french';
+		}
+
+		$langfile = $class . '_lang.php';
+		$path = APPPATH . 'language/' . $idiom . '/' . $langfile;
+
+		if (file_exists($path)) {
+			// CI ajoute "_lang" automatiquement → on passe juste $class
+			$this->lang->load($class);
+		}
 	}
 	
 	public function SaveToJson($name, $data){
@@ -237,11 +308,28 @@ class MY_Controller extends CI_Controller {
 	 */
 	function render_view(){
 		if ($this->input->is_ajax_request()){
-			$this->load->view($this->view_inprogress,	$this->data_view);
+			$this->load->view($this->view_inprogress, $this->data_view);
 		} else {
-			$this->load->view('template/head',			$this->data_view);
-			$this->load->view($this->view_inprogress,	$this->data_view);
-			$this->load->view('template/footer',		$this->data_view);	
+			$this->load->view('template/head', $this->data_view);
+	
+			//echo debug($this->view_inprogress);
+			// Nettoie le préfixe 'unique/' s'il est déjà présent
+			$view_clean = str_replace('unique/', '', $this->view_inprogress);
+	
+			// Construit le chemin de manière portable avec DIRECTORY_SEPARATOR
+			$view = rtrim(APPPATH, '/\\') . DIRECTORY_SEPARATOR
+				  . 'views' . DIRECTORY_SEPARATOR
+				  . 'unique' . DIRECTORY_SEPARATOR
+				  . $this->_controller_name . DIRECTORY_SEPARATOR
+				  . $view_clean . ((strpos($this->view_inprogress,'.php')) ? '':'.php');
+			//echo debug($view);
+			if (is_file($view)){
+				// Pour CodeIgniter, les chemins de vues utilisent toujours '/' (peu importe l'OS)
+				$this->view_inprogress = 'unique/' . $this->_controller_name . '/' . $view_clean;
+			}
+	
+			$this->load->view($this->view_inprogress, $this->data_view);
+			$this->load->view('template/footer', $this->data_view);
 		}
 	}
 
@@ -267,17 +355,30 @@ class MY_Controller extends CI_Controller {
 	{
 		if ($this->_search)
 			$this->data_view['search_object']->autorize = true;
-		
-		$this->{$this->_model_name}->_set('global_search'	, $this->session->userdata($this->set_ref_field('global_search')));
-		$this->{$this->_model_name}->_set('order'			, $this->session->userdata($this->set_ref_field('order')));
-		$this->{$this->_model_name}->_set('filter'			, $this->session->userdata($this->set_ref_field('filter')));
-		$this->{$this->_model_name}->_set('direction'		, $this->session->userdata($this->set_ref_field('direction')));
-		$this->{$this->_model_name}->_set('per_page'		, $this->per_page);
-		$this->{$this->_model_name}->_set('page'			, $this->session->userdata($this->set_ref_field('page')));
+
+		$session_pp = (int) $this->session->userdata($this->set_ref_field('per_page'));
+		$effective_pp = $session_pp > 0 ? $session_pp : $this->per_page;
+
+		// Pile de tris (vague 2) : si elle existe, elle prime sur order/direction simples.
+		$order_stack = $this->session->userdata($this->set_ref_field('order_stack')) ?: array();
+		$dir_stack   = $this->session->userdata($this->set_ref_field('direction_stack')) ?: array();
+
+		if (!empty($order_stack)) {
+			$this->{$this->_model_name}->_set('order',     $order_stack);
+			$this->{$this->_model_name}->_set('direction', $dir_stack);
+		} else {
+			$this->{$this->_model_name}->_set('order',     $this->session->userdata($this->set_ref_field('order')));
+			$this->{$this->_model_name}->_set('direction', $this->session->userdata($this->set_ref_field('direction')));
+		}
+
+		$this->{$this->_model_name}->_set('global_search', $this->session->userdata($this->set_ref_field('global_search')));
+		$this->{$this->_model_name}->_set('filter',        $this->session->userdata($this->set_ref_field('filter')));
+		$this->{$this->_model_name}->_set('per_page',      $effective_pp);
+		$this->{$this->_model_name}->_set('page',          $this->session->userdata($this->set_ref_field('page')));
 
 		$config = array();
 		$config['use_page_numbers'] = TRUE;
-		$config['per_page'] 	= $this->per_page;
+		$config['per_page'] 	= $effective_pp;
 		$config['cur_page'] 	= (($this->{$this->_model_name}->_get('page')) ? $this->{$this->_model_name}->_get('page'):1);
 		$config['base_url'] 	= $this->config->item('base_url').$this->_controller_name.'/list/page/';
 		$config['total_rows'] 	= $this->{$this->_model_name}->get_pagination();
@@ -286,15 +387,75 @@ class MY_Controller extends CI_Controller {
 			$config['cur_page'] 	=  1;
 			$this->{$this->_model_name}->_set('page', 1 );
 		}
-		$this->pagination->initialize($config);	
-		//GET DATAS
-		$this->data_view['fields'] 	= $this->{$this->_model_name}->_get('autorized_fields');
-		$this->data_view['datas'] 	= $this->{$this->_model_name}->get();
+		$this->pagination->initialize($config);
+
+		$this->data_view['fields']         = $this->{$this->_model_name}->_get('autorized_fields');
+		$this->data_view['datas']          = $this->{$this->_model_name}->get();
+
+		// Vague 1
+		$this->data_view['total_rows']       = (int) $config['total_rows'];
+		$this->data_view['per_page']         = $effective_pp;
+		$this->data_view['per_page_options'] = array(15, 30, 50, 100);
+		$this->data_view['cur_page']         = (int) $config['cur_page'];
+		$this->data_view['active_filters']   = $this->session->userdata($this->set_ref_field('filter')) ?: array();
+		$this->data_view['global_search']    = $this->session->userdata($this->set_ref_field('global_search'));
+
+		// Vague 2 : tri secondaire + colonnes masquables + bulk actions
+		$this->data_view['order_stack']      = $order_stack;
+		$this->data_view['direction_stack']  = $dir_stack;
+		$this->data_view['hidden_columns']   = $this->session->userdata($this->set_ref_field('hidden_columns')) ?: array();
+		$this->data_view['hideable_columns'] = $this->_hideable_columns;
+		$this->data_view['bulk_actions']     = $this->_get_bulk_actions();
+
+		// Pousse aussi les piles dans le Render_object pour render_link
+		$this->render_object->_set('_options', array_merge(
+			$this->render_object->_get('_options'),
+			array(
+				'order_stack'     => $order_stack,
+				'direction_stack' => $dir_stack,
+				'hidden_columns'  => $this->data_view['hidden_columns'],
+			)
+		));
+
 		$this->_set('view_inprogress','unique/list_view');
 		if ($this->render_view)
 			$this->render_view();
-	}	
+	}
 	
+	/**
+	 * Construit la liste finale des actions de masse en intégrant 'delete'
+	 * si autorisé. Les contrôleurs métier peuvent enrichir $_bulk_actions
+	 * dans leur constructeur, par exemple :
+	 *   $this->_bulk_actions['archive'] = ['label_key'=>'BULK_ARCHIVE','class'=>'btn-warning','confirm'=>true];
+	 */
+	protected function _get_bulk_actions(){
+		$actions = $this->_bulk_actions;
+		if (!empty($this->_autorize['delete']) && $this->acl->hasAccess($this->_controller_name.'/delete')) {
+			$actions = array_merge(
+				array('delete' => array(
+					'label_key' => 'BULK_DELETE',
+					'class'     => 'btn-danger',
+					'confirm'   => true,
+				)),
+				$actions
+			);
+		}
+		return $actions;
+	}
+	
+	/**
+	 * @brief Réinitialise les filtres de colonnes, la recherche globale
+	 *        et la page courante pour la liste du contrôleur appelant.
+	 * @returns void
+	 */
+	public function clear_filters()
+	{
+		$this->session->set_userdata( $this->set_ref_field('filter')        , array() );
+		$this->session->set_userdata( $this->set_ref_field('global_search') , ''      );
+		$this->session->set_userdata( $this->set_ref_field('page')          , 1       );
+		redirect($this->_controller_name . '/list');
+	}
+
 	/**
 	 * @brief Genric View Method
 	 * @param $id 
@@ -457,15 +618,67 @@ class MY_Controller extends CI_Controller {
 					break;
 					case 'filter':
 						$filtered = $this->session->userdata( $this->set_ref_field('filter') );
-						//unset($filtered['filter']);
 						if ($array['filter_value'] == 'all'){
 							unset($filtered[$value]);
 						} else {
 							$filtered[$value] = $array['filter_value'];
 						}
 						$this->session->set_userdata( $this->set_ref_field('filter') , $filtered);
-
 					break;
+					case 'per_page':
+						// Liste blanche pour éviter qu'un utilisateur stocke n'importe quoi en session
+						$allowed_pp = array(15, 30, 50, 100);
+						$pp = (int) $value;
+						if (in_array($pp, $allowed_pp, true)) {
+							$this->session->set_userdata(
+								$this->set_ref_field('per_page'),
+								$pp
+							);
+							// Si on change le per_page, repartir page 1 pour ne pas tomber hors plage
+							$this->session->set_userdata(
+								$this->set_ref_field('page'),
+								1
+							);
+						}
+					break;
+					case 'order_push':
+						// Empile un nouveau critère de tri en respectant la pile existante.
+						// Si le champ est déjà dans la pile, on inverse sa direction ;
+						// sinon on l'ajoute en fin de pile.
+						$stack = $this->session->userdata($this->set_ref_field('order_stack')) ?: array();
+						$dirs  = $this->session->userdata($this->set_ref_field('direction_stack')) ?: array();
+	
+						$idx = array_search($value, $stack, true);
+						if ($idx !== false) {
+							// Toggle direction
+							$dirs[$idx] = (isset($dirs[$idx]) && $dirs[$idx] === 'asc') ? 'desc' : 'asc';
+						} else {
+							$stack[] = $value;
+							$dirs[]  = 'asc';
+							// Limite raisonnable : pile de 3 tris max
+							if (count($stack) > 3) {
+								array_shift($stack);
+								array_shift($dirs);
+							}
+						}
+						$this->session->set_userdata($this->set_ref_field('order_stack'),     $stack);
+						$this->session->set_userdata($this->set_ref_field('direction_stack'), $dirs);
+					break;
+	
+					case 'order_clear':
+						$this->session->set_userdata($this->set_ref_field('order_stack'),     array());
+						$this->session->set_userdata($this->set_ref_field('direction_stack'), array());
+					break;
+	
+					case 'column_toggle':
+						$hidden = $this->session->userdata($this->set_ref_field('hidden_columns')) ?: array();
+						if (in_array($value, $hidden, true)) {
+							$hidden = array_values(array_diff($hidden, array($value)));
+						} else {
+							$hidden[] = $value;
+						}
+						$this->session->set_userdata($this->set_ref_field('hidden_columns'), $hidden);
+					break;					
 					default:
 						$this->session->set_userdata( $this->set_ref_field($field) , $value );
 					break;
@@ -602,6 +815,127 @@ class MY_Controller extends CI_Controller {
 	public function _get($field){
 		return $this->$field;
 	} 
+
+	/**
+	 * @brief Exporte la liste courante au format CSV en respectant les
+	 *        filtres, la recherche globale, le tri et les colonnes
+	 *        masquées. Pas de pagination : tout est exporté.
+	 * @returns void
+	 */
+	public function export_csv()
+	{
+		// Reproduire les mêmes _set() que list()
+		$order_stack = $this->session->userdata($this->set_ref_field('order_stack')) ?: array();
+		$dir_stack   = $this->session->userdata($this->set_ref_field('direction_stack')) ?: array();
+
+		if (!empty($order_stack)) {
+			$this->{$this->_model_name}->_set('order',     $order_stack);
+			$this->{$this->_model_name}->_set('direction', $dir_stack);
+		} else {
+			$this->{$this->_model_name}->_set('order',     $this->session->userdata($this->set_ref_field('order')));
+			$this->{$this->_model_name}->_set('direction', $this->session->userdata($this->set_ref_field('direction')));
+		}
+		$this->{$this->_model_name}->_set('global_search', $this->session->userdata($this->set_ref_field('global_search')));
+		$this->{$this->_model_name}->_set('filter',        $this->session->userdata($this->set_ref_field('filter')));
+		$this->{$this->_model_name}->_set('per_page',      0); // pas de limite
+		$this->{$this->_model_name}->_set('page',          1);
+
+		$datas = $this->{$this->_model_name}->get_all_filtered();
+		$defs  = $this->{$this->_model_name}->_get('defs');
+		$hidden = $this->session->userdata($this->set_ref_field('hidden_columns')) ?: array();
+
+		// Liste finale des champs à exporter (respect du flag list:true et des colonnes masquées)
+		$columns = array();
+		foreach ($defs as $field => $def) {
+			if ($def->_get('list') === true && !in_array($field, $hidden, true)) {
+				$columns[] = $field;
+			}
+		}
+
+		// Headers HTTP — purge buffer pour streaming propre
+		while (ob_get_level()) { ob_end_clean(); }
+
+		$filename = $this->_controller_name . '_' . date('Y-m-d_His') . '.csv';
+		header('Content-Type: text/csv; charset=UTF-8');
+		header('Content-Disposition: attachment; filename="' . $filename . '"');
+		header('Cache-Control: no-store, no-cache');
+
+		$out = fopen('php://output', 'w');
+
+		// BOM UTF-8 pour qu'Excel ouvre les accents correctement
+		fwrite($out, "\xEF\xBB\xBF");
+
+		// Ligne d'en-tête : libellés i18n
+		$header_row = array();
+		foreach ($columns as $field) {
+			$label = $this->lang->line($field);
+			$header_row[] = $label ?: $field;
+		}
+		fputcsv($out, $header_row, ';', '"');
+
+		// Lignes de données : on remplace les ID par leur libellé via les "values"
+		foreach ($datas as $row) {
+			$line = array();
+			foreach ($columns as $field) {
+				$raw = isset($row->{$field}) ? $row->{$field} : '';
+				$values = $defs[$field]->_get('values');
+				if (is_array($values) && isset($values[$raw])) {
+					$line[] = $values[$raw];
+				} else {
+					// Strip HTML éventuel + retours chariot pour rester dans une cellule
+					$clean = strip_tags((string) $raw);
+					$clean = preg_replace('/\s+/', ' ', $clean);
+					$line[] = trim($clean);
+				}
+			}
+			fputcsv($out, $line, ';', '"');
+		}
+
+		fclose($out);
+		exit;
+	}
+
+	/**
+	 * @brief Exécute une action sur un lot d'éléments sélectionnés dans la liste.
+	 * @returns void
+	 */
+	public function bulk()
+	{
+		$action = $this->input->post('bulk_action');
+		$ids    = $this->input->post('bulk_ids');
+
+		if (!is_array($ids) || empty($ids) || !$action) {
+			$this->session->set_flashdata('bulk_error', $this->lang->line('BULK_NOTHING_SELECTED'));
+			redirect($this->_controller_name . '/list');
+			return;
+		}
+
+		// Whitelist : l'action doit figurer dans _get_bulk_actions()
+		$allowed = $this->_get_bulk_actions();
+		if (!isset($allowed[$action])) {
+			$this->session->set_flashdata('bulk_error', $this->lang->line('BULK_FORBIDDEN'));
+			redirect($this->_controller_name . '/list');
+			return;
+		}
+
+		if ($action === 'delete') {
+			$nb = $this->{$this->_model_name}->delete_bulk($ids);
+			$this->session->set_flashdata(
+				'bulk_success',
+				sprintf($this->lang->line('BULK_DELETED_X'), $nb)
+			);
+		} else {
+			// Action custom : la méthode bulk_<action>() doit exister dans le contrôleur
+			$method = 'bulk_' . $action;
+			if (method_exists($this, $method)) {
+				$this->{$method}($ids);
+			} else {
+				$this->session->set_flashdata('bulk_error', $this->lang->line('BULK_NOT_IMPLEMENTED'));
+			}
+		}
+
+		redirect($this->_controller_name . '/list');
+	}
 }
 
 ?>
