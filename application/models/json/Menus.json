@@ -38,6 +38,11 @@
 				"url":"Templates_controller/list",
 				"name":"Templates_controller",
 				"type":"link"
+			},
+			{
+				"url":"Translations_controller/list",
+				"name":"Translations_controller",
+				"type":"link"
 			},			
 			{
 				"type":"divider"
@@ -92,19 +97,15 @@
 				]
 			},
 			{
-				"url" : "Cantine_controller/index",
+				"url" : "Cantine_controller/register",
 				"opt" : "sys",
-				"name" : "Cantine_controller_index",
+				"name" : "Cantine_controller_register",
 				"color" : "orange",
 				"noright":false,
 				"items":[
 					{
-						"url":"Cantine_controller/register",
-						"name":"Cantine_controller_register",
-						"type":"link"
-					},{
 						"url":"Cantine_controller/config",
-						"name":"Units_controller_config",
+						"name":"Cantine_controller_config",
 						"type":"link"
 					}			
 				]
@@ -117,6 +118,11 @@
 				"color" : "orange",
 				"noright":false,
 				"items":[
+					{
+						"url":"Admwork_controller/my_sessions",
+						"name":"Admwork_controller_my_sessions",
+						"type":"link"
+					},
 					{
 						"url":"Familys_controller/list",
 						"name":"Familys_controller_list",
@@ -159,13 +165,7 @@
 						"url":"Admwork_controller/worker",
 						"name":"Admwork_controller_worker",
 						"type":"link"
-					},
-					{
-						"url":"Admwork_controller/my_sessions",
-						"name":"Admwork_controller_my_sessions",
-						"type":"link"
-					}		
-										
+					}										
 				]
 			},
 			{

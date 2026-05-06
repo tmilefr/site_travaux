@@ -55,6 +55,45 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 								<?php echo $this->render_menu->Get('sysmenu');?>						
 								<?php echo $this->render_menu->Get('optionmenu');?>	
 								<?php if ( $this->acl->Islog() ) { ?>
+
+								<?php
+									// [i18n] Sélecteur de langue.
+									// Affiché uniquement si plusieurs langues sont disponibles.
+									$_lang_dir = APPPATH.'language/';
+									$_available_idioms = array();
+									if (is_dir($_lang_dir)) {
+										foreach (scandir($_lang_dir) as $_e) {
+											if ($_e === '.' || $_e === '..') continue;
+											if (is_dir($_lang_dir.$_e) && preg_match('/^[a-z][a-z0-9_\-]*$/', $_e)) {
+												$_available_idioms[] = $_e;
+											}
+										}
+										sort($_available_idioms);
+									}
+									$_current_idiom = $this->session->userdata('user_language');
+									if (!$_current_idiom) { $_current_idiom = $this->config->item('language'); }
+									if (!$_current_idiom) { $_current_idiom = 'french'; }
+
+									if (count($_available_idioms) > 1) { ?>
+										<li class="nav-item dropdown">
+											<a class="nav-link dropdown-toggle" href="#" id="langDropdown" role="button"
+											data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+											title="<?php echo $this->lang->line('LANG_SWITCHER_TITLE') ?: 'Changer de langue'; ?>">
+												<span class="oi oi-globe" aria-hidden="true"></span>
+												<span class="d-none d-lg-inline text-gray-600 small ml-1">
+													<?php echo htmlspecialchars(strtoupper(substr($_current_idiom, 0, 2)), ENT_QUOTES, 'UTF-8'); ?>
+												</span>
+											</a>
+											<div class="dropdown-menu dropdown-menu-right" aria-labelledby="langDropdown">
+												<?php foreach ($_available_idioms as $_idm) { ?>
+													<a class="dropdown-item <?php echo ($_idm === $_current_idiom) ? 'active' : ''; ?>"
+													href="<?php echo base_url('Translations_controller/switch_lang/'.$_idm); ?>">
+														<?php echo htmlspecialchars($_idm, ENT_QUOTES, 'UTF-8'); ?>
+													</a>
+												<?php } ?>
+											</div>
+										</li>
+									<?php } ?>
 									<li class="nav-item dropdown">
 										<a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 											<span class="mr-2 d-none d-lg-inline text-gray-600 small"><?php echo $this->acl->GetUserName(); ?></span>

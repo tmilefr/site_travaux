@@ -21,14 +21,27 @@ class Admwork_model extends Core_model{
 		$this->db->update($this->table);
 	}
 
-	function GetFiltered($civil_year, $schools){
+/**
+	 * Liste des travaux filtrés par année et école(s).
+	 *
+	 * @param string  $civil_year
+	 * @param array   $schools         codes école acceptés (B/M/L)
+	 * @param array   $exclude_types   types à exclure ; par défaut on retire 'can'
+	 *                                 (les sessions cantine ont leur propre vue
+	 *                                 Cantine_controller/register).
+	 * @return array|false
+	 */
+	function GetFiltered($civil_year, $schools, $exclude_types = []){ //'can'
 		$this->db->order_by('date_travaux','DESC');
-		$query = $this->db->select('*')
-		->from($this->table)
-		->where("civil_year IN ('".$civil_year."','2025-2026')")
-		->where("statut", 1 )
-		->where_in('accespar',$schools)
-		->get();
+		$this->db->select('*')
+			->from($this->table)
+			->where("civil_year IN ('".$civil_year."','2025-2026')")
+			->where("statut", 1 )
+			->where_in('accespar', $schools);
+		if (!empty($exclude_types)){
+			$this->db->where_not_in('type', $exclude_types);
+		}
+		$query = $this->db->get();
 		$this->_debug_array[] = $this->db->last_query();
 		if ($query->num_rows() > 0)
 		{
@@ -56,20 +69,6 @@ class Admwork_model extends Core_model{
 		return $datas;
 	}
 
-	/**
-	 * Chaîne de liaison pour retrouver la famille du référent :
-	 *   travaux.referent_travaux (INT)      = trombi.id
-	 *   trombi.ref               (VARCHAR)  = groupes_member.id
-	 *   groupes_member.id_fam    (VARCHAR)  = famille.id (INT)
-	 *
-	 * MySQL gère la conversion implicite VARCHAR↔INT pour les égalités, donc les
-	 * jointures s'écrivent directement sans CAST. Si un jour une valeur non
-	 * numérique est stockée par erreur dans id_fam, la jointure ne remontera
-	 * simplement aucune ligne (comportement souhaitable).
-	 *
-	 * @param int $id_travaux
-	 * @return stdClass|null  famille complète (id, nom, e_mail, ...)
-	 */
 	/**
 	 * Retourne la famille référente d'une session.
 	 *
@@ -121,21 +120,49 @@ class Admwork_model extends Core_model{
 	}
 
 	/**
-	 * Sessions passées dont le mail de validation au référent n'a pas encore
-	 * été envoyé. Appelé par le cron.
+	 * Archive automatiquement les travaux dont la date est passée depuis
+	 * $grace_days jours. On conserve un délai de grâce pour permettre la
+	 * validation des unités a posteriori par le référent.
 	 *
-	 * @param int $days_since  nb jours mini écoulés depuis la session
+	 * - Ne touche pas aux travaux URG (pas de date significative).
+	 * - Ne ré-archive pas les travaux déjà archivés (idempotent).
+	 *
+	 * @param int $grace_days  jours après la date où l'on archive (défaut 30)
+	 * @return int  nombre de lignes archivées
+	 */
+	function ArchiveOldWorks($grace_days = 30){
+		$cutoff = date('Y-m-d', strtotime('-'.(int)$grace_days.' days'));
+		$this->db->set('archived', 1)
+			->set('updated', date('Y-m-d H:i:s'))
+			->where('archived !=', 1)
+			->where('type !=', 'URG')
+			->where('date_travaux <', $cutoff)
+			->update($this->table);
+		$this->_debug_array[] = $this->db->last_query();
+		return $this->db->affected_rows();
+	}
+
+	/**
+	 * Sessions dont le mail d'information au référent doit partir.
+	 * Logique : le mail part 7 jours AVANT la session, et uniquement pour les
+	 * types "ménage" (MEN) et "travaux" (TRA).
+	 *
+	 * @param int $days_before  nb jours avant la session où envoyer le mail (défaut 7)
 	 * @return array
 	 */
-	public function GetWorksNeedingRefMail($days_since = 0)
+	public function GetWorksNeedingRefMail($days_before = 7)
 	{
-		$cutoff = date('Y-m-d', strtotime('-' . (int) $days_since . ' days'));
+		// Fenêtre : sessions dont la date est entre aujourd'hui et aujourd'hui+N jours
+		$target_date = date('Y-m-d', strtotime('+' . (int) $days_before . ' days'));
+		$today       = date('Y-m-d');
 
 		$data = $this->db->select('travaux.*')
 			->from('travaux')
 			->where('travaux.archived !=', 1)
 			->where('travaux.ref_mail_sent_at IS NULL', null, false)
-			->where('travaux.date_travaux <=', $cutoff)
+			->where('travaux.date_travaux >=', $today)
+			->where('travaux.date_travaux <=', $target_date)
+			->where_in('travaux.type', ['MEN', 'TRA'])
 			->where('travaux.referent_travaux !=', 0)
 			->where('travaux.referent_travaux IS NOT NULL', null, false)
 			->order_by('travaux.date_travaux', 'ASC')
@@ -155,6 +182,20 @@ class Admwork_model extends Core_model{
 	{
 		$this->db->where('id', (int) $id_travaux)
 			->update('travaux', ['ref_mail_sent_at' => date('Y-m-d H:i:s')]);
+		$this->_debug_array[] = $this->db->last_query();
+	}
+
+	/**
+	 * Marque la session comme "alerte e-mail famille envoyée".
+	 * Utilisé par Cron::send_new_session_alerts pour garantir l'idempotence.
+	 *
+	 * @param int $id_travaux
+	 * @return void
+	 */
+	public function MarkAlertSent($id_travaux)
+	{
+		$this->db->where('id', (int) $id_travaux)
+			->update('travaux', ['alert_sent_at' => date('Y-m-d H:i:s')]);
 		$this->_debug_array[] = $this->db->last_query();
 	}
 

@@ -20,7 +20,7 @@ class Candidatures_controller extends MY_Controller {
 		$this->_model_name 		= 'Candidatures_model';	   //DataModel
 		$this->_edit_view 		= 'edition/Candidatures_form';//template for editing
 		$this->_list_view		= 'unique/Candidatures_view.php';
-		$this->_autorize 		= array('list'=>true,'add'=>true,'edit'=>true,'delete'=>true,'view'=>true);
+		$this->_autorize 		= array('list'=>true,'add'=>true,'edit'=>false,'delete'=>true,'view'=>true);
 		$this->_search 			= false;
 		$this->_bg_color        = 'nicdark_bg_violet';
 		$this->title            .= $this->lang->line('GESTION_'.$this->_controller_name);

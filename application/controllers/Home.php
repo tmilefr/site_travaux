@@ -75,6 +75,8 @@ class Home extends MY_Controller {
 	//gestion de mon compte 
 	public function myaccount(){
 		$this->LoadModel('Capacity_model');
+		$this->LoadModel('AlertPref_model');  
+		$this->bootstrap_tools->_SetHead('assets/css/account_form.css', 'css');
 		
 		//compte de type admin
 		if ($this->acl->getType()  == "sys"){
