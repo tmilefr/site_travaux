@@ -231,5 +231,22 @@
 		"dbforge": {
 			"type": "DATETIME"
 		}
-	}						
+	},	
+	"alert_types": {
+		"sql": "-- voir application/migrations/mig_alert_prefs.sql",
+		"type": "checkboxdb",
+		"list": false,
+		"search": false,
+		"rules": null,
+		"param": "distinct(options,cle:value#filter=type)",
+		"values": [],
+		"model": "AlertPref_model",
+		"ref": "id_type",
+		"foreignkey": "id_fam",
+		"since": 1,
+		"dbforge": {
+			"type": "VARCHAR",
+			"constraint": "255"
+		}
+	}					
 }

@@ -24,7 +24,7 @@
 		}
 	},
 	"actions": {
-		"type": "table",
+		"type": "actions_pills",
 		"model": "Acl_actions_model",
 		"ref":"action",
 		"foreignkey":"id_ctrl",		

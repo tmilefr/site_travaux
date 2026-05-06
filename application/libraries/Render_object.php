@@ -105,36 +105,67 @@ Class Render_object{
 	}
 	
 	/**
-	 * @param mixed $field 
-	 * @param string $mode 
-	 * @param bool $datamodel 
-	 * @return string 
-	 */
+	* @param mixed $field 
+	* @param string $mode 
+	* @param bool $datamodel 
+	* @return string 
+	*  Une modification de render_link() pour :
+	*  - cliquer sur un en-tête empile le tri (au lieu de remplacer)
+	*  - afficher un petit badge "1↑", "2↓" indiquant la position dans la pile
+	*  - shift+clic n'est pas géré (HTML ne le permet pas via <a>) :
+	*    on propose à la place un bouton "+ tri" séparé du libellé.
+	*/
 	public function render_link($field, $mode = 'list', $datamodel = false)
 	{
 		if (!$datamodel)
 			$datamodel = $this->datamodel;
 
-		if(isset($this->_model[$datamodel]) ){
-			if ( $this->_model[$datamodel]->_get('defs')[$field]->dbforge->type == 'INT'){
-				$null_value = 0;
-			} else {
-				$null_value = '';
-			}
-			$add_string =  '';
-			if (isset($this->_options['filter'][$field])){
-				$add_string = '<span class="badge badge-success">'.((isset($this->_model[$this->datamodel]->_get('defs')[$field]->values[$this->_options['filter'][$field]])) ? $this->_model[$this->datamodel]->_get('defs')[$field]->values[$this->_options['filter'][$field]]:$this->_options['filter'][$field]).'</span>';
-			}
-			$string_render_link = '<div class="btn-group">';
-			$string_render_link .= $this->RenderTools->render_head_link($field, $this->_options['direction'],$this->_ui_rules[$mode]->url, $add_string);
-			if ($this->_model[$datamodel]->_get('defs')[$field]->_get('values')){
-				$string_render_link .= $this->RenderTools->render_dropdown($field, $this->_model[$datamodel]->_get('defs')[$field]->_get('values'), $this->_ui_rules[$mode]->url, $null_value );
-			}
-			$string_render_link .= '</div>';
-			return $string_render_link;
-		} else {
-			return  $datamodel.' not set in render_link';
+		if (!isset($this->_model[$datamodel])) {
+			return $datamodel.' not set in render_link';
 		}
+
+		$null_value = ($this->_model[$datamodel]->_get('defs')[$field]->dbforge->type == 'INT')
+			? 0 : '';
+
+		// Badge filtre (existant)
+		$add_string = '';
+		if (isset($this->_options['filter'][$field])) {
+			$values = $this->_model[$this->datamodel]->_get('defs')[$field]->_get('values');
+			$label  = isset($values[$this->_options['filter'][$field]])
+				? $values[$this->_options['filter'][$field]]
+				: $this->_options['filter'][$field];
+			$add_string = '<span class="badge badge-success">'.$label.'</span>';
+		}
+
+		// Badge tri secondaire : si le champ est dans la pile, afficher "1↑" / "2↓" ...
+		$stack = isset($this->_options['order_stack']) ? $this->_options['order_stack'] : array();
+		$dirs  = isset($this->_options['direction_stack']) ? $this->_options['direction_stack'] : array();
+		$idx = (is_array($stack) && count($stack)) ? array_search($field, $stack, true) : false;
+		if ($idx !== false) {
+			$arrow = (isset($dirs[$idx]) && $dirs[$idx] === 'desc') ? '↓' : '↑';
+			$add_string .= ' <span class="badge badge-info">'.($idx + 1).$arrow.'</span>';
+		}
+
+		$base_url = $this->_ui_rules[$mode]->url;
+
+		$string_render_link  = '<div class="btn-group">';
+		// Le clic sur le libellé empile (order_push). Si le champ est déjà
+		// le seul critère, ça toggle sa direction (comportement intuitif).
+		$string_render_link .= '<a class="nav-link" href="'.$base_url.'/order_push/'.urlencode($field).'">';
+		$string_render_link .= Lang($field).' '.$add_string;
+		$string_render_link .= '</a>';
+
+		if ($this->_model[$datamodel]->_get('defs')[$field]->_get('values')){
+			$string_render_link .= $this->RenderTools->render_dropdown(
+				$field,
+				$this->_model[$datamodel]->_get('defs')[$field]->_get('values'),
+				$base_url,
+				$null_value
+			);
+		}
+		$string_render_link .= '</div>';
+
+		return $string_render_link;
 	}
 	
 	/* Find How to ... */

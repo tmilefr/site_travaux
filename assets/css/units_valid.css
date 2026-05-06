@@ -1,0 +1,432 @@
+/* =====================================================================
+   units_valid.css — Refonte vue Units_controller/valid
+   Préfixe .uv- pour ne rien casser dans le reste du site.
+   ===================================================================== */
+
+.uv-section {
+    font-family: 'Raleway', sans-serif;
+    color: #404547;
+}
+
+/* =====================================================================
+   1. ÉTAT VIDE (aucune session à valider)
+   ===================================================================== */
+.uv-empty {
+    text-align: center;
+    padding: 60px 20px;
+    background: #f7f7f7;
+    border-radius: 12px;
+    color: #888;
+}
+.uv-empty i { font-size: 56px; color: #6ab78a; }
+.uv-empty h3 {
+    font-family: 'Montserrat', sans-serif;
+    color: #404547;
+    margin-top: 16px;
+}
+.uv-empty p { margin-top: 8px; }
+
+/* =====================================================================
+   2. BARRE DE FILTRES (sticky en haut)
+   -----------------------------------------------------------------------
+   IMPORTANT : le thème (nicdark_style.css) force `float:left` et
+   `width:100%` sur <select>, <input[type=text]> et <textarea>. On doit
+   annuler ces règles dans le scope de la toolbar pour que la flex-row
+   tienne sur une seule ligne.
+   ===================================================================== */
+.uv-toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: #ffffff;
+    border: 1px solid #ebebeb;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    padding: 14px 16px;
+    margin-bottom: 20px;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+/* Reset des règles globales du thème dans la toolbar */
+.uv-toolbar input,
+.uv-toolbar select,
+.uv-toolbar textarea,
+.uv-toolbar button {
+    float: none !important;
+    box-sizing: border-box;
+}
+
+.uv-toolbar-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    width: 100%;
+}
+
+/* Largeurs explicites par tool */
+.uv-tool {
+    flex: 0 0 auto;
+    min-width: 0;
+}
+.uv-tool-search {
+    position: relative;
+    flex: 1 1 240px;
+    min-width: 200px;
+}
+.uv-tool-search > i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #aaa;
+    pointer-events: none;
+    z-index: 1;
+}
+.uv-tool-search .uv-input { padding-left: 34px; }
+
+#uv-filter-date    { width: 170px; }
+#uv-filter-famille { width: 200px; }
+#uv-filter-type    { width: 150px; }
+
+@media (max-width: 768px) {
+    #uv-filter-date,
+    #uv-filter-famille,
+    #uv-filter-type    { width: 100%; }
+    .uv-tool           { width: 100%; }
+}
+
+.uv-input {
+    width: 100%;
+    height: 38px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 0 12px;
+    background: #fafafa;
+    font-family: 'Raleway', sans-serif;
+    font-size: 13px;
+    color: #404547;
+    transition: border-color .15s, background .15s;
+    -webkit-appearance: none;
+            appearance: none;
+    /* assure qu'il ne flotte pas même si le thème global tente de l'imposer */
+    float: none !important;
+    display: block;
+    box-sizing: border-box;
+}
+.uv-input:focus {
+    outline: none;
+    border-color: #ac7ab5;
+    background: #fff;
+}
+
+/* Petit caret personnalisé pour les <select> car on a coupé l'appearance native */
+select.uv-input {
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='%23888' d='M0 0l5 6 5-6z'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 30px;
+}
+
+.uv-btn-ghost {
+    height: 38px;
+    padding: 0 14px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background: #fafafa;
+    color: #666;
+    font-family: 'Raleway', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all .15s;
+}
+.uv-btn-ghost:hover {
+    background: #fff;
+    border-color: #c8c8c8;
+    color: #404547;
+}
+
+/* Compteurs */
+.uv-toolbar-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px dashed #ebebeb;
+    font-size: 12px;
+    color: #777;
+}
+.uv-chip {
+    background: #f3f3f3;
+    border-radius: 999px;
+    padding: 4px 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+.uv-chip b { color: #404547; font-weight: 700; }
+.uv-chip-accent {
+    background: #ede1f0;
+    color: #6e3a78;
+}
+.uv-chip-accent b { color: #6e3a78; }
+
+/* =====================================================================
+   3. CARTES DE SESSION
+   ===================================================================== */
+.uv-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding-bottom: 90px; /* place pour la barre d'action sticky */
+}
+
+.uv-card {
+    background: #fff;
+    border: 1px solid #ebebeb;
+    border-radius: 10px;
+    overflow: hidden;
+    transition: box-shadow .15s, transform .15s;
+}
+.uv-card:hover {
+    box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+}
+
+/* En-tête de carte */
+.uv-card-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px 18px;
+    background: linear-gradient(180deg, #fafafa 0%, #f4f4f4 100%);
+    border-bottom: 1px solid #ebebeb;
+}
+.uv-card-head-main { flex: 1 1 auto; min-width: 0; }
+.uv-card-head-actions {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.uv-card-date {
+    font-size: 12px;
+    font-weight: 600;
+    color: #ac7ab5;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    margin-bottom: 4px;
+}
+.uv-card-date i { margin-right: 4px; }
+
+.uv-card-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: #404547;
+    margin: 0 0 8px 0;
+    line-height: 1.3;
+}
+
+.uv-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    font-size: 12px;
+    color: #666;
+    align-items: center;
+}
+.uv-meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.uv-meta-item i { color: #999; }
+.uv-meta-item b { color: #404547; font-weight: 700; }
+
+/* Badges */
+.uv-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+}
+.uv-badge-blue   { background: #e1f1f5; color: #2c7c8c; }
+.uv-badge-violet { background: #ede1f0; color: #6e3a78; }
+
+/* Liens et "tout cocher" dans l'en-tête */
+.uv-btn-link {
+    color: #6ab78a;
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    transition: background .15s;
+}
+.uv-btn-link:hover {
+    background: rgba(106, 183, 138, 0.1);
+    color: #4a9a6c;
+    text-decoration: none;
+}
+
+.uv-checkall {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #666;
+    cursor: pointer;
+    user-select: none;
+    margin: 0;
+}
+.uv-checkall input { cursor: pointer; }
+
+/* Tableau interne */
+.uv-table-wrap { overflow-x: auto; }
+.uv-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+.uv-table thead th {
+    text-align: left;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    color: #999;
+    padding: 10px 14px;
+    background: #fbfbfb;
+    border-bottom: 1px solid #ebebeb;
+}
+.uv-table tbody td {
+    padding: 10px 14px;
+    border-bottom: 1px solid #f2f2f2;
+    color: #404547;
+    vertical-align: middle;
+}
+.uv-table tbody tr:last-child td { border-bottom: none; }
+.uv-table tbody tr:hover { background: #fafafa; }
+.uv-table tbody tr.is-checked { background: #f6efe8; }
+.uv-table tbody tr.is-checked:hover { background: #f0e5dc; }
+
+.uv-col-check { width: 36px; text-align: center; }
+.uv-col-time  { width: 110px; }
+.uv-col-units { width: 90px; text-align: right; }
+.uv-col-fam   { font-weight: 600; }
+
+.uv-fam-name { color: #404547; }
+
+/* =====================================================================
+   4. BARRE D'ACTION (sticky en bas)
+   ===================================================================== */
+.uv-actionbar {
+    position: sticky;
+    bottom: 0;
+    z-index: 40;
+    margin-top: 20px;
+    background: #fff;
+    border: 1px solid #ebebeb;
+    border-radius: 10px;
+    box-shadow: 0 -2px 12px rgba(0,0,0,0.06);
+    padding: 14px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+.uv-actionbar.has-selection {
+    border-color: #ac7ab5;
+    background: #faf3fb;
+}
+.uv-actionbar-info {
+    color: #666;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.uv-actionbar-info i { color: #ac7ab5; }
+.uv-actionbar-info b {
+    color: #404547;
+    font-weight: 700;
+    font-size: 18px;
+}
+.uv-btn-submit {
+    height: 42px;
+    padding: 0 22px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    border-radius: 8px;
+}
+.uv-btn-submit:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+}
+
+/* =====================================================================
+   5. MESSAGE "AUCUN RÉSULTAT" (filtres)
+   ===================================================================== */
+.uv-no-result {
+    text-align: center;
+    padding: 40px 20px;
+    background: #f7f7f7;
+    border: 1px dashed #ddd;
+    border-radius: 10px;
+    color: #888;
+    margin: 10px 0 20px;
+}
+.uv-no-result i {
+    font-size: 32px;
+    color: #bbb;
+    display: block;
+    margin-bottom: 10px;
+}
+
+/* =====================================================================
+   6. RESPONSIVE
+   ===================================================================== */
+@media (max-width: 900px) {
+    .uv-card-head {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .uv-card-head-actions {
+        justify-content: space-between;
+        padding-top: 10px;
+        border-top: 1px dashed #ebebeb;
+    }
+    .uv-actionbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .uv-btn-submit { width: 100%; }
+}
+
+@media (max-width: 600px) {
+    .uv-toolbar { padding: 10px; }
+    .uv-toolbar-row > .uv-tool { flex: 1 1 100%; }
+    .uv-card-head { padding: 12px; }
+    .uv-card-title { font-size: 14px; }
+    .uv-table thead th,
+    .uv-table tbody td { padding: 8px 10px; font-size: 12px; }
+    .uv-col-time { width: auto; }
+}
