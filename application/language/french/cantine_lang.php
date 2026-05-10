@@ -44,7 +44,7 @@ $lang['cantine_full']             = 'Complet';
 $lang['cantine_passed']           = 'Date passée';
 $lang['cantine_validated']        = 'Validée';
 $lang['cantine_confirm_cancel']   = 'Confirmer la désinscription ?';
-$lang['cantine_register_hint']    = 'Cliquez sur « M\'inscrire » pour prendre un créneau. Vous pourrez vous désinscrire tant que le référent n\'a pas encore validé l\'unité.';
+$lang['cantine_register_hint']    = 'Cliquez sur « Place libre » pour prendre un créneau. Vous pourrez vous désinscrire tant que le référent n\'a pas encore validé l\'unité.';
 
 // Format liste (gardé pour compat éventuelle)
 $lang['cantine_col_date']         = 'Date';
