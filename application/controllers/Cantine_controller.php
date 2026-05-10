@@ -55,6 +55,7 @@ class Cantine_controller extends MY_Controller {
         $this->LoadModel('Infos_model');
 
         $this->lang->load('cantine');
+        $this->load->library('RefNotifier');
     }
 
     public function index(){
@@ -212,6 +213,11 @@ class Cantine_controller extends MY_Controller {
             'updated'                    => date('Y-m-d H:i:s'),
         ]);
 
+        // [AJOUT] Alerte e-mail au responsable de la session cantine
+        $this->refnotifier->notifyCantineRegistration(
+            (int) $id_work, (int) $id_fam, 'register'
+        );
+
         redirect($this->_controller_name.'/register/'.$this->_weekOffsetFor($work->date_travaux));
     }
 
@@ -233,6 +239,16 @@ class Cantine_controller extends MY_Controller {
             ->delete('infos');
 
         $offset = $work ? $this->_weekOffsetFor($work->date_travaux) : 0;
+
+        // [AJOUT] Alerte e-mail au responsable de la session cantine,
+        // seulement si la désinscription a effectivement supprimé une ligne
+        // (sinon : tentative bloquée car unité déjà validée → pas d'alerte).
+        if ($this->db->affected_rows() > 0) {
+            $this->refnotifier->notifyCantineRegistration(
+                (int) $id_work, (int) $id_fam, 'unregister'
+            );
+        }
+
         redirect($this->_controller_name.'/register/'.$offset);
     }
 
