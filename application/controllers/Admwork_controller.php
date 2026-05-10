@@ -42,6 +42,7 @@ class Admwork_controller extends MY_Controller {
 		$this->LoadModel('Familys_model');
 		$this->LoadModel('Trombi_model');
 		
+		$this->load->library('RefNotifier');
 
 		$this->render_object->_set('_not_link_list', ['add','view','list','draftvalidation']);
 	}
@@ -119,7 +120,7 @@ class Admwork_controller extends MY_Controller {
 		if ($this->acl->getType() == 'fam') {
 			$id_fam = $this->acl->getUserId();
 			$family = $this->Familys_model->GetFamily($id_fam);
-			$works  = $this->{$this->_model_name}->GetFiltered($this->config->item('civil_year'), ['B', $family->ecole]);
+			$works  = $this->{$this->_model_name}->GetFiltered($this->config->item('civil_year'), ['B', $family->ecole],['can']);
 		} else {
 			$works = $this->{$this->_model_name}->GetFiltered($this->config->item('civil_year'), ['B','M','L']);
 		}
@@ -228,16 +229,28 @@ class Admwork_controller extends MY_Controller {
 		if (!$_local_unit_id)
 			$_local_unit_id = $this->input->post('id');
 
+		// [AJOUT] On retient l'id_famille AVANT suppression pour
+		// pouvoir notifier le responsable.
+		$infos_row = $this->db->from('infos')->where('id', $_local_unit_id)->get()->row();
+		$id_fam_unreg = $infos_row ? (int) $infos_row->id_famille : 0;
+
 		$this->Infos_model->_set('key_value', $_local_unit_id);
 		$this->Infos_model->delete();
 
-		echo "<p>$_local_unit_id $id_work</p>";
-		/*$redirect = $this->_get('_local_redirect');
+		// [AJOUT] Alerte e-mail désinscription, uniquement quand c'est
+		// la famille elle-même qui se désinscrit (pas l'admin sys).
+		if ($id_fam_unreg && $this->acl->getType() === 'fam') {
+			$this->refnotifier->notifyWorkRegistration(
+				(int) $id_work, $id_fam_unreg, 'unregister'
+			);
+		}
+
+		$redirect = $this->_get('_local_redirect');
 		if ($redirect){
 			redirect($this->_controller_name.'/'.$redirect.'/'.$id_work);
 		} else {
 			redirect($this->_controller_name.'/register');
-		}*/
+		}
 	} 
 
 	private function ADD_registration($id_work){
@@ -254,6 +267,18 @@ class Admwork_controller extends MY_Controller {
 				$this->data_view['msg'] = $this->lang->line('TOO_MANY_PEOPLE');
 			} else {
 				$datas = $this->_ProcessPost('Infos_model');	
+
+				// [AJOUT] Alerte e-mail au responsable de session.
+				// On ne notifie qu'une vraie inscription famille (pas la
+				// saisie admin via managed_one() qui passe par _ProcessPost
+				// avec un id_famille du POST).
+				if ($this->acl->getType() === 'fam') {
+					$id_fam = $this->acl->getUserId();
+					$this->refnotifier->notifyWorkRegistration(
+						(int) $id_work, (int) $id_fam, 'register'
+					);
+				}
+
 				$redirect = $this->_get('_local_redirect');
 				if ($redirect){
 					redirect($this->_controller_name.'/'.$redirect.'/'.$id_work);

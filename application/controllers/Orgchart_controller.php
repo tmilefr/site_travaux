@@ -34,7 +34,7 @@ class Orgchart_controller extends MY_Controller {
 		$this->LoadModel('Orgchart_model');
 		$this->LoadModel('GroupesMembers_model');
 		$this->LoadModel('Candidatures_model');
-
+		$this->load->library('RefNotifier');
 		
 
 		$this->_set('_debug', FALSE);
@@ -156,8 +156,24 @@ class Orgchart_controller extends MY_Controller {
 		$this->data_view['msg'] = '';
 
 		if ($state){
+			// [AJOUT] On retient le contexte avant suppression
+			$cand_id = (int) $this->input->post('id');
+			$cand_row = $cand_id
+				? $this->db->from('candidatures')->where('id', $cand_id)->get()->row()
+				: null;
+
 			$this->Candidatures_model->_set('key_value', $this->input->post('id'));
 			$this->Candidatures_model->delete();
+
+			// [AJOUT] Alerte e-mail au RT de la commission
+			if ($cand_row && $this->acl->getType() === 'fam') {
+				$this->refnotifier->notifyCommissionCandidature(
+					(int) $cand_row->id_grp,
+					(int) $cand_row->id_fam,
+					'unregister'
+				);
+			}
+
 			redirect($this->_controller_name.'/view_one/'.$id);
 		} else {
 			if ($this->input->post('form_mod')){
@@ -168,6 +184,16 @@ class Orgchart_controller extends MY_Controller {
 					$datas = $this->_ProcessPost('Candidatures_model');	
 					$this->data_view['msg'] = Lang('CANDIDATE_SENDED');
 					//redirect($this->_controller_name.'/view_one/'.$id);
+
+					// [AJOUT] Alerte e-mail au RT pour toute candidature
+					// (création OU mise à jour).
+					if ($this->acl->getType() === 'fam') {
+						$this->refnotifier->notifyCommissionCandidature(
+							(int) $id,
+							(int) $this->acl->getUserId(),
+							'register'
+						);
+					}
 				}
 			}
 		}
