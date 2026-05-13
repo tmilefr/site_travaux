@@ -1,0 +1,168 @@
+{
+	"id": {
+		"type": "hidden",
+		"list": true,
+		"search": false,
+		"rules": null,
+		"since": 1,
+		"dbforge": {
+			"type": "INT",
+			"constraint": 11,
+			"unsigned": true,
+			"auto_increment": true
+		}
+	},
+	"filename": {
+		"type": "input",
+		"list": true,
+		"search": true,
+		"rules": "trim|required",
+		"since": 1,
+		"dbforge": {
+			"type": "VARCHAR",
+			"constraint": "255"
+		}
+	},
+	"stored_path": {
+		"type": "input",
+		"list": false,
+		"search": false,
+		"rules": "trim",
+		"since": 1,
+		"dbforge": {
+			"type": "VARCHAR",
+			"constraint": "255"
+		}
+	},
+	"civil_year": {
+		"type": "input",
+		"list": true,
+		"search": true,
+		"rules": "trim",
+		"since": 1,
+		"dbforge": {
+			"type": "VARCHAR",
+			"constraint": "20"
+		}
+	},
+	"nb_lines": {
+		"type": "input",
+		"list": true,
+		"search": false,
+		"rules": null,
+		"since": 1,
+		"dbforge": {
+			"type": "INT",
+			"constraint": "11"
+		}
+	},
+	"nb_families": {
+		"type": "input",
+		"list": true,
+		"search": false,
+		"rules": null,
+		"since": 1,
+		"dbforge": {
+			"type": "INT",
+			"constraint": "11"
+		}
+	},
+	"nb_created": {
+		"type": "input",
+		"list": true,
+		"search": false,
+		"rules": null,
+		"since": 1,
+		"dbforge": {
+			"type": "INT",
+			"constraint": "11"
+		}
+	},
+	"nb_updated": {
+		"type": "input",
+		"list": true,
+		"search": false,
+		"rules": null,
+		"since": 1,
+		"dbforge": {
+			"type": "INT",
+			"constraint": "11"
+		}
+	},
+	"nb_marked": {
+		"type": "input",
+		"list": true,
+		"search": false,
+		"rules": null,
+		"since": 1,
+		"dbforge": {
+			"type": "INT",
+			"constraint": "11"
+		}
+	},
+	"nb_reactivated": {
+		"type": "input",
+		"list": false,
+		"search": false,
+		"rules": null,
+		"since": 1,
+		"dbforge": {
+			"type": "INT",
+			"constraint": "11"
+		}
+	},
+	"nb_errors": {
+		"type": "input",
+		"list": true,
+		"search": false,
+		"rules": null,
+		"since": 1,
+		"dbforge": {
+			"type": "INT",
+			"constraint": "11"
+		}
+	},
+	"report": {
+		"type": "memo",
+		"list": false,
+		"search": false,
+		"rules": null,
+		"since": 1,
+		"dbforge": {
+			"type": "TEXT"
+		}
+	},
+	"imported_by": {
+		"type": "select_database",
+		"list": false,
+		"search": false,
+		"rules": null,
+		"since": 1,
+		"param": "distinct(acl_users,id:name)",
+		"values": [],
+		"dbforge": {
+			"type": "INT",
+			"constraint": "11"
+		}
+	},
+	"created": {
+		"type": "created",
+		"list": true,
+		"search": false,
+		"rules": null,
+		"since": 1,
+		"dbforge": {
+			"type": "DATETIME"
+		}
+	},
+	"updated": {
+		"type": "updated",
+		"list": false,
+		"search": false,
+		"rules": null,
+		"since": 1,
+		"dbforge": {
+			"type": "DATETIME"
+		}
+	}
+}
