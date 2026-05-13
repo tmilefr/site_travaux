@@ -161,6 +161,41 @@ class Familys_model extends Core_model
 		return $this->_populateUsercheck($query->row_array());
 	}
 
+	/**
+     * Liste des familles non encore inscrites à une session donnée et
+     * compatibles avec l'école rattachée à la session (champ `accespar`).
+     *
+     * Règle école :
+     *   - accespar = 'B'     → toutes les familles
+     *   - accespar = 'M'|'L' → familles de cette école + familles 'B'
+     *
+     * @param  stdClass $work  ligne `travaux` (besoin de ->id et ->accespar)
+     * @return array
+     */
+    function GetAvailableForWork($work)
+    {
+        if (!isset($work->id)) return [];
+        $id_work = (int) $work->id;
+
+        $this->db->select('famille.id, famille.nom, famille.ecole')
+            ->from($this->table)
+            ->where(
+                "famille.id NOT IN (SELECT id_famille FROM infos WHERE id_travaux = ".$id_work.")",
+                null, false
+            );
+
+        if (!empty($work->accespar) && $work->accespar !== 'B') {
+            $this->db->group_start()
+                ->where('famille.ecole', $work->accespar)
+                ->or_where('famille.ecole', 'B')
+                ->group_end();
+        }
+
+        $rows = $this->db->order_by('famille.nom', 'ASC')->get()->result();
+        $this->_debug_array[] = $this->db->last_query();
+        return $rows ?: [];
+    }
+
 	// -----------------------------------------------------------------------
 	// Méthodes privées
 	// -----------------------------------------------------------------------
