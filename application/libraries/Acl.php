@@ -151,10 +151,9 @@ class Acl
 		if ($this->DontCheck) {
 			return TRUE;
 		}
-
+		$currentPage = $this->controller . '/' . $this->action;
 		if ($this->IsLog()) {
 			if (!$this->CI->acl->hasAccess()) {
-				$currentPage = $this->controller . '/' . $this->action;
 				if ($currentPage !== '/home/no_right'
 					&& !in_array($currentPage, $this->CI->acl->getGuestPages())
 				) {
@@ -173,8 +172,15 @@ class Acl
 				$this->_debug_array[] = $this->controller . '/' . $this->action . ' GRANTED';
 			}
 		} else {
-			if ($this->controller . '/' . $this->action !== 'home/login') {
-				return redirect('/Home/login');
+			if ( in_array($currentPage, $this->CI->acl->getGuestPages()) && !in_array($currentPage,['home/login','home/index'])){ //sauf login
+				return TRUE;
+			}	
+			if (php_sapi_name() == 'cli') {
+				echo "no access for $currentPage\n";
+			} else {
+				if ($this->controller . '/' . $this->action !== 'home/login') {
+					return redirect('/Home/login');
+				}
 			}
 		}
 	}

@@ -225,33 +225,19 @@ class Admwork_controller extends MY_Controller {
 
 
 	private function delete_registration($id_work){
-		$_local_unit_id = $this->_get('_local_unit_id');
-		if (!$_local_unit_id)
-			$_local_unit_id = $this->input->post('id');
+        $id_info = $this->_get('_local_unit_id');
+        if (!$id_info) $id_info = $this->input->post('id');
 
-		// [AJOUT] On retient l'id_famille AVANT suppression pour
-		// pouvoir notifier le responsable.
-		$infos_row = $this->db->from('infos')->where('id', $_local_unit_id)->get()->row();
-		$id_fam_unreg = $infos_row ? (int) $infos_row->id_famille : 0;
+        $is_self = ($this->acl->getType() === 'fam');
+        $this->inscriptions->unregisterByInfoId((int) $id_info, (int) $id_work, $is_self);
 
-		$this->Infos_model->_set('key_value', $_local_unit_id);
-		$this->Infos_model->delete();
-
-		// [AJOUT] Alerte e-mail désinscription, uniquement quand c'est
-		// la famille elle-même qui se désinscrit (pas l'admin sys).
-		if ($id_fam_unreg && $this->acl->getType() === 'fam') {
-			$this->refnotifier->notifyWorkRegistration(
-				(int) $id_work, $id_fam_unreg, 'unregister'
-			);
-		}
-
-		$redirect = $this->_get('_local_redirect');
-		if ($redirect){
-			redirect($this->_controller_name.'/'.$redirect.'/'.$id_work);
-		} else {
-			redirect($this->_controller_name.'/register');
-		}
-	} 
+        $redirect = $this->_get('_local_redirect');
+        if ($redirect){
+            redirect($this->_controller_name.'/'.$redirect.'/'.$id_work);
+        } else {
+            redirect($this->_controller_name.'/register');
+        }
+    }
 
 	private function ADD_registration($id_work){
 		if ($this->form_validation->run('Infos_model') === FALSE){ //les champs sont ok
@@ -497,39 +483,15 @@ class Admwork_controller extends MY_Controller {
 	 * @param int $id_work
 	 * @return true|string  true si OK, message d'erreur sinon
 	 */
-	private function _ProcessRefAdd($id_work)
-	{
-		$id_fam            = (int) $this->input->post('id_famille');
-		$type_participant  = $this->input->post('type_participant');
-		if (!$id_fam || !$type_participant) {
-			return $this->lang->line('REF_ADD_MISSING_FIELDS');
-		}
-
-		// Déjà inscrite ?
-		if ($this->Infos_model->IsRegister($id_fam, $id_work)) {
-			return $this->lang->line('REF_ADD_ALREADY_REGISTERED');
-		}
-
-		// Capacité disponible ?
-		$nb_participants = ($type_participant === 'Both') ? 2 : 1;
-		$current = $this->Infos_model->Decompte($id_work);
-		$current = $current ? (int) $current->nb_participants : 0;
-		$max     = (int) $this->Admwork_model->GetMax($id_work)->nb_inscrits_max;
-		if (($current + $nb_participants) > $max) {
-			return $this->lang->line('TOO_MANY_PEOPLE');
-		}
-
-		// Insertion directe dans infos
-		$this->db->insert('infos', [
-			'id_famille'            => $id_fam,
-			'id_travaux'            => $id_work,
-			'type_participant'      => $type_participant,
-			'nb_participants'       => $nb_participants,
-			'nb_unites_valides'     => 0,
-			'type_session'          => (int) $this->input->post('type_session') ?: 1,
-		]);
-		return true;
-	}
+	private function _ProcessRefAdd($id_work){
+        $r = $this->inscriptions->registerByRef(
+            (int) $id_work,
+            (int) $this->input->post('id_famille'),
+            $this->input->post('type_participant'),
+            (int) $this->input->post('type_session') ?: 1
+        );
+        return $r->success ? true : $r->message;
+    }
 
 	/**
 	 * Retire une famille de la session (mode gestion).
@@ -537,23 +499,10 @@ class Admwork_controller extends MY_Controller {
 	 * @param int $id_work
 	 * @return void
 	 */
-	private function _ProcessRefRemove($id_work)
-	{
-		$id_info = (int) $this->input->post('id_info');
-		if (!$id_info) return;
-
-		// Sécurité : l'info doit bien appartenir à CETTE session
-		$info = $this->db->select('*')
-			->from('infos')
-			->where('id', $id_info)
-			->where('id_travaux', $id_work)
-			->get()
-			->row();
-		if (!$info) return;
-
-		$this->Infos_model->_set('key_value', $id_info);
-		$this->Infos_model->delete();
-	}
+	private function _ProcessRefRemove($id_work){
+        $id_info = (int) $this->input->post('id_info');
+        $this->inscriptions->unregisterByRef($id_info, (int) $id_work);
+    }
 
 	/**
 	 * Traitement du POST de validation des présences (jour J et après).
@@ -650,25 +599,8 @@ class Admwork_controller extends MY_Controller {
 	 * @param stdClass $work
 	 * @return array
 	 */
-	private function _GetFamiliesAvailableForWork($work)
-	{
-		$this->db->select('famille.id, famille.nom, famille.ecole')
-			->from('famille')
-			->where("famille.id NOT IN (SELECT id_famille FROM infos WHERE id_travaux = " . (int) $work->id . ")", null, false);
-
-		// Filtre école : si la session est sur une école spécifique, seules
-		// les familles compatibles sont affichées (B = les deux, L ou M = une seule)
-		if (!empty($work->accespar) && $work->accespar !== 'B') {
-			$this->db->group_start()
-				->where('famille.ecole', $work->accespar)
-				->or_where('famille.ecole', 'B')
-				->group_end();
-		}
-
-		$this->db->order_by('famille.nom', 'ASC');
-		$rows = $this->db->get()->result();
-
-		return $rows ?: [];
-	}
+	private function _GetFamiliesAvailableForWork($work){
+        return $this->inscriptions->getFamiliesAvailableForWork($work);
+    }
 
 }

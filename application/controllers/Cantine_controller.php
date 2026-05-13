@@ -30,7 +30,6 @@ class Cantine_controller extends MY_Controller {
     public function __construct(){
         parent::__construct();
 
-
         $this->_controller_name = 'Cantine_controller';
         $this->_model_name      = 'CantineConfig_model';
         $this->_edit_view       = 'edition/Cantine_form';
@@ -54,7 +53,11 @@ class Cantine_controller extends MY_Controller {
         $this->LoadModel('Admwork_model');
         $this->LoadModel('Infos_model');
 
+        $this->load->library('Inscriptions');
+
         $this->lang->load('cantine');
+        $this->lang->load('inscriptions');
+
         $this->load->library('RefNotifier');
     }
 
@@ -174,81 +177,54 @@ class Cantine_controller extends MY_Controller {
         $this->render_view();
     }
 
+
+
+
+    
     /**
      * Inscription à une session cantine donnée (id du travail).
      */
     public function register_one($id_work = null){
-        $id_work = (int)$id_work;
+        $id_work = (int) $id_work;
         if (!$id_work || $this->acl->getType() != 'fam'){
             redirect($this->_controller_name.'/register');
         }
 
         $id_fam = $this->acl->getUserId();
 
-        $work = $this->db->from('travaux')->where('id', $id_work)->where('type','can')->get()->row();
-        if (!$work){ redirect($this->_controller_name.'/register'); }
-        if (strtotime($work->date_travaux) < strtotime(date('Y-m-d'))){
-            redirect($this->_controller_name.'/register/'.$this->_weekOffsetFor($work->date_travaux));
+        // Type 'can' forcé : seules les sessions cantine passent ici.
+        $r = $this->inscriptions->registerSelf($id_work, $id_fam, [], 'can');
+
+        // Sur erreur silencieuse ou succès, on revient à l'agenda. Si l'on
+        // veut afficher le message, le poser en flashdata ou data_view.
+        if (!$r->success && in_array($r->code, [
+                Inscriptions::ALREADY_REGISTERED,
+                Inscriptions::SESSION_FULL,
+                Inscriptions::PAST_DATE])) {
+            $this->session->set_flashdata('cantine_msg', $r->message);
         }
-        if ($this->Infos_model->IsRegister($id_fam, $id_work)){
-            redirect($this->_controller_name.'/register/'.$this->_weekOffsetFor($work->date_travaux));
-        }
-        $nb = (int) $this->db->from('infos')->where('id_travaux', $id_work)->count_all_results();
-        if ($nb >= (int)$work->nb_inscrits_max){
-            redirect($this->_controller_name.'/register/'.$this->_weekOffsetFor($work->date_travaux));
-        }
 
-        // Création de l'inscription (ligne infos) = unité à valider
-        $this->db->insert('infos', [
-            'id_famille'                 => $id_fam,
-            'id_travaux'                 => $id_work,
-            'heure_debut_prevue'         => $work->heure_deb_trav,
-            'heure_fin_prevue'           => $work->heure_fin_trav,
-            'nb_unites_valides'          => (float)$work->nb_units,
-            'nb_unites_valides_effectif' => 0,
-            'nb_participants'            => 1,
-            'type_participant'           => 'Mr',
-            'type_session'               => 1,
-            'created'                    => date('Y-m-d H:i:s'),
-            'updated'                    => date('Y-m-d H:i:s'),
-        ]);
-
-        // [AJOUT] Alerte e-mail au responsable de la session cantine
-        $this->refnotifier->notifyCantineRegistration(
-            (int) $id_work, (int) $id_fam, 'register'
-        );
-
-        redirect($this->_controller_name.'/register/'.$this->_weekOffsetFor($work->date_travaux));
-    }
-
+        $offset = ($r->work) ? $this->_weekOffsetFor($r->work->date_travaux) : 0;
+        redirect($this->_controller_name.'/register/'.$offset);
+    }  
+  
     /**
      * Désinscription d'une session (refusée si unité déjà validée).
      */
     public function unregister_one($id_work = null){
-        $id_work = (int)$id_work;
+        $id_work = (int) $id_work;
         if (!$id_work || $this->acl->getType() != 'fam'){
             redirect($this->_controller_name.'/register');
         }
 
         $id_fam = $this->acl->getUserId();
-        $work = $this->db->from('travaux')->where('id', $id_work)->get()->row();
+        $r = $this->inscriptions->unregisterSelf($id_work, $id_fam);
 
-        $this->db->where('id_travaux', $id_work)
-            ->where('id_famille', $id_fam)
-            ->where('nb_unites_valides_effectif', 0)
-            ->delete('infos');
-
-        $offset = $work ? $this->_weekOffsetFor($work->date_travaux) : 0;
-
-        // [AJOUT] Alerte e-mail au responsable de la session cantine,
-        // seulement si la désinscription a effectivement supprimé une ligne
-        // (sinon : tentative bloquée car unité déjà validée → pas d'alerte).
-        if ($this->db->affected_rows() > 0) {
-            $this->refnotifier->notifyCantineRegistration(
-                (int) $id_work, (int) $id_fam, 'unregister'
-            );
+        if (!$r->success && $r->code === Inscriptions::ALREADY_VALIDATED) {
+            $this->session->set_flashdata('cantine_msg', $r->message);
         }
 
+        $offset = ($r->work) ? $this->_weekOffsetFor($r->work->date_travaux) : 0;
         redirect($this->_controller_name.'/register/'.$offset);
     }
 

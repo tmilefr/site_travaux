@@ -117,5 +117,69 @@ class Infos_model extends Core_model{
 			return (($data->num_rows()) ? $data->result():FALSE);
 	}
 
+	/**
+     * Insère une inscription (ligne `infos`).
+     *
+     * @param  array $data
+     * @return int|false  id généré, ou false en cas d'échec
+     */
+    function Register($data){
+        if (empty($data)) return false;
+        $this->db->insert($this->table, $data);
+        $this->_debug_array[] = $this->db->last_query();
+        return $this->db->insert_id() ?: false;
+    }
+
+    /**
+     * Désinscrit une famille d'une session.
+     *
+     * @param int  $id_fam
+     * @param int  $id_work
+     * @param bool $only_if_not_validated  refuse la suppression si une unité
+     *                                     est déjà validée (cas auto-désinscription)
+     * @return int  nombre de lignes effectivement supprimées
+     */
+    function Unregister($id_fam, $id_work, $only_if_not_validated = true){
+        $this->db->where('id_famille', (int) $id_fam)
+                 ->where('id_travaux', (int) $id_work);
+        if ($only_if_not_validated){
+            $this->db->where('nb_unites_valides_effectif', 0);
+        }
+        $this->db->delete($this->table);
+        $this->_debug_array[] = $this->db->last_query();
+        return (int) $this->db->affected_rows();
+    }
+
+    /**
+     * Récupère une inscription par son id.
+     *
+     * @param  int $id_info
+     * @return stdClass|null
+     */
+    function GetInfoById($id_info){
+        $row = $this->db->from($this->table)
+            ->where($this->key, (int) $id_info)
+            ->get()->row();
+        $this->_debug_array[] = $this->db->last_query();
+        return $row ?: null;
+    }
+
+    /**
+     * Récupère une inscription en vérifiant qu'elle appartient bien à
+     * la session $id_work (garde-fou contre une falsification de paramètre
+     * côté contrôleur).
+     *
+     * @param  int $id_info
+     * @param  int $id_work
+     * @return stdClass|null
+     */
+    function GetInfoForWork($id_info, $id_work){
+        $row = $this->db->from($this->table)
+            ->where($this->key, (int) $id_info)
+            ->where('id_travaux', (int) $id_work)
+            ->get()->row();
+        $this->_debug_array[] = $this->db->last_query();
+        return $row ?: null;
+    }
 }
 ?>

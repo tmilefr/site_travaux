@@ -63,3 +63,86 @@ $lang['nb_enfants']                             = 'Nombre d\'enfant';
 $lang['capacity']                               = 'Comp&eacute;tences';
 $lang['civil_year']                             = 'Année civile';
 
+// ---------------------------------------------------------------------
+// IMPORT CSV ABCM — titres et sous-titres des nouvelles vues
+// ---------------------------------------------------------------------
+$lang['Familys_controller_import']                  = 'Import des familles (CSV ABCM)';
+$lang['Familys_controller_import_subtitle']         = 'Synchronisation à partir de l\'export ABCM';
+$lang['Familys_controller_import_history']         = 'Historique des imports ABCM';
+$lang['Familys_controller_import_history_subtitle']= 'Suivi des imports CSV précédents';
+
+
+// ---------------------------------------------------------------------
+// IMPORT CSV ABCM — labels et messages
+// ---------------------------------------------------------------------
+
+// Étape 1 — formulaire d'upload
+$lang['IMPORT_UPLOAD_TITLE']        = 'Import d\'un fichier CSV ABCM';
+$lang['IMPORT_UPLOAD_HELP']         = 'Sélectionnez le fichier CSV exporté depuis ABCM. Le fichier sera analysé et un aperçu des changements vous sera proposé avant toute modification en base.';
+$lang['IMPORT_FILE_LABEL']          = 'Fichier CSV';
+$lang['IMPORT_FILE_HELP']           = 'Format attendu : CSV, séparateur point-virgule, encodage Windows-1252 (ABCM).';
+$lang['IMPORT_UPLOAD_BTN']          = 'Analyser le fichier';
+
+// Étape 1 — preview
+$lang['IMPORT_PREVIEW_TITLE']       = 'Aperçu des changements';
+$lang['IMPORT_PREVIEW_STATS']       = '%d ligne(s) de données analysée(s), %d famille(s) distincte(s) identifiée(s).';
+$lang['IMPORT_TO_CREATE']           = 'À créer';
+$lang['IMPORT_TO_UPDATE']           = 'À mettre à jour';
+$lang['IMPORT_TO_REACTIVATE']       = 'À réactiver';
+$lang['IMPORT_TO_MARK']             = 'À désactiver';
+$lang['IMPORT_ERRORS']              = 'Erreurs';
+
+$lang['IMPORT_TO_CREATE_TITLE']     = 'Familles nouvelles à créer';
+$lang['IMPORT_TO_UPDATE_TITLE']     = 'Familles existantes à mettre à jour';
+$lang['IMPORT_TO_REACTIVATE_TITLE'] = 'Familles à réactiver';
+$lang['IMPORT_TO_REACTIVATE_HELP']  = 'Ces familles étaient marquées "à désactiver" mais réapparaissent dans ce CSV : leur drapeau sera levé automatiquement.';
+$lang['IMPORT_TO_MARK_TITLE']       = 'Familles à marquer "à désactiver"';
+$lang['IMPORT_TO_MARK_HELP']        = 'Ces familles ont un code ABCM mais ne figurent plus dans le CSV. Elles seront marquées (drapeau to_deactivate=1). Leur historique reste intact ; vous pourrez décider manuellement de leur sort depuis la liste des familles.';
+$lang['IMPORT_ERRORS_TITLE']        = 'Lignes en erreur (ignorées)';
+
+$lang['IMPORT_X_NEW_CHILDREN']      = '%d nouvel(s) enfant(s) à ajouter';
+$lang['IMPORT_X_UPDATED_CHILDREN']  = '%d enfant(s) à mettre à jour';
+
+$lang['IMPORT_CONFIRM_QUESTION']    = 'Confirmer l\'application de %d action(s) ?';
+$lang['IMPORT_CONFIRM_BTN']         = 'Confirmer et appliquer';
+$lang['IMPORT_CONFIRM_JS']          = 'Confirmer l\'application des changements en base ?';
+$lang['IMPORT_CANCEL_BTN']          = 'Annuler';
+$lang['IMPORT_NOTHING_TO_DO']       = 'Aucune action à appliquer : la base est déjà alignée avec ce CSV.';
+$lang['IMPORT_BACK_BTN']            = 'Retour';
+
+// Étape 2 — résultat
+$lang['IMPORT_APPLIED_X']           = 'Import appliqué : %d créée(s), %d modifiée(s), %d marquée(s) à désactiver, %d réactivée(s).';
+
+// Erreurs côté upload
+$lang['IMPORT_NO_FILE']             = 'Aucun fichier reçu.';
+$lang['IMPORT_EMPTY_FILE']          = 'Le fichier reçu est vide.';
+$lang['IMPORT_BAD_EXTENSION']       = 'Extension de fichier invalide (.csv attendu).';
+$lang['IMPORT_STORE_FAILED']        = 'Impossible de stocker le fichier sur le serveur.';
+$lang['IMPORT_PARSE_FAILED']        = 'Impossible de parser le fichier CSV (format ou encodage incompatible).';
+$lang['IMPORT_BAD_PATH']            = 'Chemin de fichier invalide.';
+$lang['IMPORT_FILE_GONE']           = 'Le fichier uploadé n\'est plus disponible. Veuillez recommencer l\'import.';
+
+// Historique
+$lang['IMPORT_HISTORY_TITLE']       = 'Imports précédents';
+$lang['IMPORT_HISTORY_EMPTY']       = 'Aucun import effectué pour le moment.';
+$lang['IMPORT_NEW_BTN']             = 'Nouvel import';
+
+
+// ---------------------------------------------------------------------
+// Labels de champs (utilisés par les vues import + import_history,
+// et exploités automatiquement par render_object si besoin).
+// ---------------------------------------------------------------------
+$lang['code_famille_abcm']          = 'Code famille ABCM';
+$lang['code_membre_abcm']           = 'Code membre ABCM';
+$lang['to_deactivate']              = 'À désactiver';
+$lang['classe']                     = 'Classe';
+
+$lang['filename']                   = 'Fichier';
+$lang['nb_lines']                   = 'Lignes';
+$lang['nb_families']                = 'Familles';
+$lang['nb_created']                 = 'Créées';
+$lang['nb_updated']                 = 'Modifiées';
+$lang['nb_marked']                  = 'Marquées';
+$lang['nb_reactivated']             = 'Réactivées';
+$lang['nb_errors']                  = 'Erreurs';
+$lang['created']                    = 'Date';

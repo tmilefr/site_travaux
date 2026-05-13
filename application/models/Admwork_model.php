@@ -199,5 +199,25 @@ class Admwork_model extends Core_model{
 		$this->_debug_array[] = $this->db->last_query();
 	}
 
+
+	/**
+     * Récupère une session par son id, avec un filtre optionnel sur le type.
+     * Utilisé par la librairie Inscriptions pour valider l'existence et
+     * la conformité de la session ciblée.
+     *
+     * @param  int         $id_work
+     * @param  string|null $expected_type  si non null ('can'…), la session
+     *                                     doit être de ce type
+     * @return stdClass|null
+     */
+    public function GetWorkById($id_work, $expected_type = null){
+        $this->db->from($this->table)->where($this->key, (int) $id_work);
+        if ($expected_type !== null){
+            $this->db->where('type', $expected_type);
+        }
+        $row = $this->db->get()->row();
+        $this->_debug_array[] = $this->db->last_query();
+        return $row ?: null;
+    }
 }
 ?>
