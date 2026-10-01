@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.0.4
+-- version 5.2.3
 -- https://www.phpmyadmin.net/
 --
--- Hôte : localhost
--- Généré le : jeu. 21 juil. 2022 à 21:15
--- Version du serveur :  5.7.11
--- Version de PHP : 7.4.11
+-- Hôte : localhost:3306
+-- Généré le : jeu. 01 oct. 2026 à 09:08
+-- Version du serveur : 10.11.14-MariaDB-0ubuntu0.24.04.1
+-- Version de PHP : 8.4.25
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Base de données : `travaux_v2`
+-- Base de données : `itregiomlh_prod`
 --
 
 -- --------------------------------------------------------
@@ -34,7 +34,7 @@ CREATE TABLE `options` (
   `filter` varchar(255) NOT NULL,
   `created` date NOT NULL,
   `updated` date NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 --
 -- Déchargement des données de la table `options`
@@ -42,7 +42,7 @@ CREATE TABLE `options` (
 
 INSERT INTO `options` (`id`, `cle`, `value`, `filter`, `created`, `updated`) VALUES
 (1, 'PE', 'Président', 'classif', '2021-10-26', '2021-11-22'),
-(2, 'RT', 'Référent de comission', 'classif', '2021-10-26', '2021-11-22'),
+(2, 'RT', 'Responsable de commission', 'classif', '2021-10-26', '2024-04-24'),
 (3, 'nicdark_bg_white', 'blanc', 'color', '2021-10-26', '2021-10-26'),
 (4, 'nicdark_bg_grey', 'gris', 'color', '2021-10-26', '2021-10-26'),
 (5, 'nicdark_bg_grey2', 'gris 2', 'color', '2021-10-26', '0000-00-00'),
@@ -79,7 +79,17 @@ INSERT INTO `options` (`id`, `cle`, `value`, `filter`, `created`, `updated`) VAL
 (36, 'san', 'Sanitaire', 'capacity', '2022-06-26', '0000-00-00'),
 (37, 'inf', 'Informatique (gestion)', 'capacity', '2022-06-27', '0000-00-00'),
 (38, 'dev', 'Informatique (developpement)', 'capacity', '2022-06-27', '0000-00-00'),
-(39, 'can', 'Cantine', 'type', '2022-06-30', '0000-00-00');
+(39, 'can', 'Cantine', 'type', '2022-06-30', '0000-00-00'),
+(40, 'INF', 'Informatique', 'type', '2022-07-23', '0000-00-00'),
+(41, 'ama', 'Activités manuelle et artistique (bricolage ... )', 'capacity', '2022-09-13', '2022-09-13'),
+(42, 'reftra', 'Réfèrent de session', 'classif', '2023-10-09', '0000-00-00'),
+(43, 'pvca', 'Document de CA', 'filetype', '2024-05-10', '0000-00-00'),
+(44, 'reuca', 'Réunion CA', 'event_type', '2024-05-10', '0000-00-00'),
+(45, 'reubur', 'Réunion bureau', 'event_type', '2024-05-10', '0000-00-00'),
+(46, 'URG', 'Urgent', 'type', '2024-09-23', '0000-00-00'),
+(47, 'ag', 'Assemblée Générale', 'event_type', '2025-05-19', '0000-00-00'),
+(48, 'pub', 'public', 'filetype', '2025-05-23', '0000-00-00'),
+(49, 'cve', 'Evénementiel', 'type', '2026-03-04', '2026-03-04');
 
 --
 -- Index pour les tables déchargées
@@ -99,7 +109,7 @@ ALTER TABLE `options`
 -- AUTO_INCREMENT pour la table `options`
 --
 ALTER TABLE `options`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
