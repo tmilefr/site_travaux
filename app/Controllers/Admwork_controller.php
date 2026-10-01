@@ -99,7 +99,7 @@ class Admwork_controller extends MY_Controller {
 			//echo debug($work);
 
 			if (!is_file($this->libpdf->_get('pdf_path').$work->pdf) OR $override){
-				$this->libpdf->DoPdf($work,'unique/'.$this->_controller_name.'_register_one_pdf', $work->pdf , TRUE);
+				$this->libpdf->DoPdf($work,'unique/'.$this->_controller_name.'/'.$this->_controller_name.'_register_one_pdf', $work->pdf , TRUE);
 			} 		
 		}
 	}

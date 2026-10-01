@@ -12,28 +12,62 @@ class Input
         return service('request');
     }
 
+    /**
+     * Lecture dans un tableau (superglobale) avec la syntaxe CI3 :
+     * "champ" ou "champ[cle]". On lit les superglobales directement (comme CI3)
+     * car le code metier les modifie parfois ($_POST['x'] = ...).
+     */
+    protected function fetch(array $source, $index = null)
+    {
+        if ($index === null) {
+            return $source;
+        }
+        if (is_array($index)) {
+            $out = [];
+            foreach ($index as $key) {
+                $out[$key] = $this->fetch($source, $key);
+            }
+            return $out;
+        }
+        if (isset($source[$index])) {
+            return $source[$index];
+        }
+        if (($pos = strpos($index, '[')) !== false && preg_match_all('/\[(.*?)\]/', $index, $m)) {
+            $value = $source[substr($index, 0, $pos)] ?? null;
+            foreach ($m[1] as $key) {
+                if (!is_array($value)) {
+                    return null;
+                }
+                if ($key === '') {
+                    return $value;
+                }
+                $value = $value[$key] ?? null;
+            }
+            return $value;
+        }
+        return null;
+    }
+
     public function post($index = null, $xss = false)
     {
-        $req = $this->request();
-        if ($index === null) {
-            return $req->getPost() ?? [];
-        }
-        return $req->getPost($index);
+        return $this->fetch($_POST, $index);
     }
 
     public function get($index = null, $xss = false)
     {
-        $req = $this->request();
-        if ($index === null) {
-            return $req->getGet() ?? [];
-        }
-        return $req->getGet($index);
+        return $this->fetch($_GET, $index);
     }
 
     public function post_get($index)
     {
         $v = $this->post($index);
         return $v !== null ? $v : $this->get($index);
+    }
+
+    public function get_post($index)
+    {
+        $v = $this->get($index);
+        return $v !== null ? $v : $this->post($index);
     }
 
     public function server($index = null)
