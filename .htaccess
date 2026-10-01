@@ -1,5 +1,9 @@
-RewriteBase /site_travaux
-RewriteEngine On
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.*)$ index.php/$1 [L]
+# Hebergement mutualise : le document root pointe sur la racine du depot,
+# on redirige tout vers public/ (le code reste hors de portee du web).
+<IfModule mod_rewrite.c>
+	RewriteEngine On
+	RewriteRule ^$ public/ [L]
+	RewriteCond %{REQUEST_FILENAME} !-f
+	RewriteCond %{REQUEST_FILENAME} !-d
+	RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
