@@ -11,6 +11,7 @@ use Exception;
  * (c) 2013-2022 Travis Dent <tcdent@gmail.com>
  */
 
+#[\AllowDynamicProperties]
 class RestClientException extends Exception {}
 
 class RestClient implements \Iterator, \ArrayAccess {

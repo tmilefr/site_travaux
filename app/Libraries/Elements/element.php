@@ -11,6 +11,7 @@ use App\Libraries\Render_object;
  */
 
 
+#[\AllowDynamicProperties]
 class element
 {
 	protected $mode; //view, form.

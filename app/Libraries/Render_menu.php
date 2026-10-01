@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Libraries;
+#[\AllowDynamicProperties]
 Class Render_menu{
 
 	protected $CI 		= NULL; //Controller instance 

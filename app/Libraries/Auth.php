@@ -33,6 +33,7 @@ use Exception;
  * @subpackage Libraries
  * @category   Factory
  */
+#[\AllowDynamicProperties]
 class Auth
 {
 	/** @var CI_Controller */

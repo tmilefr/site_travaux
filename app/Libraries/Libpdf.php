@@ -6,6 +6,7 @@ use Dompdf\Dompdf;
 use Dompdf\Options;
 use Exception;
 
+#[\AllowDynamicProperties]
 class Libpdf {
 	
 	var $CI;

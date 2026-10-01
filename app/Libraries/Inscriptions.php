@@ -72,6 +72,7 @@ namespace App\Libraries;
  *
  * @package WebApp
  */
+#[\AllowDynamicProperties]
 class Inscriptions
 {
     /** @var CI_Controller */
