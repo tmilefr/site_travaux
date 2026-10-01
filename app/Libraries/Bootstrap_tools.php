@@ -3,6 +3,7 @@
 namespace App\Libraries;
 
 use Stdclass;
+#[\AllowDynamicProperties]
 Class Bootstrap_tools{
 
 	protected $_head = array();

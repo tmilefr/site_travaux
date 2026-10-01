@@ -80,11 +80,11 @@ Events::on('pre_system', static function (): void {
     set_error_handler(static function (int $severity, string $message, ?string $file = null, ?int $line = null) use ($previous) {
         $lenient = E_WARNING | E_NOTICE | E_USER_WARNING | E_USER_NOTICE;
         if (($severity & $lenient) !== 0 && (error_reporting() & $severity) !== 0) {
-            log_message('warning', '[{severity}] {message} in {file}:{line}', [
-                'severity' => $severity,
-                'message'  => $message,
-                'file'     => $file,
-                'line'     => $line,
+            log_message('warning', '[{errno}] {errmsg} in {errfile}:{errline}', [
+                'errno'   => $severity,
+                'errmsg'  => $message,
+                'errfile' => str_replace(ROOTPATH, '', (string) $file),
+                'errline' => $line,
             ]);
 
             return true;

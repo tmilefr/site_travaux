@@ -24,6 +24,7 @@ namespace App\Libraries;
  * @subpackage  Libraries
  * @category    Security
  */
+#[\AllowDynamicProperties]
 class PasswordAuthenticator
 {
 	/** @var CI_Controller */

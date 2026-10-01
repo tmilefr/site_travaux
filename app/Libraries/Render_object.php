@@ -6,6 +6,7 @@ use App\Models\Core_model;
 
 
 
+#[\AllowDynamicProperties]
 Class Render_object{
 
 	protected $CI 		= NULL; //Controller instance 

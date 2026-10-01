@@ -26,6 +26,7 @@ namespace App\Libraries;
  *
  * @package WebApp
  */
+#[\AllowDynamicProperties]
 class RefNotifier
 {
     /** @var CI_Controller */

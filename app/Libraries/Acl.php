@@ -24,6 +24,7 @@ namespace App\Libraries;
  * @subpackage Libraries
  * @category   Security
  */
+#[\AllowDynamicProperties]
 class Acl
 {
 	protected $is_log        = FALSE;
