@@ -2,7 +2,6 @@
 
 # CodeIgniter 4
 /vendor/
-composer.lock
 .env
 writable/cache/*
 writable/logs/*
@@ -37,3 +36,6 @@ php_errors.log
 
 # Fichiers CSV du jeu de test de recette (fixtures à versionner)
 !database/sql/jeu_de_test/csv/*.csv
+
+# Sorties PHPUnit
+/build/

@@ -38,7 +38,7 @@ Les utilisateurs ont l'un des trois types : **admin** (`sys`), **famille** (`fam
 
 ### 1.2 Licence et auteurs
 
-- Framework : CodeIgniter 3, MIT License (© British Columbia Institute of Technology)
+- Framework : CodeIgniter 4, MIT License (© British Columbia Institute of Technology)
 - Surcouches maison : © Tmile, 2018
 - Évolutions métier : association ABCM Mulhouse-Lutterbach
 
@@ -49,7 +49,7 @@ Les utilisateurs ont l'un des trois types : **admin** (`sys`), **famille** (`fam
 | Composant | Version / Détail |
 |---|---|
 | Langage | PHP 7.4+ |
-| Framework | CodeIgniter 3 |
+| Framework | CodeIgniter 4 |
 | Base de données | MySQL 5.7 (utf8 / latin1 selon les tables) |
 | Auth | bcrypt + JWT (Firebase\JWT) + SSO Delta Enfance |
 | Front | HTML/CSS/JS, framework "Nicdark" (templates) |
@@ -64,55 +64,61 @@ Les utilisateurs ont l'un des trois types : **admin** (`sys`), **famille** (`fam
 
 ```
 site_travaux/
-├── application/
-│   ├── core/
-│   │   └── MY_Controller.php       # CRUD générique (extension de CI_Controller)
-│   ├── controllers/
+├── app/
+│   ├── Common.php                  # fonctions de compatibilité CI3 (ci_redirect, ci_lang, form_error...)
+│   ├── Config/                     # configuration CI4 (App, Database, Session, Routing, Events, Services...)
+│   │   └── legacy/
+│   │       ├── app.php             # config applicative non sensible (versionnée)
+│   │       ├── secured.sample.php  # modèle de secured.php
+│   │       └── secured.php         # SMTP, API_KEY, PASSWORD_SALT, captcha (non versionné)
+│   ├── Controllers/
+│   │   ├── MY_Controller.php       # CRUD générique (contrôleur de base abstrait)
 │   │   ├── Home.php                # login, logout, tableau de bord
 │   │   ├── Admwork_controller.php  # travaux : inscription, validation, gestion
 │   │   ├── Cantine_controller.php  # garde du midi
 │   │   ├── Units_controller.php    # validation des unités par admin
 │   │   ├── Familys_controller.php  # gestion familles + édition profil
 │   │   ├── Orgchart_controller.php # commissions et organigramme
-│   │   ├── Cron.php                # tâches planifiées (sendmail, ref_validation)
+│   │   ├── Cron.php                # tâches planifiées (CLI)
 │   │   ├── Api.php                 # API REST + JWT
 │   │   └── Acl_*_controller.php    # admin des rôles, contrôleurs, actions
-│   ├── models/
+│   ├── Models/
 │   │   ├── Core_model.php          # base : get_one, get_all, post, put, delete
 │   │   ├── *_model.php             # modèles métiers
 │   │   └── json/
 │   │       └── *.json              # schémas de table (champs, règles, dbforge)
-│   ├── libraries/
+│   ├── Libraries/
 │   │   ├── Acl.php                 # autorisations + cascade auth
 │   │   ├── Auth.php                # factory d'auth (web + API + Delta SSO)
 │   │   ├── PasswordAuthenticator.php # bcrypt + migration legacy
 │   │   ├── Render_object.php       # rendu factory à partir des schémas JSON
 │   │   ├── Bootstrap_tools.php     # helpers d'affichage (couleurs, design)
-│   │   ├── Libpdf.php              # génération de PDF
-│   │   └── elements/element_*.php  # éléments de formulaire (input, select, etc.)
-│   ├── hooks/
-│   │   └── Loginchecker.php        # hook ACL avant chaque action
-│   ├── language/french/            # i18n (clés métier + clés CI)
-│   ├── migrations/                 # SQL manuels (Migration.sql, mig_*.sql)
-│   ├── config/
-│   │   ├── app.php                 # config non-sensible (versionnée)
-│   │   ├── secured.php             # SMTP, API_KEY, PASSWORD_SALT (non versionné)
-│   │   └── development|production/ # surcharges par environnement
-│   └── views/
+│   │   ├── Libpdf.php              # génération de PDF (Dompdf)
+│   │   ├── Elements/element_*.php  # éléments de formulaire (input, select, etc.)
+│   │   └── Compat/                 # couche de compatibilité CI3 -> CI4 (voir MIGRATION_CI4.md)
+│   ├── Language/french/            # i18n (clés métier + messages de validation)
+│   ├── Helpers/tools_helper.php
+│   └── Views/
 │       ├── template/               # head.php, footer.php (layout)
 │       ├── edition/                # formulaires
-│       └── unique/                 # vues spécifiques par contrôleur
-├── assets/
-│   ├── css/                        # admwork_register.css, ...
-│   ├── js/
-│   └── vendor/                     # bibliothèques tierces
-├── system/                         # CI3 (vendor framework)
-├── public/files/                   # uploads (img/team, ...)
-├── .gitignore
-├── .htaccess
+│       ├── unique/                 # vues spécifiques par contrôleur
+│       └── errors/                 # pages d'erreur CI4
+├── public/                         # seul dossier exposé par le serveur web
+│   ├── index.php
+│   ├── assets/                     # css, js, img, vendor
+│   ├── files/                      # uploads (img/team, ...)
+│   └── data/pdf/                   # PDF générés
+├── database/sql/                   # SQL manuels (Migration.sql, mig_*.sql, jeu_de_test/)
+├── writable/                       # cache, logs, sessions fichiers, debugbar
+├── tests/unit/                     # tests PHPUnit (couche de compatibilité)
+├── tools/                          # smoke.sh, check_classes.php
+├── vendor/                         # dépendances Composer (non versionné)
+├── .env                            # environnement + base de données (non versionné, cf. env.example)
+├── composer.json
+├── spark                           # CLI CodeIgniter 4
 ├── README.md
-├── CHANGELOG.md
-└── index.php
+├── MIGRATION_CI4.md
+└── CHANGELOG.md
 ```
 
 ### 3.2 Points forts architecturaux
@@ -265,7 +271,7 @@ Tokens à durée limitée pour la validation par lien email.
 
 #### `cantine_config`, `cantine_inscriptions` *(module Cantine)*
 
-Voir `application/migrations/mig_cantine.sql`.
+Voir `database/sql/mig_cantine.sql`.
 
 ### 5.2 Tables ACL
 
@@ -394,7 +400,7 @@ Toute autre route requiert une session valide et un droit ACL (`role_id` × `con
 
 ### 6.5 Configuration sécurisée
 
-`application/config/secured.php` (non versionné) doit définir :
+`app/Config/legacy/secured.php` (non versionné) doit définir :
 
 ```php
 define('API_KEY', '...');                    // clé HMAC pour JWT
@@ -486,7 +492,7 @@ Chaque session cantine = ligne `travaux` de `type='can'`. Une inscription = lign
 
 ### 8.1 Schéma JSON d'une table
 
-Chaque table a un fichier dans `application/models/json/<Model>.json`. Exemple raccourci pour `Familys.json` :
+Chaque table a un fichier dans `app/Models/json/<Model>.json`. Exemple raccourci pour `Familys.json` :
 
 ```json
 {
@@ -575,11 +581,11 @@ ou en mode liste / vue :
 echo $this->render_object->RenderElement('nom', $data->nom);
 ```
 
-`Render_object` choisit l'élément approprié dans `application/libraries/elements/element_<type>.php` selon `defs[champ]->type`.
+`Render_object` choisit l'élément approprié dans `app/Libraries/Elements/element_<type>.php` selon `defs[champ]->type`.
 
 ### 8.5 Menus
 
-Définis dans `application/models/json/Menus.json`. Les entrées portent une `opt` (`sys`, `fam`, ou null pour tous) qui filtre selon le type d'utilisateur.
+Définis dans `app/Models/json/Menus.json`. Les entrées portent une `opt` (`sys`, `fam`, ou null pour tous) qui filtre selon le type d'utilisateur.
 
 ---
 
@@ -665,7 +671,7 @@ Les commandes sont à lancer via PHP CLI depuis la racine du projet.
 Pool d'envoi des emails en file (`sendmail` table).
 
 ```bash
-php index.php cron sendmail [size=10]
+php public/index.php cron sendmail [size=10]
 ```
 
 - Récupère jusqu'à `$size` mails en statut 0
@@ -676,7 +682,7 @@ php index.php cron sendmail [size=10]
 **Crontab recommandé** :
 
 ```cron
-*/10 * * * *  cd /var/www/site_travaux && php index.php cron sendmail
+*/10 * * * *  cd /var/www/site_travaux && php public/index.php cron sendmail
 ```
 
 ### 10.2 `cron send_ref_validation_mails`
@@ -684,7 +690,7 @@ php index.php cron sendmail [size=10]
 Envoie aux référents un lien personnel pour la validation des présences.
 
 ```bash
-php index.php cron send_ref_validation_mails [days_before=7]
+php public/index.php cron send_ref_validation_mails [days_before=7]
 ```
 
 - Cherche les `travaux` non archivés, sans `ref_mail_sent_at`, à venir dans `$days_before` jours
@@ -697,18 +703,18 @@ php index.php cron send_ref_validation_mails [days_before=7]
 **Crontab recommandé** :
 
 ```cron
-0 6 * * *  cd /var/www/site_travaux && php index.php cron send_ref_validation_mails
+0 6 * * *  cd /var/www/site_travaux && php public/index.php cron send_ref_validation_mails
 ```
 
 ### 10.3 Archivage automatique
 
-Pas un vrai cron : déclenché à la première visite de `Admwork_controller/register` chaque jour, avec throttle via `application/cache/last_archive_run.txt`. Archive les travaux passés depuis plus de 30 jours (sauf type `URG`).
+Pas un vrai cron : déclenché à la première visite de `Admwork_controller/register` chaque jour, avec throttle via `writable/cache/last_archive_run.txt`. Archive les travaux passés depuis plus de 30 jours (sauf type `URG`).
 
 ---
 
 ## 11. Configuration & environnements
 
-### 11.1 Fichier `application/config/app.php` (versionné)
+### 11.1 Fichier `app/Config/legacy/app.php` (versionné)
 
 ```php
 $config['app_name']    = 'Site de l\'association ABCM...';
@@ -728,32 +734,29 @@ $config['newline']     = "\r\n";
 $config['crlf']        = "\r\n";
 ```
 
-### 11.2 Fichier `application/config/secured.php` (NON versionné)
+### 11.2 Fichier `app/Config/legacy/secured.php` (NON versionné)
 
 Voir [§ 6.5](#65-configuration-sécurisée).
 
 ### 11.3 Surcharges par environnement
 
-```
-application/config/development/config.php
-application/config/development/database.php
-application/config/production/config.php     (non versionné)
-application/config/production/database.php   (non versionné)
-```
+Depuis la migration vers CodeIgniter 4, les surcharges par environnement passent par le fichier
+`.env` (non versionné, modèle : `env.example`) :
 
-L'environnement est déterminé par `$_SERVER['CI_ENV']` ou `define('ENVIRONMENT', '...')` dans `index.php`.
+```
+CI_ENVIRONMENT = development            # development | production | testing
+app.baseURL = 'http://localhost:8080/'
+database.default.hostname = localhost
+database.default.database = regiomlh_prod
+database.default.username = root
+database.default.password = ...
+```
 
 ### 11.4 `.htaccess`
 
-À la racine, route toutes les requêtes vers `index.php` :
-
-```apache
-RewriteBase /
-RewriteEngine On
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.*)$ index.php/$1 [L]
-```
+Le document root du serveur web doit pointer sur `public/`. Le `.htaccess` de `public/` route toutes les
+requêtes vers `index.php` ; celui de la racine redirige vers `public/` pour les hébergements mutualisés où le
+document root ne peut pas être changé.
 
 ---
 
@@ -787,10 +790,10 @@ RewriteRule ^(.*)$ index.php/$1 [L]
 
 ### 12.3 Avant chaque mise en prod
 
-- [ ] Vérifier `application/config/production/database.php` à jour sur le serveur
-- [ ] Vérifier `application/config/secured.php` à jour sur le serveur
-- [ ] Exécuter les migrations SQL en attente (voir `application/migrations/`)
-- [ ] Vérifier l'écriture sur `application/cache/`, `application/logs/`, `public/files/`
+- [ ] Vérifier ``.env` (section database.default.*)` à jour sur le serveur
+- [ ] Vérifier `app/Config/legacy/secured.php` à jour sur le serveur
+- [ ] Exécuter les migrations SQL en attente (voir `database/sql/`)
+- [ ] Vérifier l'écriture sur `writable/`, `public/files/`
 - [ ] Tester une connexion admin et une connexion famille
 
 ---
@@ -801,12 +804,12 @@ RewriteRule ^(.*)$ index.php/$1 [L]
 
 | Fichier | Contenu |
 |---|---|
-| `application/migrations/Migration.sql` | Migration initiale Joomla → CI3, ajout colonnes `created`/`updated`, `type_session`, `e_mail_comp` |
-| `application/migrations/mig_0910.sql` | Ajout `civil_year` et `archived` sur `unites`, `infos`, `travaux` |
-| `application/migrations/mig_cantine.sql` | Tables `cantine_config` et `cantine_inscriptions` |
-| `application/migrations/groupes.sql` | Dump de la table `groupes` |
-| `application/migrations/emails.sql` | Dump de la table `emails` |
-| `application/migrations/Options.sql` | Dump des options (couleurs, types, classifications) |
+| `database/sql/Migration.sql` | Migration initiale Joomla → CI3, ajout colonnes `created`/`updated`, `type_session`, `e_mail_comp` |
+| `database/sql/mig_0910.sql` | Ajout `civil_year` et `archived` sur `unites`, `infos`, `travaux` |
+| `database/sql/mig_cantine.sql` | Tables `cantine_config` et `cantine_inscriptions` |
+| `database/sql/groupes.sql` | Dump de la table `groupes` |
+| `database/sql/emails.sql` | Dump de la table `emails` |
+| `database/sql/Options.sql` | Dump des options (couleurs, types, classifications) |
 
 ### 13.2 Migration manuelle pour la release courante
 
@@ -835,17 +838,17 @@ ALTER TABLE travaux ADD ref_mail_sent_at DATETIME NULL AFTER updated;
 ALTER TABLE famille ADD e_mail_comp VARCHAR(255) NULL AFTER e_mail;
 
 -- Module cantine
-SOURCE application/migrations/mig_cantine.sql;
+SOURCE database/sql/mig_cantine.sql;
 ```
 
 ### 13.3 Convention de nommage
 
 - Contrôleurs : `Xxx_controller.php` (PascalCase + suffixe)
 - Modèles : `Xxx_model.php` (PascalCase + suffixe)
-- Vues d'édition : `application/views/edition/Xxx_form.php`
-- Vues spécifiques : `application/views/unique/Xxx_controller_<action>.php`
-- Schémas JSON : `application/models/json/Xxx.json` (PascalCase, sans `_model`)
-- Langue : `application/language/<idiom>/<controller_lowercase>_lang.php`
+- Vues d'édition : `app/Views/edition/Xxx_form.php`
+- Vues spécifiques : `app/Views/unique/Xxx_controller_<action>.php`
+- Schémas JSON : `app/Models/json/Xxx.json` (PascalCase, sans `_model`)
+- Langue : `app/Language/<idiom>/<controller_lowercase>_lang.php`
 - Cron : méthode publique de `Cron` controller, lock via `process.loc`
 
 ### 13.4 Bonnes pratiques observées
@@ -855,7 +858,7 @@ SOURCE application/migrations/mig_cantine.sql;
 - **Migration password transparente** : pas de batch SQL à lancer, la migration se fait à la connexion.
 - **Timing constant** : `PasswordAuthenticator::verify()` exécute `password_hash` même si le login n'existe pas, pour empêcher l'énumération d'utilisateurs.
 - **Lock cron** : `Cron::_setLock()` empêche deux exécutions parallèles via `process.loc`.
-- **Throttle archivage** : flag fichier journalier dans `application/cache/`.
+- **Throttle archivage** : flag fichier journalier dans `writable/cache/`.
 
 ### 13.5 Pièges connus
 

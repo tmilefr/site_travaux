@@ -71,7 +71,7 @@ class Form_validation
 
         $data = $this->data;
         if ($data === null) {
-            $data = service('request')->getPost() ?: [];
+            $data = $_POST;
         }
         if (empty($data)) {
             return false;

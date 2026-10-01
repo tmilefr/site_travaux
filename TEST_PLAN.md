@@ -1,7 +1,7 @@
 # Plan de test — `site_travaux`
 
 > Application de gestion des travaux associatifs et de la participation des familles
-> (ABCM Mulhouse‑Lutterbach) — CodeIgniter 3 / PHP / MySQL.
+> (ABCM Mulhouse‑Lutterbach) — CodeIgniter 4 / PHP / MySQL.
 
 | | |
 |---|---|
@@ -75,7 +75,7 @@
 
 ### 1.3 Hors périmètre
 
-- Le cœur du framework CodeIgniter 3 (`system/`) et les bibliothèques tierces (`assets/vendor/`).
+- Le cœur du framework CodeIgniter 4 (`system/`) et les bibliothèques tierces (`assets/vendor/`).
 - Le SSO **Delta Enfance** côté fournisseur : seule l'intégration côté application est testée (avec un compte Delta de test, ou en simulant les réponses de `RestClient`).
 - L'infrastructure serveur (Apache, MySQL, SMTP) hors vérification de configuration.
 - L'audit de sécurité approfondi (pentest) : seuls les contrôles listés en [§ 6.15](#615-sec--sécurité) sont couverts.
@@ -122,15 +122,15 @@
 ### 3.1 Prérequis techniques
 
 - [ ] Base de recette **restaurée à partir d'un dump anonymisé de production** (ou du jeu de données du [§ 4](#4-jeux-de-données-et-comptes-de-test)).
-- [ ] Toutes les migrations SQL en attente exécutées (`application/migrations/`, dont `validation_tokens`, `travaux.ref_mail_sent_at`, `mig_cantine.sql`).
-- [ ] `application/config/secured.php` présent et renseigné (`API_KEY`, `PASSWORD_SALT`, SMTP).
-- [ ] `application/config/development/database.php` pointant sur la base de **recette** et jamais sur la production.
-- [ ] Droits d'écriture sur `application/cache/`, `application/logs/`, `public/files/`, `application/language/`.
+- [ ] Toutes les migrations SQL en attente exécutées (`database/sql/`, dont `validation_tokens`, `travaux.ref_mail_sent_at`, `mig_cantine.sql`).
+- [ ] `app/Config/legacy/secured.php` présent et renseigné (`API_KEY`, `PASSWORD_SALT`, SMTP).
+- [ ] `.env` (database.default.*) pointant sur la base de **recette** et jamais sur la production.
+- [ ] Droits d'écriture sur `writable/`, `public/files/`, `app/Language/`.
 - [ ] `$config['civil_year']` cohérent avec les données de test (par défaut `2025-2026`).
 - [ ] `$config['maintenance'] = false`, `$config['debug_app'] = 'none'` (sauf test dédié).
 - [ ] SMTP de recette pointant sur une **boîte de capture** (MailHog, Mailtrap ou alias interne) — jamais sur les adresses réelles des familles.
 
-> ⚠️ **Règle absolue** : ne jamais lancer `php index.php cron sendmail` sur une base contenant les adresses réelles des familles avec un SMTP de production. Vider la table `sendmail` ou remplacer les adresses avant toute campagne de test.
+> ⚠️ **Règle absolue** : ne jamais lancer `php public/index.php cron sendmail` sur une base contenant les adresses réelles des familles avec un SMTP de production. Vider la table `sendmail` ou remplacer les adresses avant toute campagne de test.
 
 ### 3.2 Navigateurs cibles
 
@@ -275,7 +275,7 @@ SELECT SUM(nb_unites_valides_effectif) FROM infos
 | TRV-12 | P1 | sys | CRUD session | `Admwork_controller/add`, `edit`, `delete` | Création, modification et suppression conformes ; validations de champs actives |
 | TRV-13 | P2 | sys | Inscription pour le compte d'une famille | `managed_one/<id>` | Inscription créée au nom de la famille choisie, **sans** notification « inscription famille » au référent |
 | TRV-14 | P2 | sys | Génération PDF | `MakePdf/<id_work>` | PDF de la feuille de session généré, lisible, avec les inscrits et les horaires |
-| TRV-15 | P2 | sys | Archivage automatique | Positionner `T-VIEUX` à J‑45, supprimer `application/cache/last_archive_run.txt`, visiter `register` | `T-VIEUX` passe à `archived=1` ; `T-URG` reste actif ; le fichier de throttle est recréé |
+| TRV-15 | P2 | sys | Archivage automatique | Positionner `T-VIEUX` à J‑45, supprimer `writable/cache/last_archive_run.txt`, visiter `register` | `T-VIEUX` passe à `archived=1` ; `T-URG` reste actif ; le fichier de throttle est recréé |
 | TRV-16 | P3 | sys | Throttle d'archivage | Rappeler `register` dans la foulée | Pas de nouveau balayage d'archivage le même jour |
 | TRV-17 | P2 | fam | Filtres de la liste | Utiliser recherche, type, date sur `register` | Résultats cohérents, compteurs mis à jour, pas d'erreur si aucun résultat |
 | TRV-18 | P2 | sys | Statistiques participants | `Admwork_controller/worker` | Totaux cohérents avec `infos` (contrôle SQL croisé) |
@@ -395,12 +395,12 @@ SELECT SUM(nb_unites_valides_effectif) FROM infos
 
 | ID | P | Objectif | Étapes | Résultat attendu |
 |---|---|---|---|---|
-| CRO-01 | P1 | Envoi de la file | `php index.php cron sendmail 10` avec 3 mails en attente | 3 mails partis, `statut=1`, log en `sendmail_statut` |
+| CRO-01 | P1 | Envoi de la file | `php public/index.php cron sendmail 10` avec 3 mails en attente | 3 mails partis, `statut=1`, log en `sendmail_statut` |
 | CRO-02 | P1 | Gestion d'erreur SMTP | Config SMTP volontairement fausse | `statut=2`, message d'erreur enregistré, pas d'interruption du lot |
 | CRO-03 | P1 | Taille du lot | `cron sendmail 2` avec 5 mails en attente | Exactement 2 traités |
 | CRO-04 | P1 | Verrou d'exécution | Lancer deux exécutions simultanées | La seconde s'arrête immédiatement (`process.loc`) |
 | CRO-05 | P2 | Verrou résiduel | Laisser un `process.loc` orphelin | Comportement documenté (déblocage manuel ou expiration) — anomalie si blocage définitif |
-| CRO-06 | P1 | Mails de validation référent | `php index.php cron send_ref_validation_mails 7` avec une session à J+5 | Token créé (expiration J+30), mail poussé en file, `travaux.ref_mail_sent_at` renseigné |
+| CRO-06 | P1 | Mails de validation référent | `php public/index.php cron send_ref_validation_mails 7` avec une session à J+5 | Token créé (expiration J+30), mail poussé en file, `travaux.ref_mail_sent_at` renseigné |
 | CRO-07 | P1 | Non‑duplication | Relancer immédiatement CRO-06 | Aucun nouveau token ni mail pour la même session |
 | CRO-08 | P2 | Référent introuvable | Session sans référent ou chaîne `trombi` cassée | Session ignorée sans erreur, trace en log |
 | CRO-09 | P2 | Alertes nouvelles sessions | `cron send_new_session_alerts` | Familles concernées notifiées, filtrage par école et préférences respecté |
@@ -460,7 +460,7 @@ Ces cas s'appliquent à **chaque** contrôleur reposant sur `MY_Controller` (`Fa
 | TRA-04 | P2 | Caractères spéciaux | Saisir une valeur avec `'`, `"`, `\`, un accent et un retour à la ligne | Échappement correct ; le fichier PHP reste valide (contrôler `php -l`) |
 | TRA-05 | P2 | Suppression de clé | `delete_key` | Clé supprimée, aucune autre ligne altérée |
 | TRA-06 | P2 | Ajout de langue | `add_language` puis `switch_lang` | Nouveau répertoire créé à partir de la référence, bascule effective |
-| TRA-07 | P1 | Traversée de répertoire | Appeler `edit/../../config/config.php` et `edit/french/../../../index.php` | Refus (`_is_safe_idiom` / `_is_safe_file`), **aucun** fichier hors `application/language/` lu ou écrit |
+| TRA-07 | P1 | Traversée de répertoire | Appeler `edit/../../config/config.php` et `edit/french/../../../index.php` | Refus (`_is_safe_idiom` / `_is_safe_file`), **aucun** fichier hors `app/Language/` lu ou écrit |
 | TRA-08 | P1 | Droits | Accéder au module en session `fam` | Accès refusé |
 | TRA-09 | P3 | Clé manquante | Afficher une page dont une clé a été supprimée | Dégradation propre (clé brute affichée), pas d'erreur fatale |
 
@@ -476,7 +476,7 @@ Ces cas s'appliquent à **chaque** contrôleur reposant sur `MY_Controller` (`Fa
 | SEC-06 | P1 | Élévation de privilège | En session `fam`, poster vers `Acl_roles_controller/set_rules` et `Familys_controller/edit` d'une autre famille | Refus |
 | SEC-07 | P1 | Fixation de session | Comparer l'identifiant de session avant/après connexion | Identifiant régénéré à la connexion |
 | SEC-08 | P1 | Cookies | Inspecter le cookie de session en HTTPS | `HttpOnly` et `Secure` positionnés ; `SameSite` défini |
-| SEC-09 | P1 | Accès direct aux fichiers | `/application/config/secured.php`, `/.env`, `/application/logs/`, `/php_errors.log` | `403`/`404` — **aucun** contenu servi |
+| SEC-09 | P1 | Accès direct aux fichiers | `/app/Config/legacy/secured.php`, `/.env`, `/writable/logs/`, `/php_errors.log` | `403`/`404` — **aucun** contenu servi |
 | SEC-10 | P1 | Fuite d'erreurs | Provoquer une erreur SQL en production | Page d'erreur générique, aucune trace ni requête affichée (`debug_app = none`) |
 | SEC-11 | P1 | Upload | Téléverser `.php`, `.phtml`, `.svg` avec script, et un fichier de très grande taille | Rejet ou stockage non exécutable ; vérifier qu'aucun script n'est atteignable via son URL |
 | SEC-12 | P1 | Force brute | 20 tentatives de connexion échouées | Limitation ou temporisation en place — sinon ouvrir une anomalie et documenter le risque |
@@ -510,7 +510,7 @@ Ces cas s'appliquent à **chaque** contrôleur reposant sur `MY_Controller` (`Fa
 | PER-03 | P2 | Liste des familles (> 300 lignes) | Pagination efficace, < 3 s |
 | PER-04 | P2 | 30 inscriptions simultanées | Aucune erreur 500, capacité maximale jamais dépassée |
 | PER-05 | P3 | Import CSV de 500 lignes | Traitement sans timeout, ou pagination/lot documenté |
-| PER-06 | P2 | Journaux | Après une campagne complète, `application/logs/` ne contient aucune erreur `ERROR` inattendue |
+| PER-06 | P2 | Journaux | Après une campagne complète, `writable/logs/` ne contient aucune erreur `ERROR` inattendue |
 
 ---
 
@@ -520,10 +520,10 @@ Ces cas s'appliquent à **chaque** contrôleur reposant sur `MY_Controller` (`Fa
 
 **Préparation**
 
-- [ ] `application/config/production/database.php` à jour sur le serveur
-- [ ] `application/config/secured.php` à jour sur le serveur
+- [ ] `.env` (database.default.*) à jour sur le serveur
+- [ ] `app/Config/legacy/secured.php` à jour sur le serveur
 - [ ] Migrations SQL en attente exécutées (voir `DOCUMENTATION.md` § 13.2)
-- [ ] Droits d'écriture vérifiés sur `application/cache/`, `application/logs/`, `public/files/`
+- [ ] Droits d'écriture vérifiés sur `writable/`, `public/files/`
 - [ ] `civil_year` correcte pour la campagne en cours
 - [ ] `maintenance = false`, `debug_app = 'none'`
 - [ ] Sauvegarde de la base de production effectuée
@@ -535,13 +535,13 @@ Ces cas s'appliquent à **chaque** contrôleur reposant sur `MY_Controller` (`Fa
 - [ ] Inscription puis désinscription à une session réelle de test, ensuite nettoyée
 - [ ] `Units_controller/valid` affiche les sessions en attente
 - [ ] Un mail de test traverse la file (`sendmail` → cron → boîte de réception)
-- [ ] `php index.php cron sendmail` et `cron send_ref_validation_mails` s'exécutent sans erreur en CLI
+- [ ] `php public/index.php cron sendmail` et `cron send_ref_validation_mails` s'exécutent sans erreur en CLI
 - [ ] Crontabs actifs sur le serveur (`*/10 * * * *` et `0 6 * * *`)
-- [ ] Aucune erreur dans `application/logs/` après 30 min d'exploitation
+- [ ] Aucune erreur dans `writable/logs/` après 30 min d'exploitation
 
 **Sécurité**
 
-- [ ] `/.env` et `/application/config/secured.php` inaccessibles via le navigateur
+- [ ] `/.env` et `/app/Config/legacy/secured.php` inaccessibles via le navigateur
 - [ ] Aucun secret ajouté au dépôt sur ce cycle (`git diff` sur les fichiers de configuration)
 
 ---
@@ -573,7 +573,7 @@ Préconditions :
 Résultat obtenu :
 Résultat attendu :
 Fréquence   : systématique | intermittente (n/10)
-Pièces jointes : capture, extrait de application/logs/, requête SQL de contrôle
+Pièces jointes : capture, extrait de writable/logs/, requête SQL de contrôle
 ```
 
 ### 8.3 Circuit
@@ -633,7 +633,7 @@ Automatiser les 12 cas du [§ 5](#5-campagne-de-smoke-test-30-min) contre l'envi
 
 Un workflow GitHub Actions sur `develop` et `main` :
 
-1. `php -l` récursif sur `application/` (détecte les erreurs de syntaxe avant déploiement) ;
+1. `php -l` récursif sur `app/` + `php tools/check_classes.php` (détecte les erreurs de syntaxe avant déploiement) ;
 2. PHPUnit ;
 3. contrôle qu'aucun secret (`secured.php`, `.env`, `production/*`) n'entre dans le dépôt.
 
@@ -692,4 +692,4 @@ Ces points méritent une attention particulière en recette ; ils sont issus des
 
 - `DOCUMENTATION.md` — architecture, modèle de données, modules, API, cron
 - `CHANGELOG.md` — refonte de `Units_controller/valid` (cas UNI-01 à UNI-08)
-- `application/migrations/` — scripts SQL à jouer avant recette
+- `database/sql/` — scripts SQL à jouer avant recette

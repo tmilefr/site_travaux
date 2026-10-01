@@ -62,9 +62,27 @@ class Email
         return $this;
     }
 
+    /** Methodes CI3 dont le nom change en CI4 */
+    protected $methods = [
+        'from'            => 'setFrom',
+        'to'              => 'setTo',
+        'cc'              => 'setCC',
+        'bcc'             => 'setBCC',
+        'reply_to'        => 'setReplyTo',
+        'subject'         => 'setSubject',
+        'message'         => 'setMessage',
+        'set_alt_message' => 'setAltMessage',
+        'set_header'      => 'setHeader',
+        'set_mailtype'    => 'setMailType',
+        'set_priority'    => 'setPriority',
+        'set_newline'     => 'setNewline',
+        'set_crlf'        => 'setCRLF',
+        'print_debugger'  => 'printDebugger',
+    ];
+
     public function __call($name, $args)
     {
-        $camel = lcfirst(str_replace(' ', '', ucwords(str_replace('_', ' ', $name))));
+        $camel = $this->methods[$name] ?? lcfirst(str_replace(' ', '', ucwords(str_replace('_', ' ', $name))));
         $result = $this->email->{$camel}(...$args);
         return $result === $this->email ? $this : $result;
     }

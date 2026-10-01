@@ -183,18 +183,16 @@ class Acl_controllers_controller extends MY_Controller {
 				continue;
 			}
 
-			// 2) Charger la classe puis utiliser Reflection pour TOUTES les méthodes
-			//    publiques (héritées comprises). Les fichiers de contrôleurs
-			//    n'ont aucun code racine, l'include est sans effet de bord.
-			if (!class_exists($class, false)) {
-				@include_once $file;
-			}
-			if (!class_exists($class, false)) {
+			// 2) Résoudre la classe (App\Controllers\<Nom>, chargée par l'autoloader
+			//    PSR-4) puis utiliser Reflection pour TOUTES les méthodes publiques
+			//    (héritées comprises).
+			$fq_class = 'App\\Controllers\\' . $class;
+			if (!class_exists($fq_class)) {
 				continue; // fichier "exotique" non chargeable, on ignore proprement
 			}
 
-			$own_methods       = $this->_methods_declared_in_file($class, $file);
-			$inherited_methods = $this->_inherited_actions_for($class, $inherited_actions);
+			$own_methods       = $this->_methods_declared_in_file($fq_class, $file);
+			$inherited_methods = $this->_inherited_actions_for($fq_class, $inherited_actions);
 
 			$methods = array_values(array_unique(array_merge($own_methods, $inherited_methods)));
 			sort($methods);
