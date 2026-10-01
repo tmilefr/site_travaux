@@ -10,21 +10,21 @@ namespace App\Controllers;
  * @author      Tmile
  * @link        http://www.dev-asso.fr
  */
-class Templates_controller extends MY_Controller {
+class Templates_controller extends CrudController {
 
 
 	/**
 	 * @return void 
 	 * @throws RuntimeException 
 	 */
-	public function __construct(){
-		parent::__construct();
+	protected function boot(): void
+	{
 		$this->_controller_name = 'Templates_controller';  //controller name for routing
 		$this->_model_name 		= 'Templates_model';	   //DataModel
 		$this->_edit_view 		= 'edition/Templates_form';//template for editing
 		$this->_list_view		= 'unique/Templates_view.php';
 		$this->_autorize 		= array('list'=>true,'add'=>true,'edit'=>true,'delete'=>true,'view'=>true,'valid'=>true);
-		$this->title 			.=  $this->lang->line('GESTION').$this->lang->line($this->_controller_name);
+		$this->title 			.=  tr('GESTION').tr($this->_controller_name);
 
 		$this->_bg_color = 'nicdark_bg_violet';
 

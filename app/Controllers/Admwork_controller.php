@@ -10,7 +10,7 @@ namespace App\Controllers;
  * @author      Tmile
  * @link        http://www.24bis.com
  */
-class Admwork_controller extends MY_Controller {
+class Admwork_controller extends CrudController {
 
 	public $Infos_model = null;
 	public $Admwork_model = null;
@@ -24,15 +24,15 @@ class Admwork_controller extends MY_Controller {
 	 * @return void 
 	 * @throws RuntimeException 
 	 */
-	public function __construct(){
-		parent::__construct();
+	protected function boot(): void
+	{
 		$this->_controller_name = 'Admwork_controller';  //controller name for routing
 		$this->_model_name 		= 'Admwork_model';	   //DataModel
 		$this->_edit_view 		= 'edition/Admwork_form';//template for editing
 		$this->_list_view		= 'unique/Admwork_view.php';
 		$this->_autorize 		= array('add'=>true,'edit'=>true,'list'=>true,'delete'=>true,'view'=>false,"draftvalidation"=>true);
 		
-		$this->title 			= $this->lang->line('GESTION_'.$this->_controller_name);
+		$this->title 			= tr('GESTION_'.$this->_controller_name);
 
 		$this->_bg_color = 'nicdark_bg_red';
 
@@ -43,14 +43,15 @@ class Admwork_controller extends MY_Controller {
 		$this->LoadModel('Familys_model');
 		$this->LoadModel('Trombi_model');
 		
-		$this->load->library('RefNotifier');
+		$this->refnotifier = service('refNotifier');
+		$this->inscriptions = service('inscriptions');
 
 		$this->render_object->_set('_not_link_list', ['add','view','list','draftvalidation']);
 	}
 
 	/** @return void  */
 	public function index(){
-		//ci_redirect($this->_controller_name.'/register');
+		//$this->goTo($this->_controller_name.'/register');
 	}
 
 	/**
@@ -80,7 +81,7 @@ class Admwork_controller extends MY_Controller {
 	
 	public function draftvalidation(){
 		$this->Admwork_model->DraftPublication( $this->set_civil_years() );
-		ci_redirect($this->_controller_name.'/list');
+		$this->goTo($this->_controller_name.'/list');
 	}
 
 	/**
@@ -90,7 +91,7 @@ class Admwork_controller extends MY_Controller {
 	 * @throws RuntimeException 
 	 */
 	function MakePdf($id_work = null, $override = true){
-		$this->load->library('libpdf');
+		$this->libpdf = service('libpdf');
 		if ($work = $this->GetWork($id_work) ){
 
 			//echo debug($dba_data);
@@ -99,7 +100,7 @@ class Admwork_controller extends MY_Controller {
 			//echo debug($work);
 
 			if (!is_file($this->libpdf->_get('pdf_path').$work->pdf) OR $override){
-				$this->libpdf->DoPdf($work,'unique/'.$this->_controller_name.'/'.$this->_controller_name.'_register_one_pdf', $work->pdf , TRUE);
+				return $this->libpdf->DoPdf($work,'unique/'.$this->_controller_name.'/'.$this->_controller_name.'_register_one_pdf', $work->pdf , TRUE);
 			} 		
 		}
 	}
@@ -121,9 +122,9 @@ class Admwork_controller extends MY_Controller {
 		if ($this->acl->getType() == 'fam') {
 			$id_fam = $this->acl->getUserId();
 			$family = $this->Familys_model->GetFamily($id_fam);
-			$works  = $this->{$this->_model_name}->GetFiltered($this->config->item('civil_year'), ['B', $family->ecole],['can']);
+			$works  = $this->{$this->_model_name}->GetFiltered(config('Travaux')->civilYear, ['B', $family->ecole],['can']);
 		} else {
-			$works = $this->{$this->_model_name}->GetFiltered($this->config->item('civil_year'), ['B','M','L']);
+			$works = $this->{$this->_model_name}->GetFiltered(config('Travaux')->civilYear, ['B','M','L']);
 		}
 	
 		$today = date('Y-m-d');
@@ -156,7 +157,7 @@ class Admwork_controller extends MY_Controller {
 
 	/**
 	 * Lance l'archivage des anciens travaux au plus une fois par jour.
-	 * Utilise un fichier témoin dans application/cache/ pour éviter de
+	 * Utilise un fichier témoin dans writable/cache/ pour éviter de
 	 * solliciter la base à chaque requête.
 	 */
 	private function _maybe_archive_old_works($grace_days = 30){
@@ -227,31 +228,33 @@ class Admwork_controller extends MY_Controller {
 
 	private function delete_registration($id_work){
         $id_info = $this->_get('_local_unit_id');
-        if (!$id_info) $id_info = $this->input->post('id');
+        if (!$id_info) $id_info = $this->request->getPost('id');
 
         $is_self = ($this->acl->getType() === 'fam');
         $this->inscriptions->unregisterByInfoId((int) $id_info, (int) $id_work, $is_self);
 
         $redirect = $this->_get('_local_redirect');
         if ($redirect){
-            ci_redirect($this->_controller_name.'/'.$redirect.'/'.$id_work);
+            $this->goTo($this->_controller_name.'/'.$redirect.'/'.$id_work);
         } else {
-            ci_redirect($this->_controller_name.'/register');
+            $this->goTo($this->_controller_name.'/register');
         }
     }
 
 	private function ADD_registration($id_work){
-		if ($this->form_validation->run('Infos_model') === FALSE){ //les champs sont ok
+		if ($this->runValidation('Infos_model') === FALSE){ //les champs sont ok
 
 		} else {
 			//Injection de règle de gestion
-			$_POST['nb_participants'] = (($_POST['type_participant'] == 'Both') ? 2:1);
+			$post = $this->request->getPost();
+			$post['nb_participants'] = (($post['type_participant'] == 'Both') ? 2:1);
+			$this->request->setGlobal('post', $post);
 			//Traitement
 			//calcul du nombre final ! 
 			$participants = $this->Infos_model->Decompte($id_work)->nb_participants;
 			$max = $this->Admwork_model->GetMax($id_work)->nb_inscrits_max;
-			if (($participants + $_POST['nb_participants']) > $max){
-				$this->data_view['msg'] = $this->lang->line('TOO_MANY_PEOPLE');
+			if (($participants + $post['nb_participants']) > $max){
+				$this->data_view['msg'] = tr('TOO_MANY_PEOPLE');
 			} else {
 				$datas = $this->_ProcessPost('Infos_model');	
 
@@ -268,9 +271,9 @@ class Admwork_controller extends MY_Controller {
 
 				$redirect = $this->_get('_local_redirect');
 				if ($redirect){
-					ci_redirect($this->_controller_name.'/'.$redirect.'/'.$id_work);
+					$this->goTo($this->_controller_name.'/'.$redirect.'/'.$id_work);
 				} else {
-					ci_redirect($this->_controller_name.'/register');
+					$this->goTo($this->_controller_name.'/register');
 				}
 			}
 		}
@@ -325,7 +328,7 @@ class Admwork_controller extends MY_Controller {
 			//recupération de la liste des participants pour la vue admin
 			if ($this->acl->hasAccess('Admwork_controller/managed_one')){
 				$registreds = $this->Infos_model->GetRegistred($id_work);
-				$this->load->model('Familys_model');
+				$this->Familys_model = model('Familys_model');
 				//on recherche la famille pour chaque inscription
 				if ($registreds)
 				foreach($registreds AS $key=>$registred){
@@ -354,7 +357,7 @@ class Admwork_controller extends MY_Controller {
 
 		$tk = $this->ValidationToken_model->findValid($token);
 		if (!$tk) {
-			$this->data_view['error'] = $this->lang->line('REF_TOKEN_INVALID');
+			$this->data_view['error'] = tr('REF_TOKEN_INVALID');
 			$this->_set('view_inprogress', 'unique/Admwork_controller_token_error');
 			$this->render_view();
 			return;
@@ -370,10 +373,10 @@ class Admwork_controller extends MY_Controller {
 	public function validate_one($id_work)
 	{
 		if (!$id_work || $this->acl->getType() !== 'fam') {
-			ci_redirect('Home/no_right');
+			$this->goTo('Home/no_right');
 		}
 		if (!$this->_IsReferentOfWork($id_work)) {
-			ci_redirect('Home/no_right');
+			$this->goTo('Home/no_right');
 		}
 		$this->_HandleRefActions($id_work, $this->acl->getUserId(), null, null);
 	}
@@ -385,7 +388,7 @@ class Admwork_controller extends MY_Controller {
 	public function my_sessions()
 	{
 		if ($this->acl->getType() !== 'fam') {
-			ci_redirect('Home/no_right');
+			$this->goTo('Home/no_right');
 		}
 
 		/* Mêmes assets que la vue register pour profiter du toggle / filtres / accordéons */
@@ -431,26 +434,26 @@ class Admwork_controller extends MY_Controller {
 		$this->data_view['is_validation_open'] = $is_open;
 
 		// ---- Traitement du POST ----
-		$action = $this->input->post('action');
+		$action = $this->request->getPost('action');
 
-		if ($action === 'validate' && $is_open && $this->input->post('elements')) {
+		if ($action === 'validate' && $is_open && $this->request->getPost('elements')) {
 			$this->_ProcessRefValidation($id_work, $id_fam_ref);
 			if ($token_id) {
 				$this->ValidationToken_model->markUsed($token_id);
 			}
 			$this->data_view['msg'] = '<div class="alert alert-success">'
-				. $this->lang->line('REF_VALIDATE_SAVED') . '</div>';
+				. tr('REF_VALIDATE_SAVED') . '</div>';
 
 		} elseif ($action === 'remove' && !$is_open) {
 			$this->_ProcessRefRemove($id_work);
 			$this->data_view['msg'] = '<div class="alert alert-success">'
-				. $this->lang->line('REF_REMOVE_SAVED') . '</div>';
+				. tr('REF_REMOVE_SAVED') . '</div>';
 
 		} elseif ($action === 'add' && !$is_open) {
 			$added = $this->_ProcessRefAdd($id_work);
 			if ($added === true) {
 				$this->data_view['msg'] = '<div class="alert alert-success">'
-					. $this->lang->line('REF_ADD_SAVED') . '</div>';
+					. tr('REF_ADD_SAVED') . '</div>';
 			} else {
 				$this->data_view['msg'] = '<div class="alert alert-warning">'
 					. $added . '</div>';
@@ -487,9 +490,9 @@ class Admwork_controller extends MY_Controller {
 	private function _ProcessRefAdd($id_work){
         $r = $this->inscriptions->registerByRef(
             (int) $id_work,
-            (int) $this->input->post('id_famille'),
-            $this->input->post('type_participant'),
-            (int) $this->input->post('type_session') ?: 1
+            (int) $this->request->getPost('id_famille'),
+            $this->request->getPost('type_participant'),
+            (int) $this->request->getPost('type_session') ?: 1
         );
         return $r->success ? true : $r->message;
     }
@@ -501,7 +504,7 @@ class Admwork_controller extends MY_Controller {
 	 * @return void
 	 */
 	private function _ProcessRefRemove($id_work){
-        $id_info = (int) $this->input->post('id_info');
+        $id_info = (int) $this->request->getPost('id_info');
         $this->inscriptions->unregisterByRef($id_info, (int) $id_work);
     }
 
@@ -514,9 +517,9 @@ class Admwork_controller extends MY_Controller {
 	 */
 	private function _ProcessRefValidation($id_work, $id_fam_ref)
 	{
-		$elements    = $this->input->post('elements');
-		$to_delete   = (array) $this->input->post('unregister');
-		$global_com  = $this->input->post('commentaire_global');
+		$elements    = $this->request->getPost('elements');
+		$to_delete   = (array) $this->request->getPost('unregister');
+		$global_com  = $this->request->getPost('commentaire_global');
 
 		if (!is_array($elements)) $elements = [];
 
@@ -529,9 +532,9 @@ class Admwork_controller extends MY_Controller {
 				continue;
 			}
 
-			$present     = $this->input->post('present_' . $id_info);
-			$nb_units    = $this->input->post('nb_unites_' . $id_info);
-			$commentaire = trim((string) $this->input->post('commentaire_' . $id_info));
+			$present     = $this->request->getPost('present_' . $id_info);
+			$nb_units    = $this->request->getPost('nb_unites_' . $id_info);
+			$commentaire = trim((string) $this->request->getPost('commentaire_' . $id_info));
 
 			if ($global_com) {
 				$commentaire = trim($global_com . ($commentaire ? ' | ' . $commentaire : ''));

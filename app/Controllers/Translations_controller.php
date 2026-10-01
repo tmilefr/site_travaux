@@ -6,45 +6,42 @@ namespace App\Controllers;
  * Translations_controller
  * -----------------------
  * Interface d'édition des fichiers de traduction situés dans
- *   application/language/<idiom>/*_lang.php
+ *   app/Language/<langue>/<Fichier>.php   (tableaux PHP « return [...] » au format CodeIgniter 4)
  *
  * Fonctionnalités :
  *   - list                : choix langue + fichier à éditer
  *   - edit                : édition des paires clé/valeur d'un fichier
- *                           avec vue côte-à-côte langue de référence (français)
+ *                           avec vue côte-à-côte langue de référence (fr)
  *                           pour repérer les clés manquantes
- *   - save                : sauvegarde POST (préserve commentaires + structure)
+ *   - save                : sauvegarde POST
  *   - switch_lang         : change la langue courante (session) — accessible
  *                           sans authentification (via guestPages dans Acl.php)
  *   - add_language        : crée une nouvelle langue en clonant le français
- *   - add_key             : ajoute une nouvelle clé à un fichier
  *   - delete_key          : supprime une clé d'un fichier
  *
  * Sécurité :
- *   - Toutes les actions (sauf switch_lang) sont protégées par l'ACL standard
- *     (à enregistrer via Acl_controllers_controller/scan puis assignation au
- *     rôle Admin via Acl_roles_controller/set_rules).
- *   - Validation stricte des noms de langue ([a-z_]+) et de fichier
- *     ([A-Za-z0-9_]+_lang) pour éviter tout path traversal.
+ *   - Toutes les actions (sauf switch_lang) sont protégées par l'ACL standard.
+ *   - Validation stricte des noms de langue ([a-z_-]+) et de fichier
+ *     ([A-Za-z0-9_]+) pour éviter tout path traversal.
  *   - Sauvegarde automatique du fichier original dans .bak avant écrasement.
  *
  * @package    WebApp
  * @subpackage Translations
  * @author     ABCM Mulhouse
  */
-class Translations_controller extends MY_Controller {
+class Translations_controller extends CrudController {
 
     /**
      * Langue de référence pour la comparaison (clés sources).
      * @var string
      */
-    protected $_ref_idiom = 'french';
+    protected $_ref_idiom = 'fr';
 
     /**
      * @return void
      */
-    public function __construct(){
-        parent::__construct();
+    protected function boot(): void
+	{
 
         $this->_controller_name = 'Translations_controller';
         // Pas de _model_name : on ne manipule pas une table SQL,
@@ -52,7 +49,7 @@ class Translations_controller extends MY_Controller {
 
 
 		$this->_model_name 		= 'Templates_model';	   //DataModel
-		$this->title 			.=  $this->lang->line('GESTION').$this->lang->line($this->_controller_name);
+		$this->title 			.=  tr('GESTION').tr($this->_controller_name);
 
 		$this->_bg_color = 'nicdark_bg_violet';
 
@@ -71,7 +68,7 @@ class Translations_controller extends MY_Controller {
             'delete_key'   => true,
         );
 
-        $this->title    = $this->lang->line('GESTION_'.$this->_controller_name);
+        $this->title    = tr('GESTION_'.$this->_controller_name);
         $this->_bg_color = 'nicdark_bg_violet';
 
         $this->init();
@@ -88,14 +85,14 @@ class Translations_controller extends MY_Controller {
      * des fichiers présents dans chaque langue.
      */
     public function list(){
-        $idiom    = $this->input->get('idiom');
+        $idiom    = $this->request->getGet('idiom');
         $available= $this->_get_available_languages();
 
         if (!$idiom || !in_array($idiom, $available, true)) {
             // Langue actuelle (session > config)
-            $idiom = $this->session->userdata('user_language');
+            $idiom = $this->session->get('user_language');
             if (!$idiom || !in_array($idiom, $available, true)) {
-                $idiom = $this->config->item('language') ?: 'french';
+                $idiom = $this->request->getLocale();
             }
         }
 
@@ -140,29 +137,29 @@ class Translations_controller extends MY_Controller {
      * Affiche le formulaire d'édition pour un fichier de langue donné.
      *
      * URL : /Translations_controller/edit/<idiom>/<file>
-     * Ex. : /Translations_controller/edit/french/menu_lang
+     * Ex. : /Translations_controller/edit/fr/Menu
      *
      * @param string $idiom Nom de la langue (sans slash)
      * @param string $file  Nom du fichier sans .php (ex: menu_lang)
      */
     public function edit($idiom = null, $file = null){
         if (!$idiom || !$file) {
-            ci_redirect($this->_controller_name.'/list');
+            $this->goTo($this->_controller_name.'/list');
         }
         if (!$this->_is_safe_idiom($idiom) || !$this->_is_safe_file($file)) {
-            show_error('Paramètres invalides.', 400);
+            $this->abort(400, 'Paramètres invalides.');
         }
 
         $available = $this->_get_available_languages();
         if (!in_array($idiom, $available, true)) {
-            show_error('Langue inconnue : '.htmlspecialchars($idiom), 404);
+            $this->abort(404, 'Langue inconnue : '.htmlspecialchars($idiom));
         }
 
         $path = APPPATH.'Language/'.$idiom.'/'.$file.'.php';
         $ref_path = APPPATH.'Language/'.$this->_ref_idiom.'/'.$file.'.php';
 
         if (!file_exists($ref_path)) {
-            show_error('Fichier de référence inexistant : '.$file, 404);
+            $this->abort(404, 'Fichier de référence inexistant : '.$file);
         }
 
         // Si le fichier cible n'existe pas encore, on le proposera vide
@@ -198,70 +195,72 @@ class Translations_controller extends MY_Controller {
      *   - new_val  : string
      */
     public function save(){
-        $idiom = $this->input->post('idiom');
-        $file  = $this->input->post('file');
+        $idiom = $this->request->getPost('idiom');
+        $file  = $this->request->getPost('file');
 
         if (!$this->_is_safe_idiom($idiom) || !$this->_is_safe_file($file)) {
-            show_error('Paramètres invalides.', 400);
+            $this->abort(400, 'Paramètres invalides.');
         }
 
         $available = $this->_get_available_languages();
         if (!in_array($idiom, $available, true)) {
-            show_error('Langue inconnue.', 400);
+            $this->abort(400, 'Langue inconnue.');
         }
 
-        $values = $this->input->post('values');
+        $values = $this->request->getPost('values');
         if (!is_array($values)) { $values = array(); }
 
         // Permet d'ajouter une nouvelle clé en bas du formulaire
-        $new_key = trim((string) $this->input->post('new_key'));
-        $new_val = (string) $this->input->post('new_val');
+        $new_key = trim((string) $this->request->getPost('new_key'));
+        $new_val = (string) $this->request->getPost('new_val');
         if ($new_key !== '') {
             // On accepte tout caractère imprimable mais pas d'espaces ni quotes
             if (!preg_match('/^[A-Za-z0-9_\-\[\]]+$/', $new_key)) {
-                $this->session->set_flashdata('flash_error',
-                    $this->lang->line('TRANSLATIONS_INVALID_KEY'));
+                $this->session->setFlashdata('flash_error',
+                    tr('TRANSLATIONS_INVALID_KEY'));
             } else {
                 $values[$new_key] = $new_val;
             }
         }
 
-        $path = APPPATH.'Language/'.$idiom.'/'.$file.'.php';
+        $path     = APPPATH.'Language/'.$idiom.'/'.$file.'.php';
+        $ref_path = APPPATH.'Language/'.$this->_ref_idiom.'/'.$file.'.php';
+        if (!is_file($ref_path)) {
+            $this->abort(404, 'Fichier de référence introuvable.');
+        }
 
-        // 1) Si le fichier cible existe → on met à jour en préservant la structure.
-        // 2) Sinon → on génère un nouveau fichier à partir des clés ref + valeurs saisies.
+        // Les valeurs saisies remplacent celles du fichier cible ; les clés de la
+        // référence manquantes sont créées vides (à traduire).
+        $target = file_exists($path) ? $this->_parse_lang_file($idiom, $file) : array();
+        $ref    = $this->_parse_lang_file($this->_ref_idiom, $file);
+        $new    = array();
+        foreach (array_keys($ref) as $k) {
+            $new[$k] = array_key_exists($k, $values) ? $values[$k] : ($target[$k] ?? '');
+        }
+        foreach ($target as $k => $v) {           // clés propres à la langue cible
+            if (!array_key_exists($k, $new)) {
+                $new[$k] = array_key_exists($k, $values) ? $values[$k] : $v;
+            }
+        }
+        foreach ($values as $k => $v) {           // nouvelles clés ajoutées au formulaire
+            if (!array_key_exists($k, $new)) {
+                $new[$k] = $v;
+            }
+        }
+
         if (file_exists($path)) {
             $this->_backup_file($path);
-            $new_content = $this->_rewrite_lang_file($path, $values);
-        } else {
-            // Pas encore de fichier cible : crée un fichier neuf à partir
-            // des clés du fichier de référence (français), en injectant
-            // les valeurs saisies.
-            $ref_path = APPPATH.'Language/'.$this->_ref_idiom.'/'.$file.'.php';
-            if (!file_exists($ref_path)) {
-                show_error('Fichier de référence introuvable.', 404);
-            }
-            $new_content = $this->_create_lang_file_from_ref($ref_path, $values);
+        }
+        if (!$this->_write_lang_file($path, $new)) {
+            $this->session->setFlashdata('flash_error',
+                tr('TRANSLATIONS_WRITE_ERROR').' '.$path);
+            $this->goTo($this->_controller_name.'/edit/'.$idiom.'/'.$file);
         }
 
-        // Écriture atomique
-        $tmp = $path.'.tmp.'.uniqid();
-        if (@file_put_contents($tmp, $new_content) === false) {
-            $this->session->set_flashdata('flash_error',
-                $this->lang->line('TRANSLATIONS_WRITE_ERROR').' '.$path);
-            ci_redirect($this->_controller_name.'/edit/'.$idiom.'/'.$file);
-        }
-        if (!@rename($tmp, $path)) {
-            @unlink($tmp);
-            $this->session->set_flashdata('flash_error',
-                $this->lang->line('TRANSLATIONS_WRITE_ERROR').' '.$path);
-            ci_redirect($this->_controller_name.'/edit/'.$idiom.'/'.$file);
-        }
+        $this->session->setFlashdata('flash_success',
+            tr('TRANSLATIONS_SAVED_OK'));
 
-        $this->session->set_flashdata('flash_success',
-            $this->lang->line('TRANSLATIONS_SAVED_OK'));
-
-        ci_redirect($this->_controller_name.'/edit/'.$idiom.'/'.$file);
+        $this->goTo($this->_controller_name.'/edit/'.$idiom.'/'.$file);
     }
 
     // =================================================================
@@ -276,44 +275,32 @@ class Translations_controller extends MY_Controller {
      */
     public function delete_key($idiom = null, $file = null, $key = null){
         if (!$idiom || !$file || !$key) {
-            show_error('Paramètres manquants.', 400);
+            $this->abort(400, 'Paramètres manquants.');
         }
         if (!$this->_is_safe_idiom($idiom) || !$this->_is_safe_file($file)) {
-            show_error('Paramètres invalides.', 400);
+            $this->abort(400, 'Paramètres invalides.');
         }
         // Décode (la clé peut contenir des caractères encodés URL)
         $key = urldecode($key);
 
         $path = APPPATH.'Language/'.$idiom.'/'.$file.'.php';
         if (!file_exists($path)) {
-            show_error('Fichier introuvable.', 404);
+            $this->abort(404, 'Fichier introuvable.');
         }
 
-        $this->_backup_file($path);
-
-        $content = file_get_contents($path);
-        $lines   = preg_split('/\R/', $content); // gère \r\n / \n / \r
-        $out     = array();
-        $found   = false;
-
-        foreach ($lines as $line) {
-            if (!$found && $this->_line_matches_key($line, $key)) {
-                $found = true;
-                continue; // on saute la ligne
-            }
-            $out[] = $line;
-        }
-
-        if ($found) {
-            file_put_contents($path, implode("\n", $out));
-            $this->session->set_flashdata('flash_success',
-                sprintf($this->lang->line('TRANSLATIONS_KEY_DELETED'), $key));
+        $entries = $this->_parse_lang_file($idiom, $file);
+        if (array_key_exists($key, $entries)) {
+            $this->_backup_file($path);
+            unset($entries[$key]);
+            $this->_write_lang_file($path, $entries);
+            $this->session->setFlashdata('flash_success',
+                sprintf(tr('TRANSLATIONS_KEY_DELETED'), $key));
         } else {
-            $this->session->set_flashdata('flash_error',
-                sprintf($this->lang->line('TRANSLATIONS_KEY_NOT_FOUND'), $key));
+            $this->session->setFlashdata('flash_error',
+                sprintf(tr('TRANSLATIONS_KEY_NOT_FOUND'), $key));
         }
 
-        ci_redirect($this->_controller_name.'/edit/'.$idiom.'/'.$file);
+        $this->goTo($this->_controller_name.'/edit/'.$idiom.'/'.$file);
     }
 
     // =================================================================
@@ -328,16 +315,16 @@ class Translations_controller extends MY_Controller {
      */
     public function switch_lang($idiom = null){
         if (!$idiom || !$this->_is_safe_idiom($idiom)) {
-            ci_redirect($_SERVER['HTTP_REFERER'] ?? base_url());
+            $this->goTo($this->request->getServer('HTTP_REFERER') ?: base_url());
         }
         $available = $this->_get_available_languages();
         if (in_array($idiom, $available, true)) {
-            $this->session->set_userdata('user_language', $idiom);
+            $this->session->set('user_language', $idiom);
         }
         // Retour à la page précédente
-        $back = $this->input->server('HTTP_REFERER');
+        $back = $this->request->getServer('HTTP_REFERER');
         if (!$back) { $back = base_url(); }
-        ci_redirect($back);
+        $this->goTo($back);
     }
 
     // =================================================================
@@ -350,27 +337,27 @@ class Translations_controller extends MY_Controller {
      * POST: idiom (string)
      */
     public function add_language(){
-        $idiom = strtolower(trim((string) $this->input->post('idiom')));
+        $idiom = strtolower(trim((string) $this->request->getPost('idiom')));
 
         if (!$this->_is_safe_idiom($idiom)) {
-            $this->session->set_flashdata('flash_error',
-                $this->lang->line('TRANSLATIONS_INVALID_LANGUAGE_NAME'));
-            ci_redirect($this->_controller_name.'/list');
+            $this->session->setFlashdata('flash_error',
+                tr('TRANSLATIONS_INVALID_LANGUAGE_NAME'));
+            $this->goTo($this->_controller_name.'/list');
         }
 
         $src = APPPATH.'Language/'.$this->_ref_idiom;
         $dst = APPPATH.'Language/'.$idiom;
 
         if (is_dir($dst)) {
-            $this->session->set_flashdata('flash_error',
-                sprintf($this->lang->line('TRANSLATIONS_LANGUAGE_EXISTS'), $idiom));
-            ci_redirect($this->_controller_name.'/list');
+            $this->session->setFlashdata('flash_error',
+                sprintf(tr('TRANSLATIONS_LANGUAGE_EXISTS'), $idiom));
+            $this->goTo($this->_controller_name.'/list');
         }
 
         if (!@mkdir($dst, 0755, true)) {
-            $this->session->set_flashdata('flash_error',
-                $this->lang->line('TRANSLATIONS_MKDIR_ERROR'));
-            ci_redirect($this->_controller_name.'/list');
+            $this->session->setFlashdata('flash_error',
+                tr('TRANSLATIONS_MKDIR_ERROR'));
+            $this->goTo($this->_controller_name.'/list');
         }
 
         // Copie tous les *.php du dossier source
@@ -385,9 +372,9 @@ class Translations_controller extends MY_Controller {
             @copy($src.'/index.html', $dst.'/index.html');
         }
 
-        $this->session->set_flashdata('flash_success',
-            sprintf($this->lang->line('TRANSLATIONS_LANGUAGE_CREATED'), $idiom));
-        ci_redirect($this->_controller_name.'/list?idiom='.$idiom);
+        $this->session->setFlashdata('flash_success',
+            sprintf(tr('TRANSLATIONS_LANGUAGE_CREATED'), $idiom));
+        $this->goTo($this->_controller_name.'/list?idiom='.$idiom);
     }
 
     // =================================================================
@@ -395,7 +382,7 @@ class Translations_controller extends MY_Controller {
     // =================================================================
 
     /**
-     * Liste les langues disponibles (sous-dossiers de application/language/).
+     * Liste les langues disponibles (sous-dossiers de app/Language/).
      * @return array
      */
     protected function _get_available_languages(){
@@ -415,19 +402,18 @@ class Translations_controller extends MY_Controller {
     }
 
     /**
-     * Liste les fichiers de langue *_lang.php d'une langue donnée.
-     * Retourne les noms sans extension (ex: "menu_lang", "traduction_lang").
+     * Liste les fichiers de langue d'une langue donnée (noms sans extension,
+     * ex: "Menu", "Traduction"). Le fichier "Validation" (messages CI4) est exclu.
      * @param string $idiom
      * @return array
      */
     protected function _list_lang_files($idiom){
         $dir = APPPATH.'Language/'.$idiom;
         if (!is_dir($dir)) return array();
-        $files = glob($dir.'/*_lang.php');
         $out = array();
-        foreach ($files as $f) {
+        foreach (glob($dir.'/*.php') as $f) {
             $name = basename($f, '.php');
-            if ($this->_is_safe_file($name)) {
+            if ($name !== 'Validation' && $this->_is_safe_file($name)) {
                 $out[] = $name;
             }
         }
@@ -436,218 +422,45 @@ class Translations_controller extends MY_Controller {
     }
 
     /**
-     * Parse un fichier de langue et retourne un tableau associatif
-     * [clé => valeur] pour TOUTES les lignes $lang['xxx'] = '...';
-     * (lignes simples, ce qui couvre quasi 100% du projet).
-     *
-     * Les valeurs sont retournées DÉCAPÉES (les \' deviennent ',
-     * les \\ deviennent \).
-     *
+     * Charge un fichier de langue et retourne le tableau [clé => valeur].
      * @param string $idiom
      * @param string $file  sans extension .php
      * @return array
      */
     protected function _parse_lang_file($idiom, $file){
         $path = APPPATH.'Language/'.$idiom.'/'.$file.'.php';
-        if (!file_exists($path)) return array();
+        if (!is_file($path)) return array();
 
-        $content = file_get_contents($path);
-        $lines   = preg_split('/\R/', $content);
-        $out     = array();
+        $entries = (static function (string $path) {
+            return include $path;
+        })($path);
 
-        foreach ($lines as $line) {
-            $parsed = $this->_parse_lang_line($line);
-            if ($parsed !== null) {
-                $out[$parsed['key']] = $parsed['value'];
-            }
-        }
-        return $out;
+        return is_array($entries) ? $entries : array();
     }
 
     /**
-     * Tente de parser une ligne unique et retourne ['key', 'value', 'quote']
-     * ou null si la ligne n'est pas une affectation $lang[].
-     * @param string $line
-     * @return array|null
-     */
-    protected function _parse_lang_line($line){
-        // Quote simple : $lang['key'] = 'value';
-        if (preg_match("/^\s*\\\$lang\[\s*'([^']+)'\s*\]\s*=\s*'((?:\\\\.|[^'\\\\])*)'\s*;.*$/", $line, $m)) {
-            return array(
-                'key'   => $m[1],
-                'value' => stripcslashes($m[2]), // \' → '   \\ → \
-                'quote' => "'",
-            );
-        }
-        // Quote double : $lang["key"] = "value";
-        if (preg_match('/^\s*\$lang\[\s*"([^"]+)"\s*\]\s*=\s*"((?:\\\\.|[^"\\\\])*)"\s*;.*$/', $line, $m)) {
-            return array(
-                'key'   => $m[1],
-                'value' => stripcslashes($m[2]),
-                'quote' => '"',
-            );
-        }
-        return null;
-    }
-
-    /**
-     * Vérifie si une ligne déclare la clé donnée.
-     * @param string $line
-     * @param string $key
+     * Écrit un fichier de langue (tableau PHP) de façon atomique.
+     *
+     * @param string $path
+     * @param array  $entries [clé => valeur]
      * @return bool
      */
-    protected function _line_matches_key($line, $key){
-        $p = $this->_parse_lang_line($line);
-        return ($p !== null && $p['key'] === $key);
-    }
-
-    /**
-     * Réécrit un fichier de langue en remplaçant uniquement les valeurs
-     * des clés présentes dans $values, sans toucher aux commentaires ni
-     * à la structure du fichier.
-     *
-     * Les nouvelles clés (présentes dans $values mais absentes du fichier)
-     * sont ajoutées à la fin, juste avant la balise ?> si présente.
-     *
-     * @param string $path   chemin absolu du fichier
-     * @param array  $values [clé => valeur (non échappée)]
-     * @return string nouveau contenu
-     */
-    protected function _rewrite_lang_file($path, array $values){
-        $content = file_get_contents($path);
-        $lines   = preg_split('/\R/', $content);
-
-        $seen = array();
-        $out  = array();
-
-        foreach ($lines as $line) {
-            $parsed = $this->_parse_lang_line($line);
-            if ($parsed !== null && array_key_exists($parsed['key'], $values)) {
-                // Remplace la valeur tout en préservant le préfixe / suffixe
-                $out[]            = $this->_rebuild_lang_line($line, $parsed, $values[$parsed['key']]);
-                $seen[$parsed['key']] = true;
-            } elseif ($parsed !== null && !array_key_exists($parsed['key'], $values)) {
-                // La clé existait dans le fichier mais le formulaire ne la
-                // renvoie pas → soit elle a été supprimée explicitement
-                // (auquel cas on a déjà retiré la ligne via delete_key),
-                // soit le formulaire ne la couvre pas. Pour rester safe,
-                // on conserve la ligne telle quelle.
-                $out[] = $line;
-            } else {
-                $out[] = $line;
-            }
+    protected function _write_lang_file($path, array $entries){
+        $out = "<?php\n\n// Fichier de traduction (édité via Translations_controller le ".date('Y-m-d H:i').")\n\nreturn [\n";
+        foreach ($entries as $k => $v) {
+            $out .= '    '.var_export((string) $k, true).' => '.var_export((string) $v, true).",\n";
         }
+        $out .= "];\n";
 
-        // Ajout des clés nouvelles (non vues)
-        $new_keys = array_diff(array_keys($values), array_keys($seen));
-        if (!empty($new_keys)) {
-            // Trouve la position de la balise de fermeture PHP si présente
-            $insert_at = count($out);
-            for ($i = count($out) - 1; $i >= 0; $i--) {
-                if (preg_match('/^\s*\?>\s*$/', $out[$i])) {
-                    $insert_at = $i;
-                    break;
-                }
-            }
-            $additions = array();
-            $additions[] = '';
-            $additions[] = '// --- Clés ajoutées via Translations_controller ('.date('Y-m-d H:i').') ---';
-            foreach ($new_keys as $k) {
-                $additions[] = $this->_format_lang_line($k, $values[$k]);
-            }
-            // Splice des additions
-            array_splice($out, $insert_at, 0, $additions);
+        $tmp = $path.'.tmp.'.uniqid();
+        if (@file_put_contents($tmp, $out) === false) {
+            return false;
         }
-
-        return implode("\n", $out);
-    }
-
-    /**
-     * Reconstruit une ligne $lang['key'] = '...'; en remplaçant la valeur,
-     * tout en préservant l'indentation et l'éventuel commentaire de fin
-     * de ligne.
-     *
-     * @param string $original_line
-     * @param array  $parsed         résultat de _parse_lang_line()
-     * @param string $new_value      valeur non échappée
-     * @return string
-     */
-    protected function _rebuild_lang_line($original_line, array $parsed, $new_value){
-        $quote = $parsed['quote'];
-        $escaped = $this->_escape_for_quote($new_value, $quote);
-
-        // Pattern selon le type de quote
-        if ($quote === "'") {
-            $pattern = "/^(\s*\\\$lang\[\s*'[^']+'\s*\]\s*=\s*)('(?:\\\\.|[^'\\\\])*')(\s*;.*)$/";
-        } else {
-            $pattern = '/^(\s*\$lang\[\s*"[^"]+"\s*\]\s*=\s*)("(?:\\\\.|[^"\\\\])*")(\s*;.*)$/';
+        if (!@rename($tmp, $path)) {
+            @unlink($tmp);
+            return false;
         }
-
-        if (preg_match($pattern, $original_line, $m)) {
-            return $m[1] . $quote . $escaped . $quote . $m[3];
-        }
-        // Fallback : on reconstruit complètement
-        return $this->_format_lang_line($parsed['key'], $new_value, $quote);
-    }
-
-    /**
-     * Formate une ligne $lang[...] = '...'; depuis zéro.
-     * @param string $key
-     * @param string $value (non échappée)
-     * @param string $quote
-     * @return string
-     */
-    protected function _format_lang_line($key, $value, $quote = "'"){
-        $key_escaped = $this->_escape_for_quote($key, $quote);
-        $val_escaped = $this->_escape_for_quote($value, $quote);
-        return '$lang['.$quote.$key_escaped.$quote.'] = '.$quote.$val_escaped.$quote.';';
-    }
-
-    /**
-     * Échappe une chaîne pour insertion dans une chaîne PHP avec le quote
-     * donné. Pour les single quotes, seuls \ et ' sont à échapper.
-     * Pour les double quotes, plus d'échappements (\, ", $, \n etc.) — mais
-     * comme tout le projet utilise les single quotes, on y reste fidèle.
-     *
-     * @param string $s
-     * @param string $quote
-     * @return string
-     */
-    protected function _escape_for_quote($s, $quote){
-        if ($quote === "'") {
-            return str_replace(array('\\', "'"), array('\\\\', "\\'"), $s);
-        }
-        return str_replace(array('\\', '"', '$'), array('\\\\', '\\"', '\\$'), $s);
-    }
-
-    /**
-     * Crée un tout nouveau fichier de langue, en se basant sur les commentaires
-     * et la structure du fichier de référence (français), mais en injectant
-     * les valeurs depuis $values pour les clés correspondantes (et la
-     * valeur du français comme fallback pour les autres).
-     *
-     * @param string $ref_path
-     * @param array  $values
-     * @return string
-     */
-    protected function _create_lang_file_from_ref($ref_path, array $values){
-        $content = file_get_contents($ref_path);
-        $lines   = preg_split('/\R/', $content);
-        $out     = array();
-
-        foreach ($lines as $line) {
-            $parsed = $this->_parse_lang_line($line);
-            if ($parsed !== null) {
-                // Si l'utilisateur a fourni une valeur, on l'utilise.
-                // Sinon, on laisse vide pour que l'utilisateur sache qu'il
-                // doit traduire.
-                $val = isset($values[$parsed['key']]) ? $values[$parsed['key']] : '';
-                $out[] = $this->_rebuild_lang_line($line, $parsed, $val);
-            } else {
-                $out[] = $line;
-            }
-        }
-        return implode("\n", $out);
+        return true;
     }
 
     /**
@@ -673,17 +486,13 @@ class Translations_controller extends MY_Controller {
     }
 
     /**
-     * Validation : un nom de fichier de langue doit terminer par "_lang"
-     * et ne contenir que [A-Za-z0-9_].
+     * Validation : un nom de fichier de langue ne contient que [A-Za-z0-9_].
      * @param string $file
      * @return bool
      */
     protected function _is_safe_file($file){
         return is_string($file)
             && $file !== ''
-            && preg_match('/^[A-Za-z0-9_]+_lang$/', $file);
+            && preg_match('/^[A-Za-z][A-Za-z0-9_]*$/', $file);
     }
 }
-
-/* End of file Translations_controller.php */
-/* Location: ./application/controllers/Translations_controller.php */

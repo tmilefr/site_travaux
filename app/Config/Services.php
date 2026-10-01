@@ -19,26 +19,87 @@ use CodeIgniter\Config\BaseService;
  */
 class Services extends BaseService
 {
-    /**
-     * Moteur de vues : expose les composants du controleur courant
-     * ($this->render_object, $this->lang ...) dans les gabarits, comme en CI3.
-     */
-    public static function renderer(?string $viewPath = null, ?\Config\View $config = null, bool $getShared = true)
+    public static function bootstrapTools(bool $getShared = true)
     {
         if ($getShared) {
-            return static::getSharedInstance('renderer', $viewPath, $config);
+            return static::getSharedInstance('bootstrapTools');
         }
 
-        $viewPath = in_array($viewPath, [null, '', '0'], true) ? (new Paths())->viewDirectory : $viewPath;
-        $config ??= config(\Config\View::class);
+        return new \App\Libraries\Bootstrap_tools();
+    }
 
-        return new \App\Libraries\Compat\CompatView(
-            $config,
-            $viewPath,
-            static::locator(),
-            CI_DEBUG,
-            static::logger()
-        );
+    public static function renderObject(bool $getShared = true)
+    {
+        if ($getShared) {
+            return static::getSharedInstance('renderObject');
+        }
+
+        return new \App\Libraries\Render_object(static::bootstrapTools());
+    }
+
+    public static function renderMenu(bool $getShared = true)
+    {
+        if ($getShared) {
+            return static::getSharedInstance('renderMenu');
+        }
+
+        return new \App\Libraries\Render_menu(static::acl());
+    }
+
+    /** Contrôle d'accès (rôles / actions) de la requête courante. */
+    public static function acl(bool $getShared = true)
+    {
+        if ($getShared) {
+            return static::getSharedInstance('acl');
+        }
+
+        return new \App\Libraries\Acl();
+    }
+
+    /** Authentification (web, API JWT, SSO Delta). */
+    public static function auth(bool $getShared = true)
+    {
+        if ($getShared) {
+            return static::getSharedInstance('auth');
+        }
+
+        return new \App\Libraries\Auth();
+    }
+
+    public static function passwordAuthenticator(bool $getShared = true)
+    {
+        if ($getShared) {
+            return static::getSharedInstance('passwordAuthenticator');
+        }
+
+        return new \App\Libraries\PasswordAuthenticator();
+    }
+
+    public static function refNotifier(bool $getShared = true)
+    {
+        if ($getShared) {
+            return static::getSharedInstance('refNotifier');
+        }
+
+        return new \App\Libraries\RefNotifier();
+    }
+
+    public static function inscriptions(bool $getShared = true)
+    {
+        if ($getShared) {
+            return static::getSharedInstance('inscriptions');
+        }
+
+        return new \App\Libraries\Inscriptions();
+    }
+
+    public static function libpdf(bool $getShared = true)
+    {
+        if ($getShared) {
+            return static::getSharedInstance('libpdf');
+        }
+
+        return new \App\Libraries\Libpdf();
     }
 
     /*

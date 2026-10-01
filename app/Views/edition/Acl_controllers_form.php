@@ -5,7 +5,7 @@
  * Variables disponibles (cf. MY_Controller + Render_object) :
  *   - $id              : identifiant courant (vide en création)
  *   - $required_field  : tableau des champs requis (pour form_error)
- *   - $this->render_object, $this->bootstrap_tools, $this->lang
+ *   - $render_object, $bootstrap_tools, tr()
  *
  * Améliorations ergonomiques :
  *   - En-tête contextualisé (mode + nom du contrôleur édité)
@@ -16,13 +16,13 @@
  */
 
 // --- Contexte ---------------------------------------------------------------
-$form_mod   = $this->render_object->_get('form_mod'); // 'add' ou 'edit'
+$form_mod   = $render_object->_get('form_mod'); // 'add' ou 'edit'
 $is_edit    = ($form_mod === 'edit');
 $ctrl_route = 'Acl_controllers_controller';
 $base_list  = base_url($ctrl_route . '/list');
 
 // Données existantes en mode édition (nom, dates, etc.)
-$dba_data = $this->render_object->_get('dba_data');
+$dba_data = $render_object->_get('dba_data');
 $ctrl_name_current = ($is_edit && isset($dba_data->controller))
     ? $dba_data->controller
     : '';
@@ -31,19 +31,19 @@ $updated_at = ($is_edit && isset($dba_data->updated)) ? $dba_data->updated : nul
 
 // Nombre d'actions actuellement liées (utile en édition)
 $nb_actions = 0;
-if ($is_edit && $id && isset($this->Acl_actions_model)) {
-    $this->Acl_actions_model->_set('filter', array('id_ctrl' => (int) $id));
-    $nb_actions = count($this->Acl_actions_model->get_all());
+if ($is_edit && $id && true) {
+    model('Acl_actions_model')->_set('filter', array('id_ctrl' => (int) $id));
+    $nb_actions = count(model('Acl_actions_model')->get_all());
 }
 
 // Libellés
-$page_title = $this->lang->line($ctrl_route . '_' . $form_mod);
-$btn_label  = $this->render_object->_get('_ui_rules')[$form_mod]->name;
+$page_title = tr($ctrl_route . '_' . $form_mod);
+$btn_label  = $render_object->_get('_ui_rules')[$form_mod]->name;
 
 // Détection erreurs de validation
 $has_errors = false;
 foreach ($required_field as $f) {
-    if (form_error($f) !== '') { $has_errors = true; break; }
+    if (field_error($f) !== '') { $has_errors = true; break; }
 }
 ?>
 
@@ -67,16 +67,16 @@ foreach ($required_field as $f) {
                         if ($is_edit && $ctrl_name_current !== '') {
                             echo htmlspecialchars($ctrl_name_current, ENT_QUOTES, 'UTF-8');
                         } else {
-                            echo $this->lang->line($ctrl_route . '_subtitle');
+                            echo tr($ctrl_route . '_subtitle');
                         }
                         ?>
                     </h1>
                 </div>
                 <a href="<?php echo $base_list; ?>"
                    class="btn btn-light acl-form__back"
-                   title="<?php echo htmlspecialchars($this->lang->line('LIST') ?: 'Retour à la liste', ENT_QUOTES, 'UTF-8'); ?>">
+                   title="<?php echo htmlspecialchars(tr('LIST') ?: 'Retour à la liste', ENT_QUOTES, 'UTF-8'); ?>">
                     <span class="oi oi-arrow-left" aria-hidden="true"></span>
-                    <?php echo $this->lang->line('LIST_'.$ctrl_route) ?: 'Retour à la liste'; ?>
+                    <?php echo tr('LIST_'.$ctrl_route) ?: 'Retour à la liste'; ?>
                 </a>
             </div>
             <div class="nicdark_divider left big">
@@ -93,13 +93,13 @@ foreach ($required_field as $f) {
                 <div class="alert alert-danger acl-form__errors">
                     <strong>
                         <span class="oi oi-warning" aria-hidden="true"></span>
-                        <?php echo $this->lang->line('FORM_ERRORS_TITLE') ?: 'Veuillez corriger les erreurs ci-dessous :'; ?>
+                        <?php echo tr('FORM_ERRORS_TITLE') ?: 'Veuillez corriger les erreurs ci-dessous :'; ?>
                     </strong>
                     <ul class="mb-0 mt-2">
                         <?php foreach ($required_field as $f) {
-                            $err = form_error($f);
+                            $err = field_error($f);
                             if ($err !== '') {
-                                $label = $this->lang->line($f) ?: $f;
+                                $label = tr($f) ?: $f;
                                 echo '<li><strong>' . htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . '</strong> : '
                                     . strip_tags($err) . '</li>';
                             }
@@ -113,7 +113,7 @@ foreach ($required_field as $f) {
                 FORMULAIRE
            ============================================================ */ ?>
         <?php
-        echo form_open(
+        echo open_form(
             $ctrl_route . '/' . $form_mod,
             array('class' => 'acl-form__form', 'id' => 'edit'),
             array('form_mod' => $form_mod, 'id' => $id)
@@ -124,19 +124,19 @@ foreach ($required_field as $f) {
             <div class="card shadow-sm">
                 <div class="card-header acl-form__card-header">
                     <span class="oi oi-cog" aria-hidden="true"></span>
-                    <?php echo $this->lang->line('FORM_MAIN_INFO') ?: 'Informations'; ?>
+                    <?php echo tr('FORM_MAIN_INFO') ?: 'Informations'; ?>
                 </div>
                 <div class="card-body">
 
                     <div class="form-row">
                         <div class="form-group col-md-12">
-                            <?php echo $this->bootstrap_tools->label('controller'); ?>
+                            <?php echo $bootstrap_tools->label('controller'); ?>
                             <small class="form-text text-muted mb-2">
-                                <?php echo $this->lang->line('controller_help')
+                                <?php echo tr('controller_help')
                                     ?: 'Nom exact de la classe PHP (ex. <code>Acl_users_controller</code>).'; ?>
                             </small>
-                            <?php echo $this->render_object->RenderFormElement('controller'); ?>
-                            <?php echo form_error('controller', '<div class="invalid-feedback d-block mt-1">', '</div>'); ?>
+                            <?php echo $render_object->RenderFormElement('controller'); ?>
+                            <?php echo field_error('controller', '<div class="invalid-feedback d-block mt-1">', '</div>'); ?>
                         </div>
                     </div>
 
@@ -144,16 +144,16 @@ foreach ($required_field as $f) {
 
                     <div class="form-row">
                         <div class="form-group col-md-12">
-                            <?php echo $this->bootstrap_tools->label('actions'); ?>
+                            <?php echo $bootstrap_tools->label('actions'); ?>
                             <small class="form-text text-muted mb-2">
-                                <?php echo $this->lang->line('actions_help')
+                                <?php echo tr('actions_help')
                                     ?: 'Une action = une méthode publique du contrôleur (ex. list, add, edit, delete).'; ?>
                             </small>
 
                             <?php /* Palette d'actions standard — purement informatif/aide à la saisie */ ?>
                             <div class="acl-form__std-actions" aria-hidden="true">
                                 <span class="text-muted small mr-2">
-                                    <?php echo $this->lang->line('STD_ACTIONS') ?: 'Actions standard :'; ?>
+                                    <?php echo tr('STD_ACTIONS') ?: 'Actions standard :'; ?>
                                 </span>
                                 <?php foreach (array(
                                     'list'   => array('icon' => 'oi-list',   'class' => 'badge-secondary'),
@@ -169,8 +169,8 @@ foreach ($required_field as $f) {
                                 <?php } ?>
                             </div>
 
-                            <?php echo $this->render_object->RenderFormElement('actions'); ?>
-                            <?php echo form_error('actions', '<div class="invalid-feedback d-block mt-1">', '</div>'); ?>
+                            <?php echo $render_object->RenderFormElement('actions'); ?>
+                            <?php echo field_error('actions', '<div class="invalid-feedback d-block mt-1">', '</div>'); ?>
                         </div>
                     </div>
 
@@ -179,7 +179,7 @@ foreach ($required_field as $f) {
                 <?php /* Footer d'actions */ ?>
                 <div class="card-footer acl-form__footer">
                     <a href="<?php echo $base_list; ?>" class="btn btn-link text-muted">
-                        <?php echo $this->lang->line('CANCEL') ?: 'Annuler'; ?>
+                        <?php echo tr('CANCEL') ?: 'Annuler'; ?>
                     </a>
                     <button type="submit" class="btn btn-primary">
                         <span class="oi oi-check" aria-hidden="true"></span>
@@ -197,18 +197,18 @@ foreach ($required_field as $f) {
                 <div class="card shadow-sm acl-form__meta">
                     <div class="card-header">
                         <span class="oi oi-info" aria-hidden="true"></span>
-                        <?php echo $this->lang->line('FORM_META') ?: 'Informations système'; ?>
+                        <?php echo tr('FORM_META') ?: 'Informations système'; ?>
                     </div>
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <span class="text-muted">
-                                <?php echo $this->lang->line('id') ?: 'ID'; ?>
+                                <?php echo tr('id') ?: 'ID'; ?>
                             </span>
                             <code><?php echo (int) $id; ?></code>
                         </li>
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <span class="text-muted">
-                                <?php echo $this->lang->line('actions') ?: 'Actions'; ?>
+                                <?php echo tr('actions') ?: 'Actions'; ?>
                             </span>
                             <span class="badge badge-info badge-pill">
                                 <?php echo $nb_actions; ?>
@@ -217,7 +217,7 @@ foreach ($required_field as $f) {
                         <?php if ($created_at) { ?>
                             <li class="list-group-item">
                                 <small class="text-muted d-block">
-                                    <?php echo $this->lang->line('created') ?: 'Créé le'; ?>
+                                    <?php echo tr('created') ?: 'Créé le'; ?>
                                 </small>
                                 <span><?php echo htmlspecialchars($created_at, ENT_QUOTES, 'UTF-8'); ?></span>
                             </li>
@@ -225,7 +225,7 @@ foreach ($required_field as $f) {
                         <?php if ($updated_at && $updated_at !== '0000-00-00 00:00:00') { ?>
                             <li class="list-group-item">
                                 <small class="text-muted d-block">
-                                    <?php echo $this->lang->line('updated') ?: 'Modifié le'; ?>
+                                    <?php echo tr('updated') ?: 'Modifié le'; ?>
                                 </small>
                                 <span><?php echo htmlspecialchars($updated_at, ENT_QUOTES, 'UTF-8'); ?></span>
                             </li>
@@ -237,7 +237,7 @@ foreach ($required_field as $f) {
                         <a href="<?php echo base_url('Acl_roles_controller/list'); ?>"
                            class="btn btn-outline-info btn-block btn-sm">
                             <span class="oi oi-key" aria-hidden="true"></span>
-                            <?php echo $this->lang->line('GO_TO_ROLES') ?: 'Gérer les rôles'; ?>
+                            <?php echo tr('GO_TO_ROLES') ?: 'Gérer les rôles'; ?>
                         </a>
                     </div>
                 </div>
@@ -246,8 +246,8 @@ foreach ($required_field as $f) {
 
         <?php
         // Champs cachés (created/updated) — préserver le comportement existant
-        echo $this->render_object->RenderFormElement('created');
-        echo $this->render_object->RenderFormElement('updated');
+        echo $render_object->RenderFormElement('created');
+        echo $render_object->RenderFormElement('updated');
         echo form_close();
         ?>
 

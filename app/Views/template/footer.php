@@ -49,7 +49,7 @@
         </div>
 		<div class="grid grid_6">
 			<div class="nicdark_space20"></div>
-			<p class="white"><a href="<?php echo base_url('Home/About');?>"><span class="oi oi-browser"></span> <?php echo ci_lang('About');?></a></p>
+			<p class="white"><a href="<?php echo base_url('Home/About');?>"><span class="oi oi-browser"></span> <?php echo tr('About');?></a></p>
 		</div>
     </div>
     <!--end nicdark_container-->           
@@ -62,18 +62,18 @@
 	  <div class="modal-dialog" role="document">
 		<div class="modal-content">
 		  <div class="modal-header">
-			<h5 class="modal-title" id="exampleModalLabel"><?php echo $this->conf->item('app_name');?></h5>
+			<h5 class="modal-title" id="exampleModalLabel"><?php echo config('Travaux')->appName;?></h5>
 			<button type="button" class="close" data-dismiss="modal" aria-label="Close">
 			  <span aria-hidden="true">&times;</span>
 			</button>
 		  </div>
 		  <div class="modal-body">
 			<?php 
-				echo $this->conf->item('about');
+				echo config('Travaux')->about;
 			?>
 		  </div>
 		  <div class="modal-footer">
-			<button type="button" class="btn btn-secondary" data-dismiss="modal"><?php echo ci_lang('Close');?></button>
+			<button type="button" class="btn btn-secondary" data-dismiss="modal"><?php echo tr('Close');?></button>
 		  </div>
 		</div>
 	  </div>
@@ -84,24 +84,24 @@
 	  <div class="modal-dialog" role="document">
 		<div class="modal-content">
 		  <div class="modal-header">
-			<h5 class="modal-title"><?php echo ci_lang('DELETE_CONFIRMATION');?></h5>
+			<h5 class="modal-title"><?php echo tr('DELETE_CONFIRMATION');?></h5>
 			<button type="button" class="close" data-dismiss="modal" aria-label="Close">
 			  <span aria-hidden="true">&times;</span>
 			</button>
 		  </div>
 		  <div class="modal-body">
-			<p><?php echo ci_lang('TXT_DELETE_CONFIRMATION');?></p>
+			<p><?php echo tr('TXT_DELETE_CONFIRMATION');?></p>
 		  </div>
 		  <div class="modal-footer">
-			<button type="button" class="btn btn-success" data-dismiss="modal"><?php echo ci_lang('CANCEL');?></button>
-			<button type="button" class="btn btn-danger" id="confirmModalYes"><?php echo ci_lang('YES');?></button>
+			<button type="button" class="btn btn-success" data-dismiss="modal"><?php echo tr('CANCEL');?></button>
+			<button type="button" class="btn btn-danger" id="confirmModalYes"><?php echo tr('YES');?></button>
 		  </div>
 		</div>
 	  </div>
 	</div>	
 	
 	<!-- Optional JavaScript -->
-	<?php $this->bootstrap_tools->RenderAttachFiles('js');?>
-	<?php $this->bootstrap_tools->RenderAttachFiles('txt');?>
+	<?php $bootstrap_tools->RenderAttachFiles('js');?>
+	<?php $bootstrap_tools->RenderAttachFiles('txt');?>
   </body>
 </html>

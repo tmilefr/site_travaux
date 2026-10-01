@@ -66,13 +66,11 @@ Les utilisateurs ont l'un des trois types : **admin** (`sys`), **famille** (`fam
 site_travaux/
 ├── app/
 │   ├── Common.php                  # fonctions de compatibilité CI3 (ci_redirect, ci_lang, form_error...)
-│   ├── Config/                     # configuration CI4 (App, Database, Session, Routing, Events, Services...)
-│   │   └── legacy/
-│   │       ├── app.php             # config applicative non sensible (versionnée)
-│   │       ├── secured.sample.php  # modèle de secured.php
-│   │       └── secured.php         # SMTP, API_KEY, PASSWORD_SALT, captcha (non versionné)
+│   ├── Config/                     # configuration CI4 (App, Database, Session, Routes, Filters, Services...)
+│   │   └── Travaux.php             # réglages applicatifs ; secrets via .env (travaux.apiKey, ...)
+│   ├── Filters/AclFilter.php       # contrôle d'accès avant chaque action
 │   ├── Controllers/
-│   │   ├── MY_Controller.php       # CRUD générique (contrôleur de base abstrait)
+│   │   ├── CrudController.php      # CRUD générique (contrôleur de base abstrait)
 │   │   ├── Home.php                # login, logout, tableau de bord
 │   │   ├── Admwork_controller.php  # travaux : inscription, validation, gestion
 │   │   ├── Cantine_controller.php  # garde du midi
@@ -95,8 +93,7 @@ site_travaux/
 │   │   ├── Bootstrap_tools.php     # helpers d'affichage (couleurs, design)
 │   │   ├── Libpdf.php              # génération de PDF (Dompdf)
 │   │   ├── Elements/element_*.php  # éléments de formulaire (input, select, etc.)
-│   │   └── Compat/                 # couche de compatibilité CI3 -> CI4 (voir MIGRATION_CI4.md)
-│   ├── Language/french/            # i18n (clés métier + messages de validation)
+│   ├── Language/fr/                # i18n : tableaux PHP (un fichier par contrôleur + Menu, Traduction, Validation)
 │   ├── Helpers/tools_helper.php
 │   └── Views/
 │       ├── template/               # head.php, footer.php (layout)
@@ -111,7 +108,7 @@ site_travaux/
 ├── database/sql/                   # SQL manuels (Migration.sql, mig_*.sql, jeu_de_test/)
 ├── writable/                       # cache, logs, sessions fichiers, debugbar
 ├── tests/unit/                     # tests PHPUnit (couche de compatibilité)
-├── tools/                          # smoke.sh, check_classes.php
+├── tools/                          # smoke.sh (test de fumée HTTP), check_classes.php
 ├── vendor/                         # dépendances Composer (non versionné)
 ├── .env                            # environnement + base de données (non versionné, cf. env.example)
 ├── composer.json
@@ -125,9 +122,9 @@ site_travaux/
 
 1. **Approche factory par schéma JSON.** Chaque table a un fichier JSON (`Infos.json`, `Acl_users.json`, …) qui décrit les champs, leurs règles de validation, leur type de rendu (input, select, select_database, hidden, table liée…) et leur définition `dbforge`. `Core_model` et `Render_object` exploitent ces schémas pour générer formulaires, listes, vues et validations sans code spécifique. Très DRY pour un back-office.
 
-2. **CRUD générique via `MY_Controller`.** Les contrôleurs déclarent simplement `_controller_name`, `_model_name`, `_edit_view`, `_list_view`, `_autorize` puis appellent `init()`. Le routage `add` / `edit` / `list` / `delete` / `view` est géré par la classe mère.
+2. **CRUD générique via `CrudController`.** Les contrôleurs déclarent simplement `_controller_name`, `_model_name`, `_edit_view`, `_list_view`, `_autorize` puis appellent `init()`. Le routage `add` / `edit` / `list` / `delete` / `view` est géré par la classe mère.
 
-3. **ACL centralisée et cachée en session.** Le hook `Loginchecker` appelle `acl->Route()` avant chaque action. Les permissions sont mises en cache par `role_id` dans la session pour éviter une requête SQL à chaque page.
+3. **ACL centralisée et cachée en session.** Le filtre `AclFilter` appelle `acl->Route()` avant chaque action. Les permissions sont mises en cache par `role_id` dans la session pour éviter une requête SQL à chaque page.
 
 4. **Auth multi-source.** Cascade `acl_users` → `famille`, plus connexion via SSO Delta Enfance qui synchronise le compte famille local. Mots de passe en bcrypt avec migration automatique des hashes legacy au prochain login.
 
@@ -400,20 +397,25 @@ Toute autre route requiert une session valide et un droit ACL (`role_id` × `con
 
 ### 6.5 Configuration sécurisée
 
-`app/Config/legacy/secured.php` (non versionné) doit définir :
+Les secrets ne sont plus dans un fichier PHP mais dans `.env` (non versionné, modèle : `env.example`).
+Ils alimentent `app/Config/Travaux.php` (préfixe `travaux.`) et `Config\Email` (préfixe `email.`) :
 
-```php
-define('API_KEY', '...');                    // clé HMAC pour JWT
-define('PASSWORD_SALT', '...');              // sel legacy crypt() — encore lu pour la migration
+```ini
+travaux.apiKey = '...'                  # clé HMAC pour les JWT
+travaux.passwordSalt = '...'            # sel historique crypt() — encore lu pour la migration des mots de passe
+travaux.siteCaptchaKey = '...'          # reCAPTCHA (si travaux.captcha = true)
+travaux.siteCaptchaSecretKey = '...'
+travaux.mailFromEmail = 'noreply@abcm.fr'
+travaux.mailFromName = 'ABCM Mulhouse-Lutterbach'
+travaux.mailReplyTo = 'bureau@abcm.fr'
 
-$config['smtp_host']      = 'smtp.example.com';
-$config['smtp_port']      = 587;
-$config['smtp_user']      = '...';
-$config['smtp_pass']      = '...';
-$config['smtp_crypto']    = 'tls';
-$config['mail_from_email'] = 'noreply@abcm.fr';
-$config['mail_from_name']  = 'ABCM Mulhouse-Lutterbach';
-$config['mail_reply_to']   = 'bureau@abcm.fr';
+email.protocol = smtp
+email.SMTPHost = smtp.example.com
+email.SMTPPort = 587
+email.SMTPUser = '...'
+email.SMTPPass = '...'
+email.SMTPCrypto = tls
+email.mailType = html
 ```
 
 ---
@@ -547,10 +549,10 @@ class Familys_model extends Core_model {
 
 Méthodes héritées disponibles : `get_one()`, `get_all()`, `post()`, `put()`, `delete()`, `delete_bulk()`, `get_distinct()`, `is_exist()`, `query()`, `truncate()`.
 
-### 8.3 Contrôleur minimal (`MY_Controller`)
+### 8.3 Contrôleur minimal (`CrudController`)
 
 ```php
-class Familys_controller extends MY_Controller {
+class Familys_controller extends CrudController {
     public function __construct() {
         parent::__construct();
         $this->_controller_name = 'Familys_controller';
@@ -675,7 +677,7 @@ php public/index.php cron sendmail [size=10]
 ```
 
 - Récupère jusqu'à `$size` mails en statut 0
-- Envoie via SMTP (config `secured.php`)
+- Envoie via SMTP (config `Config\Email`, variables `email.*` du `.env`)
 - Met à jour le statut (1 envoyé / 2 erreur)
 - Log dans `sendmail_statut`
 
@@ -714,29 +716,16 @@ Pas un vrai cron : déclenché à la première visite de `Admwork_controller/reg
 
 ## 11. Configuration & environnements
 
-### 11.1 Fichier `app/Config/legacy/app.php` (versionné)
+### 11.1 `app/Config/Travaux.php` (versionné)
 
-```php
-$config['app_name']    = 'Site de l\'association ABCM...';
-$config['slogan']      = 'Outil de gestion des travaux';
-$config['debug_app']   = 'none';        // none, debug, profiler
-$config['sidebar']     = 'on';
-$config['unit_todo']   = 20;            // nb d'unités attendues par famille
-$config['maintenance'] = false;
-$config['civil_year']  = '2025-2026';
-$config['role_famille'] = 2;            // role_id par défaut pour les familles
+Réglages applicatifs (valeurs par défaut, surchargeables dans `.env` avec le préfixe `travaux.`) :
+`appName`, `slogan`, `about`, `debugApp` (`none` | `debug`), `sidebar`, `unitTodo` (unités attendues par famille),
+`maintenance`, `civilYear` (année scolaire courante), `roleFamille` (role_id par défaut des familles), `captcha`,
+`mailFromEmail`, `mailFromName`, `mailReplyTo`, ainsi que les secrets décrits au § 6.5.
 
-$config['protocol']    = 'smtp';
-$config['charset']     = 'utf-8';
-$config['mailtype']    = 'html';
-$config['wordwrap']    = TRUE;
-$config['newline']     = "\r\n";
-$config['crlf']        = "\r\n";
-```
+### 11.2 `.env` (NON versionné)
 
-### 11.2 Fichier `app/Config/legacy/secured.php` (NON versionné)
-
-Voir [§ 6.5](#65-configuration-sécurisée).
+Voir [§ 6.5](#65-configuration-sécurisée) et `env.example`.
 
 ### 11.3 Surcharges par environnement
 
@@ -791,7 +780,7 @@ document root ne peut pas être changé.
 ### 12.3 Avant chaque mise en prod
 
 - [ ] Vérifier ``.env` (section database.default.*)` à jour sur le serveur
-- [ ] Vérifier `app/Config/legacy/secured.php` à jour sur le serveur
+- [ ] Vérifier le `.env` (secrets `travaux.*`, `email.*`, base de données) à jour sur le serveur
 - [ ] Exécuter les migrations SQL en attente (voir `database/sql/`)
 - [ ] Vérifier l'écriture sur `writable/`, `public/files/`
 - [ ] Tester une connexion admin et une connexion famille
@@ -863,7 +852,7 @@ SOURCE database/sql/mig_cantine.sql;
 ### 13.5 Pièges connus
 
 - `groupes.acteurs` et `trombi.ref` stockent des **IDs en VARCHAR** (héritage). Les jointures fonctionnent grâce à la conversion implicite MySQL.
-- `Auth` est autoloadée → son constructeur ne doit pas charger de modèles (cela casserait l'init de `MY_Controller`). Le chargement est différé via `_requireDeps()`.
+- `Auth` est autoloadée → son constructeur ne doit pas charger de modèles (cela casserait l'init de `CrudController`). Le chargement est différé via `_requireDeps()`.
 - Le format de date utilisé pour `updated` doit être `'H'` (24h) et non `'h'` (12h sans AM/PM) — bug historique corrigé.
 - L'option `WidthType.PERCENTAGE` ne fonctionne pas dans Google Docs ; utiliser DXA pour les exports.
 - Le placeholder `'2025-2026'` est codé en dur dans `Admwork_model::GetFiltered` — à mettre en config si les campagnes futures débordent.

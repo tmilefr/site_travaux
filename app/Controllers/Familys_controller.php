@@ -12,7 +12,7 @@ use StdClass;
  * @author      Tmile
  * @link        http://www.24bis.com
  */
-class Familys_controller extends MY_Controller {
+class Familys_controller extends CrudController {
 
 	/* Déclaration des Models utilisés */
 	public $Capacity_model 	= null;
@@ -23,8 +23,8 @@ class Familys_controller extends MY_Controller {
 	public $Infos_model 	= null;
 
 
-	public function __construct(){
-		parent::__construct();
+	protected function boot(): void
+	{
 		
 		$this->_controller_name = 'Familys_controller';  //controller name for routing
 		$this->_model_name 		= 'Familys_model';	   //DataModel
@@ -35,7 +35,7 @@ class Familys_controller extends MY_Controller {
 
 		$this->_bg_color = 'nicdark_bg_orange';
 		$this->_set('_debug', FALSE);
-		$this->title .= $this->lang->line('GESTION_'.$this->_controller_name);
+		$this->title .= tr('GESTION_'.$this->_controller_name);
 		
 		$this->init();
 
@@ -60,7 +60,7 @@ class Familys_controller extends MY_Controller {
 	 * 
 	 */
 	public function index(){
-		ci_redirect($this->_controller_name.'/histo');
+		$this->goTo($this->_controller_name.'/histo');
 	}
 
 	public function skills(){
@@ -154,13 +154,13 @@ class Familys_controller extends MY_Controller {
 
 		
 		if ($this->acl->getType()  == "sys"){ //vue admin
-			$id_famille = $this->session->userdata( $this->set_ref_field('id_famille') );
-			if ($this->input->post('id_fam')  !== NULL ){
-				$id_famille = $this->input->post('id_fam');
-				$this->session->set_userdata( $this->set_ref_field('id_famille') , $id_famille );
-				$this->session->set_userdata( $this->set_ref_field('filter') , ['unites_id_famille'=>$id_famille]);
+			$id_famille = $this->session->get( $this->set_ref_field('id_famille') );
+			if ($this->request->getPost('id_fam')  !== NULL ){
+				$id_famille = $this->request->getPost('id_fam');
+				$this->session->set( $this->set_ref_field('id_famille') , $id_famille );
+				$this->session->set( $this->set_ref_field('filter') , ['unites_id_famille'=>$id_famille]);
 			} 
-			$filter_ec = $this->session->userdata($this->set_ref_field('filter'));
+			$filter_ec = $this->session->get($this->set_ref_field('filter'));
 			if (isset($filter_ec['unites_id_famille']))
 				$id_famille = $filter_ec['unites_id_famille'];
 
@@ -235,7 +235,7 @@ class Familys_controller extends MY_Controller {
 			$info->valid= 0;
 			$info->coming = 0;
 			$info->addition = 0;
-			$info->raf = $this->config->item('unit_todo');
+			$info->raf = config('Travaux')->unitTodo;
 			$info->tovalid = 0;
 
 			$opt = new \stdClass();
@@ -364,28 +364,32 @@ class Familys_controller extends MY_Controller {
 
 	function stats_export()
 	{
-		
-		$this->_calc(); 
-		$file_name = 'unites_famille_'.date('Ymd').'.csv'; 
-		header("Content-Description: File Transfer"); 
-		header("Content-Disposition: attachment; filename=$file_name"); 
-		header("Content-Type: application/csv; charset=utf-8"); 
-		$file = fopen('php://output', 'w');
+		$this->_calc();
+		$file_name = 'unites_famille_'.date('Ymd').'.csv';
+
+		$file = fopen('php://temp', 'w+');
 		$header = array(
-			$this->lang->line('_title_family'),
-			$this->lang->line('_title_ecole'),
-			$this->lang->line('_title_raf'),
-			$this->lang->line('_title_tovalid'),
-			$this->lang->line('_title_valid'),
-			$this->lang->line('_title_addition')
-		); 
+			tr('_title_family'),
+			tr('_title_ecole'),
+			tr('_title_raf'),
+			tr('_title_tovalid'),
+			tr('_title_valid'),
+			tr('_title_addition')
+		);
 		fputcsv($file, $header,";");
-		foreach ($this->data_view['units'] as $key => $stats){ 
+		foreach ($this->data_view['units'] as $key => $stats){
 		  $vals = [$stats->family->nom,$stats->family->ecole,$stats->raf,$stats->tovalid,$stats->valid,$stats->addition];
-		  fputcsv( $file,  $vals ,";"); 
+		  fputcsv( $file,  $vals ,";");
 		}
-		fclose($file); 
-		exit; 
+		rewind($file);
+		$csv = stream_get_contents($file);
+		fclose($file);
+
+		return $this->response
+			->setContentType('application/csv', 'utf-8')
+			->setHeader('Content-Description', 'File Transfer')
+			->setHeader('Content-Disposition', 'attachment; filename='.$file_name)
+			->setBody($csv);
 	}
 
 	/**
@@ -407,30 +411,28 @@ class Familys_controller extends MY_Controller {
 		$this->data_view['stored_path']= null;
 
 		// GET : juste le formulaire d'upload
-		if ($_SERVER['REQUEST_METHOD'] !== 'POST'){
+		if (! $this->request->is('post')){
 			$this->render_view();
 			return;
 		}
 
 		// POST : on attend un fichier "csv_file"
-		if (empty($_FILES['csv_file']) || empty($_FILES['csv_file']['tmp_name'])){
-			$this->data_view['error'] = $this->lang->line('IMPORT_NO_FILE');
+		$file = $this->request->getFile('csv_file');
+		if ($file === null || $file->getError() === UPLOAD_ERR_NO_FILE){
+			$this->data_view['error'] = tr('IMPORT_NO_FILE');
+			$this->render_view();
+			return;
+		}
+		if (! $file->isValid() || $file->getSize() === 0){
+			$this->data_view['error'] = tr('IMPORT_EMPTY_FILE');
 			$this->render_view();
 			return;
 		}
 
-		$tmp_name = $_FILES['csv_file']['tmp_name'];
-		$orig_name= $_FILES['csv_file']['name'];
-
-		if ($_FILES['csv_file']['size'] === 0){
-			$this->data_view['error'] = $this->lang->line('IMPORT_EMPTY_FILE');
-			$this->render_view();
-			return;
-		}
+		$orig_name = $file->getClientName();
 		// Garde-fou simple sur l'extension (le mime CSV est très permissif)
-		$ext = strtolower(pathinfo($orig_name, PATHINFO_EXTENSION));
-		if ($ext !== 'csv'){
-			$this->data_view['error'] = $this->lang->line('IMPORT_BAD_EXTENSION');
+		if (strtolower($file->getClientExtension()) !== 'csv'){
+			$this->data_view['error'] = tr('IMPORT_BAD_EXTENSION');
 			$this->render_view();
 			return;
 		}
@@ -442,19 +444,18 @@ class Familys_controller extends MY_Controller {
 		}
 		$stored_filename = 'abcm_'.date('Ymd_His').'.csv';
 		$stored_full     = rtrim($import_dir, '/').'/'.$stored_filename;
-		if (!@move_uploaded_file($tmp_name, $stored_full)){
-			// Fallback : copy (cas des serveurs où move_uploaded_file échoue)
-			if (!@copy($tmp_name, $stored_full)){
-				$this->data_view['error'] = $this->lang->line('IMPORT_STORE_FAILED');
-				$this->render_view();
-				return;
-			}
+		try {
+			$file->move($import_dir, $stored_filename);
+		} catch (\Throwable $e) {
+			$this->data_view['error'] = tr('IMPORT_STORE_FAILED');
+			$this->render_view();
+			return;
 		}
 
 		// Parsing + diff
 		$parse_result = $this->_parse_csv_abcm($stored_full);
 		if ($parse_result === false || empty($parse_result['families'])){
-			$this->data_view['error'] = $this->lang->line('IMPORT_PARSE_FAILED');
+			$this->data_view['error'] = tr('IMPORT_PARSE_FAILED');
 			$this->render_view();
 			return;
 		}
@@ -483,31 +484,30 @@ class Familys_controller extends MY_Controller {
 	 */
 	public function import_apply()
 	{
-		if ($_SERVER['REQUEST_METHOD'] !== 'POST'){
-			ci_redirect($this->_controller_name.'/import');
-			return;
+		if (! $this->request->is('post')){
+			$this->goTo($this->_controller_name.'/import');
 		}
 
-		$stored_path = $this->input->post('stored_path');
+		$stored_path = $this->request->getPost('stored_path');
 		if (empty($stored_path) || strpos($stored_path, '..') !== false){
-			$this->session->set_flashdata('import_error', $this->lang->line('IMPORT_BAD_PATH'));
-			ci_redirect($this->_controller_name.'/import');
+			$this->session->setFlashdata('import_error', tr('IMPORT_BAD_PATH'));
+			$this->goTo($this->_controller_name.'/import');
 			return;
 		}
 
 		$base_dir = rtrim(ROOTPATH,'/\\').'/public/files';
 		$full_path = rtrim($base_dir, '/').'/'.$stored_path;
 		if (!is_file($full_path)){
-			$this->session->set_flashdata('import_error', $this->lang->line('IMPORT_FILE_GONE'));
-			ci_redirect($this->_controller_name.'/import');
+			$this->session->setFlashdata('import_error', tr('IMPORT_FILE_GONE'));
+			$this->goTo($this->_controller_name.'/import');
 			return;
 		}
 
 		// Re-parse pour la vérité — on ne fait PAS confiance au POST
 		$parse_result = $this->_parse_csv_abcm($full_path);
 		if ($parse_result === false || empty($parse_result['families'])){
-			$this->session->set_flashdata('import_error', $this->lang->line('IMPORT_PARSE_FAILED'));
-			ci_redirect($this->_controller_name.'/import');
+			$this->session->setFlashdata('import_error', tr('IMPORT_PARSE_FAILED'));
+			$this->goTo($this->_controller_name.'/import');
 			return;
 		}
 
@@ -515,11 +515,11 @@ class Familys_controller extends MY_Controller {
 		$report = $this->_apply_diff($diff);
 
 		// Log
-		$civil_year = $this->config->item('civil_year');
+		$civil_year = config('Travaux')->civilYear;
 		$user_id    = method_exists($this->acl, 'getUserId') ? (int) $this->acl->getUserId() : null;
 
 		$now = date('Y-m-d H:i:s');
-		$this->db->insert('family_import', [
+		$this->db->table('family_import')->insert([
 			'filename'      => basename($stored_path),
 			'stored_path'   => $stored_path,
 			'civil_year'    => $civil_year,
@@ -536,13 +536,13 @@ class Familys_controller extends MY_Controller {
 			'updated'       => $now,
 		]);
 
-		$this->session->set_flashdata('import_success', sprintf(
-			$this->lang->line('IMPORT_APPLIED_X'),
+		$this->session->setFlashdata('import_success', sprintf(
+			tr('IMPORT_APPLIED_X'),
 			$report['nb_created'], $report['nb_updated'],
 			$report['nb_marked'], $report['nb_reactivated']
 		));
 
-		ci_redirect($this->_controller_name.'/import_history');
+		$this->goTo($this->_controller_name.'/import_history');
 	}
 
 	/**
@@ -551,7 +551,7 @@ class Familys_controller extends MY_Controller {
 	public function import_history()
 	{
 		$this->_set('view_inprogress', 'unique/'.$this->_controller_name.'_import_history');
-		$this->load->model('FamilyImport_model');
+		$this->FamilyImport_model = model('FamilyImport_model');
 		$this->data_view['imports'] = $this->FamilyImport_model->GetLastImports(50);
 		$this->render_view();
 	}
@@ -749,9 +749,7 @@ class Familys_controller extends MY_Controller {
 		];
 
 		// 1. Charger toutes les familles existantes en index par code ABCM + par mail
-		$all = $this->db->select('id, code_famille_abcm, e_mail, nom, prenom, adresse, cp, ville, ecole, e_mail_comp, to_deactivate, civil_year')
-			->from('famille')
-			->get()->result();
+		$all = $this->db->table('famille')->select('id, code_famille_abcm, e_mail, nom, prenom, adresse, cp, ville, ecole, e_mail_comp, to_deactivate, civil_year')->get()->getResult();
 
 		$by_code = [];
 		$by_mail = [];
@@ -853,10 +851,7 @@ class Familys_controller extends MY_Controller {
 	 */
 	private function _diff_members($id_fam, $csv_members)
 	{
-		$existing = $this->db->select('id, code_membre_abcm, nom, prenom, classe, type')
-			->from('members')
-			->where('id_fam', $id_fam)
-			->get()->result();
+		$existing = $this->db->table('members')->select('id, code_membre_abcm, nom, prenom, classe, type')->where('id_fam', $id_fam)->get()->getResult();
 
 		$by_code = [];
 		$by_namepair = [];
@@ -925,10 +920,10 @@ class Familys_controller extends MY_Controller {
 			],
 		];
 
-		$civil_year = $this->config->item('civil_year');
+		$civil_year = config('Travaux')->civilYear;
 		$now = date('Y-m-d H:i:s');
 
-		$this->db->trans_start();
+		$this->db->transStart();
 
 		// 1. CRÉATIONS
 		foreach($diff['to_create'] AS $entry){
@@ -946,16 +941,16 @@ class Familys_controller extends MY_Controller {
 				'ecole'             => $csv->ecole,
 				'civil_year'        => $civil_year,
 				'to_deactivate'     => 0,
-				'role_id'           => $this->config->item('role_famille') ?: 2,
+				'role_id'           => config('Travaux')->roleFamille ?: 2,
 				'nb_enfants'        => count($csv->members),
 				'created'           => $now,
 				'updated'           => $now,
 			];
-			$this->db->insert('famille', $row);
-			$id_fam = (int) $this->db->insert_id();
+			$this->db->table('famille')->insert($row);
+			$id_fam = (int) $this->db->insertID();
 			if ($id_fam > 0){
 				foreach($csv->members AS $cm){
-					$this->db->insert('members', [
+					$this->db->table('members')->insert([
 						'id_fam'           => $id_fam,
 						'code_membre_abcm' => $cm->code,
 						'type'             => 'E',
@@ -982,14 +977,14 @@ class Familys_controller extends MY_Controller {
 			// Pour la réactivation : on remet to_deactivate = 0
 			$set['to_deactivate'] = 0;
 			$set['updated']       = $now;
-			$this->db->where('id', $id_fam)->update('famille', $set);
+			$this->db->table('famille')->where('id', $id_fam)->update($set);
 
 			// Sync members
 			$this->_apply_members_diff($id_fam, $entry->members_diff, $now);
 
 			// Mise à jour du nb_enfants (cohérent avec les enfants du CSV)
 			if (isset($entry->csv->members)){
-				$this->db->where('id', $id_fam)->update('famille', [
+				$this->db->table('famille')->where('id', $id_fam)->update([
 					'nb_enfants' => count($entry->csv->members),
 				]);
 			}
@@ -1006,7 +1001,7 @@ class Familys_controller extends MY_Controller {
 		// 3. À MARQUER
 		foreach($diff['to_mark'] AS $entry){
 			$id_fam = (int) $entry->existing->id;
-			$this->db->where('id', $id_fam)->update('famille', [
+			$this->db->table('famille')->where('id', $id_fam)->update([
 				'to_deactivate' => 1,
 				'updated'       => $now,
 			]);
@@ -1014,7 +1009,7 @@ class Familys_controller extends MY_Controller {
 			$report['details']['marked_ids'][] = $id_fam;
 		}
 
-		$this->db->trans_complete();
+		$this->db->transComplete();
 		return $report;
 	}
 
@@ -1024,7 +1019,7 @@ class Familys_controller extends MY_Controller {
 	private function _apply_members_diff($id_fam, $members_diff, $now)
 	{
 		foreach($members_diff['to_create'] AS $cm){
-			$this->db->insert('members', [
+			$this->db->table('members')->insert([
 				'id_fam'           => $id_fam,
 				'code_membre_abcm' => $cm->code,
 				'type'             => 'E',
@@ -1041,7 +1036,7 @@ class Familys_controller extends MY_Controller {
 				$set[$field] = $vv[1]; // [old, new]
 			}
 			$set['updated'] = $now;
-			$this->db->where('id', (int) $entry->existing->id)->update('members', $set);
+			$this->db->table('members')->where('id', (int) $entry->existing->id)->update($set);
 		}
 	}
 

@@ -6,8 +6,8 @@
  * (cf. MY_Controller::list() + render_view()).
  *
  * Variables disponibles fournies par le moteur :
- *   - $this->render_object : la ligne courante est posée via _set('dba_data')
- *   - $this->bootstrap_tools, $this->lang
+ *   - $render_object : la ligne courante est posée via _set('dba_data')
+ *   - $bootstrap_tools, tr()
  *
  * Ergonomie (refonte étape 1) :
  *   - Header : nom du contrôleur + 2 badges (nb actions, nb rôles utilisateurs)
@@ -18,16 +18,16 @@
  */
 
 // --- Récupération du contrôleur courant et de ses actions --------------------
-$dba       = $this->render_object->_get('dba_data');
+$dba       = $render_object->_get('dba_data');
 $ctrl_name = isset($dba->controller) ? $dba->controller : '';
 $ctrl_id   = isset($dba->id) ? (int) $dba->id : 0;
 
 $actions = array();
-if ($ctrl_id && isset($this->Acl_actions_model)) {
-    $this->Acl_actions_model->_set('filter', array('id_ctrl' => $ctrl_id));
-    $this->Acl_actions_model->_set('order', 'action');
-    $this->Acl_actions_model->_set('direction', 'asc');
-    $actions = $this->Acl_actions_model->get_all();
+if ($ctrl_id && true) {
+    model('Acl_actions_model')->_set('filter', array('id_ctrl' => $ctrl_id));
+    model('Acl_actions_model')->_set('order', 'action');
+    model('Acl_actions_model')->_set('direction', 'asc');
+    $actions = model('Acl_actions_model')->get_all();
 }
 $nb_actions = is_array($actions) ? count($actions) : 0;
 
@@ -64,12 +64,12 @@ $nb_custom = count($custom_actions);
 $header_color = 'nicdark_bg_red';
 
 // --- Libellés ----------------------------------------------------------------
-$lbl_actions  = $this->lang->line('actions') ?: 'actions';
-$lbl_standard = $this->lang->line('ACL_LBL_STANDARD') ?: 'Standard';
-$lbl_business = $this->lang->line('ACL_LBL_BUSINESS') ?: 'Métier';
-$lbl_no_action = $this->lang->line('NO_ACTION_DEFINED')
+$lbl_actions  = tr('actions') ?: 'actions';
+$lbl_standard = tr('ACL_LBL_STANDARD') ?: 'Standard';
+$lbl_business = tr('ACL_LBL_BUSINESS') ?: 'Métier';
+$lbl_no_action = tr('NO_ACTION_DEFINED')
     ?: 'Aucune action définie pour ce contrôleur.';
-$lbl_no_custom = $this->lang->line('ACL_LBL_NO_CUSTOM')
+$lbl_no_custom = tr('ACL_LBL_NO_CUSTOM')
     ?: 'Aucune action métier — uniquement du CRUD standard.';
 ?>
 <section class="nicdark_section">
@@ -160,7 +160,7 @@ $lbl_no_custom = $this->lang->line('ACL_LBL_NO_CUSTOM')
             </span>
         </div>
         <div class="acl-ctrl-card__menu">
-            <?php echo $this->render_object->render_element_menu(); ?>
+            <?php echo $render_object->render_element_menu(); ?>
         </div>
     </div>
 

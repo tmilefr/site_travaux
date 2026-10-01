@@ -6,10 +6,10 @@
     <div class="nicdark_container nicdark_clearfix">
         <div class="nicdark_space30"></div>
         <div class="grid grid_4">
-            <h1 class="subtitle greydark"><?php echo $this->lang->line($this->render_object->_getCi('_controller_name').'_'.$this->render_object->_getCi('_action').$this->acl->getType());?></h1>
+            <h1 class="subtitle greydark"><?php echo tr($render_object->_getCi('_controller_name').'_'.$render_object->_getCi('_action').$acl->getType());?></h1>
             <div class="nicdark_space20"></div>
             <h3 class="subtitle grey">
-                <?php echo $this->lang->line($this->render_object->_getCi('_controller_name').'_'.$this->render_object->_getCi('_action').$this->acl->getType().'_subtitle');?>
+                <?php echo tr($render_object->_getCi('_controller_name').'_'.$render_object->_getCi('_action').$acl->getType().'_subtitle');?>
             </h3>
             <div class="nicdark_space20"></div>
             <div class="nicdark_divider left big"><span class="nicdark_bg_green nicdark_radius"></span></div>
@@ -20,11 +20,11 @@
             <ul class="nav nav-pills">
                 <?php 
                 foreach($civil_years AS $key=>$value){
-                    echo '<li class="nav-item" ><a  class="nav-link '.(($filter_ec == $key) ? 'active':'').'" href="'.base_url($this->render_object->_getCi('_controller_name').'/'.$this->render_object->_getCi('_action')).'/filter/civil_year/filter_value/'.$key.'">'.$value.'</a></li>';
+                    echo '<li class="nav-item" ><a  class="nav-link '.(($filter_ec == $key) ? 'active':'').'" href="'.base_url($render_object->_getCi('_controller_name').'/'.$render_object->_getCi('_action')).'/filter/civil_year/filter_value/'.$key.'">'.$value.'</a></li>';
                 }
                 ?>
-                <li class="nav-item"><a class="nav-link <?php echo (($filter_ec == 'resume') ? 'active':'');?>" href="<?php echo base_url($this->render_object->_getCi('_controller_name').'/'.$this->render_object->_getCi('_action')).'/filter/civil_year/filter_value/resume';?>">Synthèse</a></li>
-                <li class="nav-item"><a class="nav-link nicdark_bg_red white " href="<?php echo base_url($this->render_object->_getCi('_controller_name').'/stats_export');?>"><?php echo ci_lang('Export');?></a></li>
+                <li class="nav-item"><a class="nav-link <?php echo (($filter_ec == 'resume') ? 'active':'');?>" href="<?php echo base_url($render_object->_getCi('_controller_name').'/'.$render_object->_getCi('_action')).'/filter/civil_year/filter_value/resume';?>">Synthèse</a></li>
+                <li class="nav-item"><a class="nav-link nicdark_bg_red white " href="<?php echo base_url($render_object->_getCi('_controller_name').'/stats_export');?>"><?php echo tr('Export');?></a></li>
             </ul>            
             
         </div>
@@ -34,13 +34,13 @@
                 case 'resume':
                     $totaux  = [];
                     echo '<table class="table table-sm table-striped">';
-                    echo '<tr><td>'.ci_lang('type').'</td>';
+                    echo '<tr><td>'.tr('type').'</td>';
                     foreach($civil_years AS $key=>$value){
                         echo '<th>'.$value.'</th>';
                     }
                     echo '</tr>';
                     foreach($ConsolidatedStats AS $type=>$years){
-                        echo '<tr><td>'.$this->render_object->RenderElement('type', $type, null, 'Admwork_model').'</td>';
+                        echo '<tr><td>'.$render_object->RenderElement('type', $type, null, 'Admwork_model').'</td>';
                         foreach($civil_years AS $key=>$value){
                             if (!isset($totaux[$value]))
                                 $totaux[$value] = 0;
@@ -69,12 +69,12 @@
                     <table class="table table-sm table-striped">
                         <thead>
                             <tr>
-                                <th><?php echo LANG('_title_family');?></th>
-                                <th><?php echo LANG('_title_ecole');?></th>
-                                <th><?php echo LANG('_title_raf');?></th>
-                                <th><?php echo LANG('_title_tovalid');?></th>                       
-                                <th><?php echo LANG('_title_valid');?></th>
-                                <th><?php echo LANG('_title_addition');?></th>
+                                <th><?php echo tr('_title_family');?></th>
+                                <th><?php echo tr('_title_ecole');?></th>
+                                <th><?php echo tr('_title_raf');?></th>
+                                <th><?php echo tr('_title_tovalid');?></th>                       
+                                <th><?php echo tr('_title_valid');?></th>
+                                <th><?php echo tr('_title_addition');?></th>
                             </tr>
                         </thead>
                         <tbody>            

@@ -2,575 +2,428 @@
 
 namespace App\Models;
 
-use Exception;
+use CodeIgniter\Database\BaseBuilder;
+use CodeIgniter\Model;
 
+/**
+ * Modèle de base : CRUD générique piloté par un schéma JSON (app/Models/json/*.json).
+ *
+ * Chaque modèle métier déclare ses propriétés ($table, $primaryKey, $order, $direction, $json)
+ * puis le contrôleur charge les définitions de champs avec _init_def().
+ */
 #[\AllowDynamicProperties]
-class Core_model extends \App\Libraries\Compat\Model {
-	
-	protected $table; 	//table used in model
-	protected $key; 	//id used in model
-	protected $key_value; 	
-	protected $order	= []; 	//sort used in model
-	protected $direction;//direction used in model
-	protected $autorized_fields = array();
-	protected $autorized_fields_search = array();
-	protected $required = array();
-	protected $datas = array(); // datas in model
-	protected $filter = array();//filter for model
-	protected $group_by = array(); //group by for model
-	protected $per_page = 20;
-	protected $_debug = FALSE;
-	protected $page = 1;
-	protected $nb = null;
-	protected $_debug_array = array();
-	protected $like = array();
-	protected $global_search = null;
-	protected $defs = array();	
-	protected $json = null;
-	protected $json_path = APPPATH.'Models/json/';
-	protected $_mode = 'classic'; // classic or join
-	protected $_model_name = '';
-    /**
-	 * @brief 
-	 * @returns 
-	 * 
-	 * 
-	 */
-	public function __construct()
-	{
-		parent::__construct();
-		if (!$this->page){
-			$this->page = 1;
-		}
-	}
+class Core_model extends Model
+{
+    protected $table = '';
+    protected $primaryKey = 'id';
 
-	/**
-	 * @brief 
-	 * @param $opt (std class) 
-	 * $opt->id 
-	 * $opt->value 
-	 * $opt->filter_field 
-	 * $opt->filter_value 
-	 * @returns 
-	 * 
-	 * 
-	 */
-	public function distinct($opt){
-		try{
-		//	$table,$id,$value,$filter_field=null, $filter_value = null;
-			//echo debug($opt);
-			if (strpos($opt->value,'@')){
-				$fields = 'CONCAT_WS(" ",'.str_replace('@',',',$opt->value).') AS ';
-				$as = ' '.str_replace('@','_',$opt->value);
-			} else {
-				$fields = $opt->value;
-				$as = $opt->value;
-			}
-			$this->db->distinct();
-			if ( isset($opt->filter_field) &&  isset($opt->filter_value) ){
-				$datas = $this->db->select("$opt->table.$opt->id,$fields $as")->where($opt->filter_field,$opt->filter_value)->order_by("$as", 'asc' )->get($opt->table)->result();
-			} else {
-				$datas = $this->db->select("$opt->table.$opt->id,$fields $as")->order_by("$as", 'asc' )->get($opt->table)->result();
-			}
-			//echo $this->db->last_query().'<BR/>';
-			$this->_debug_array[] = $this->db->last_query();
+    /** Valeur de la clé primaire de l'enregistrement courant */
+    protected $key_value;
+    /** Tri : nom de champ, ou tableau de champs (pile de tris) */
+    protected $order = [];
+    /** Sens du tri (ou tableau aligné sur $order) */
+    protected $direction;
+    protected $autorized_fields = [];
+    protected $autorized_fields_search = [];
+    protected $required = [];
+    /** Données à écrire par put() */
+    protected $datas = [];
+    protected $filter = [];
+    protected $group_by = [];
+    protected $per_page = 20;
+    protected $_debug = false;
+    protected $page = 1;
+    protected $nb = null;
+    protected $_debug_array = [];
+    protected $like = [];
+    protected $global_search = null;
+    protected $defs = [];
+    /** Fichier de schéma JSON du modèle */
+    protected $json = null;
+    protected $json_path = APPPATH . 'Models/json/';
+    protected $_mode = 'classic'; // classic ou join
+    protected $_model_name = '';
 
-			return $datas;
-		} catch (Exception $e) {
-			//echo 'Exception reçue : ',  $e->getMessage(), "\n";
-		}
-	}	
-		
-	/**
-	 * Method DeleteLink
-	 *
-	 * @param $foreign_key $foreign_key [explicite description]
-	 * @param $id $id [explicite description]
-	 *
-	 * @return void
-	 */
-	function DeleteLink($foreign_key, $id = null){
-		if ($id){
-			$this->db->where_in($foreign_key, $id)
-				 ->delete($this->table); 
-			$this->_debug_array[] = $this->db->last_query();
+    public function __construct()
+    {
+        parent::__construct();
+        if (! $this->page) {
+            $this->page = 1;
+        }
+    }
 
-			/*if ($this->table == "capacitys"){
-				echo debug($this->db->last_query());
-				die();
-			}*/
-		}
-		
-	}
-	
-	/**
-	 * Method SetLink
-	 *
-	 * @param $foreign_key $foreign_key [explicite description]
-	 * @param $id $id [explicite description]
-	 *
-	 * @return void
-	 */
-	function SetLink($foreign_key, $id = null){
-		if ($id){
-			$this->db->set($foreign_key, $id);
-			$this->db->where($foreign_key, 99999);
-			$this->db->update($this->table);	
-			$this->_debug_array[] = $this->db->last_query();
-		}
-	}
+    // ------------------------------------------------------------------
+    // Utilitaires
+    // ------------------------------------------------------------------
 
-	/**
-	 * @brief 
-	 * @param $opt (std class) 
-	 * $opt->id 
-	 * $opt->value 
-	 * $opt->filter_field 
-	 * $opt->filter_value 
-	 * @returns 
-	 * 
-	 * 
-	 */
-	public function query($sql){
-		try{
-			$datas = $this->db->query($sql)->result();
-			//echo $this->db->last_query().'<BR/>';
-			$this->_debug_array[] = $this->db->last_query();
+    /** Nouveau builder sur la table du modèle (état propre à chaque requête). */
+    protected function tb(?string $table = null): BaseBuilder
+    {
+        return $this->db->table($table ?? $this->table);
+    }
 
-			return $datas;
-		} catch (Exception $e) {
-			//echo 'Exception reçue : ',  $e->getMessage(), "\n";
-		}
-	}
-	
-	/**
-	 * @brief 
-	 * @returns 
-	 * 
-	 * 
-	 */
-	public function _init_def(){
-		$this->defs = array();
-		$json = file_get_contents($this->json_path.$this->json);
-		$json = json_decode($json);
-		foreach($json AS $field => $defs){
-			$this->autorized_fields[]  = $field;
-			if ($defs->search){
-				$this->autorized_fields_search[] = $field;
-			}
-			if ($defs->rules){
-				$this->required[] = $field;
-			}
-			//FIELD OBJECT ELEMENT
-			$object_name = 'App\\Libraries\\Elements\\element_'.$defs->type;
-			if (!class_exists($object_name)){
-				$object_name = 'App\\Libraries\\Elements\\element';
-			}
-			$obj = new $object_name;
-			foreach($defs AS $key => $value){
-				//echo "<p>$this->json set $key , ".debug($value)."</p>";
-				$obj->_set($key , $value);
-			}			
-			if ($obj->_get('param')){
-				$op_mg = $obj->SetParams();
-				//echo debug($op_mg);
+    /** Mémorise la dernière requête (affichée en mode debug). */
+    protected function log(): void
+    {
+        $this->_debug_array[] = (string) $this->db->getLastQuery();
+    }
 
-				if (isset($op_mg->method) && method_exists($this,$op_mg->method)){
-					//echo debug($op_mg);
-					$datas_select = [];
-					$datas = $this->{$op_mg->method}($op_mg);
-					if (count($datas)){
-						foreach($datas AS $data){
-							$datas_select[$data->{$op_mg->key}] = $data->{$op_mg->data};
-						}
-					}
-					//echo debug($datas_select);
-					$obj->_set('values', $datas_select);
-				}
-			} else {
-				//$obj->_set('values', $defs->values);	
-				if (method_exists($obj,'SetValues')){//new methode for set datas
-					$obj->SetValues();
-				}
-			}
-			$obj->_set('_model_name', $this->_get('_model_name'));
-			$obj->_set('name', $field);
-			$this->defs[$field] = $obj;
-		}
-	}
-	
-	/**
-	 * @brief 
-	 * @returns 
-	 * 
-	 * 
-	 */
-	public function truncate(){
-		$this->db->truncate($this->table);	
-	}	
-	
-	/**
-	 * @brief 
-	 * @param $field 
-	 * @param $value 
-	 * @param $fields 
-	 * @returns 
-	 * 
-	 * 
-	 */
-	public function is_exist($field = 'id' ,$value = null, $fields = null){
-		$query = $this->db->get_where($this->table , (($fields) ? $fields:array($field => $value)) );
-		$this->_debug_array[] = $this->db->last_query();
-		
-		if ($query->num_rows())
-			return $query->row();
-		else
-			return false;			
-	}	
-
-	/**
-	 * @brief 
-	 * @returns 
-	 * 
-	 * 
-	 */
-	public function get_all(){
-		if (is_array($this->filter) AND count($this->filter)){
-			foreach($this->filter AS $key => $value){
-				$this->db->where($key , $value);
-			}
-		} 	
-		if ($this->global_search){
-			foreach($this->autorized_fields_search AS $key => $value){
-				$this->db->or_like($value , $this->global_search);
-			}
-		} 			
-		$datas = $this->db->select(implode(',',$this->autorized_fields))
-					   ->order_by($this->order, $this->direction )
-					   ->get($this->table)
-					   ->result();
-		$this->_debug_array[] = $this->db->last_query();
-		return $datas;
-	}
-	
-	/**
-	 * @brief 
-	 * @param $field 
-	 * @returns 
-	 * 
-	 * 
-	 */
-	public function get_distinct($field){
-		$this->db->distinct();
-		$datas = $this->db->select($field)->get($this->table)->result();
-		$this->_debug_array[] = $this->db->last_query();
-		return $datas;
-	}		
-	
-	/* only one ? really ? */
-	/**
-	 * @brief 
-	 * @returns 
-	 * 
-	 * 
-	 */
-	public function get_one()
-	{
-		$this->db->select('*')
-				 ->from($this->table)
-				 ->where($this->key, $this->key_value);
-		$datas = $this->db->get()->row();
-		$this->_debug_array[] = $this->db->last_query();
-		return $datas;
-	}
-
-	/**
-	 * @brief 
-	 * @param $datas 
-	 * @returns 
-	 * 
-	 * 
-	 */
-	public function post($datas)
-	{
-		/*foreach ($datas AS $key=>$fields){
-			if (!in_array($field, $this->$this->autorized_fields)){
-				unset($this->datas[$key]);
-			}
-		}*/
-		$this->db->insert($this->table, $datas);
-		$this->_debug_array[] = $this->db->last_query();
-		return $this->db->insert_id();
-	}
-
-	/**
-	 * @brief 
-	 * @returns 
-	 * 
-	 * 
-	 */
-	function _set_filter(){
-		if (is_array($this->filter) AND count($this->filter)){
-			//echo debug($this->filter);
-			$this->db->group_start();
-			foreach($this->filter AS $key => $value){
-				$this->db->where($key , $value);
-			}
-			$this->db->group_end();
-		} 
-	}
-	
-	function _set_order_by(){
-		if (is_array($this->order) AND count($this->order)){
-			// Deux conventions acceptées :
-			// 1. tableau associatif [field => direction] (legacy)
-			// 2. tableau indexé aligné avec $this->direction (nouveau)
-			//    ex: order = ['name','created'], direction = ['asc','desc']
-			$is_indexed = array_keys($this->order) === range(0, count($this->order) - 1);
-
-			if ($is_indexed) {
-				$dirs = is_array($this->direction) ? $this->direction : array();
-				foreach ($this->order AS $i => $field) {
-					$dir = isset($dirs[$i]) ? $dirs[$i] : 'asc';
-					$this->db->order_by($field, $dir);
-				}
-			} else {
-				foreach ($this->order AS $key => $value) {
-					$this->db->order_by($key, $value);
-				}
-			}
-		}
-	}
-
-
-	function _setField($field){
-		$def = $this->_get('defs')[$field];
-		if (isset($def->table[$field])){
-			$this->_mode = 'join';
-			$this->db->join($def->table[$field],$this->table.'.'.$field.'='.$def->table[$field].'.'.$def->foreignKey[$field], 'left' );
-			return $def->table[$field].'.'.$def->foreignField[$field];
-		} else {
-			if ($this->_mode == 'join'){
-				return $this->table.'.'.$field.'';
-			} else {
-				return $field;
-			}
-		}		
-	}
-	
-
-	/**
-	 * @brief 
-	 * @returns 
-	 * 
-	 * 
-	 */
-	function _set_search(){
-		if ($this->global_search){
-			$this->db->group_start();
-			foreach($this->autorized_fields_search AS $key => $value){
-				if (!$key AND is_array($this->filter) AND count($this->filter)){
-					$this->db->like( $this->_setField($value) , $this->global_search);
-				} else {
-					$this->db->or_like( $this->_setField($value)  , $this->global_search);					
-				}
-			}
-			$this->db->group_end();
-		} 	
-	}
-
-
-	/**
-	 * @brief 
-	 * @returns 
-	 * 
-	 * 
-	 */
-	public function get_pagination(){
-		if (!$this->nb){
-			$this->_set_filter();
-			$this->_set_search();
-			$this->nb = $this->db->select( $this->table.'.'.$this->key )->get($this->table)->num_rows();
-		} 
-		$this->_debug_array[] = 'get_pagination : '. $this->nb; 
-		return $this->nb;
-	}	
-	
-
-	function _set_list_fields(){
-		$string_field = '';
-		if ($this->autorized_fields){
-			foreach($this->autorized_fields AS $field ){
-				if ($this->_mode == 'join'){
-					$string_field .= $this->table.'.'.$field.',';
-				} else {
-					$string_field .= $field.',';
-				}
-			}
-			$string_field .= substr($string_field,-1);
-		} else {
-			$string_field = '*';
-		} 
-		return $string_field;
-	}
+    // ------------------------------------------------------------------
+    // Requêtes génériques
+    // ------------------------------------------------------------------
 
     /**
-	 * @brief 
-	 * @returns 
-	 * 
-	 * 
-	 */
-	public function get(){
-		$this->_set_filter();
-		$this->_set_search();
-		if ($this->per_page  ){
-			if (!$this->page)
-				$this->page = 1 ;
-			$this->db->limit(intval($this->per_page), ($this->page - 1 ) * $this->per_page);
-		}
+     * Valeurs distinctes pour alimenter un select.
+     *
+     * @param object $opt ->table ->id ->value [->filter_field ->filter_value]
+     */
+    public function distinct($opt)
+    {
+        try {
+            if (strpos($opt->value, '@')) {
+                $fields = 'CONCAT_WS(" ",' . str_replace('@', ',', $opt->value) . ') AS ';
+                $as     = ' ' . str_replace('@', '_', $opt->value);
+            } else {
+                $fields = $opt->value;
+                $as     = $opt->value;
+            }
+            $b = $this->tb($opt->table)->distinct()->select("$opt->table.$opt->id,$fields $as");
+            if (isset($opt->filter_field, $opt->filter_value)) {
+                $b->where($opt->filter_field, $opt->filter_value);
+            }
+            $datas = $b->orderBy($as, 'asc')->get()->getResult();
+            $this->log();
 
-		$this->db->select( $this->_set_list_fields()  );
+            return $datas;
+        } catch (\Throwable $e) {
+            log_message('error', 'Core_model::distinct : ' . $e->getMessage());
 
-		// Gestion d'une pile de tris : si $order est un tableau, on appelle
-		// order_by une fois par champ ; sinon comportement historique.
-		if (is_array($this->order) && count($this->order) > 0) {
-			$dirs = is_array($this->direction) ? $this->direction : array();
-			foreach ($this->order as $i => $field) {
-				$dir = isset($dirs[$i]) ? $dirs[$i] : 'asc';
-				$this->db->order_by($field, $dir);
-			}
-		} else {
-			$this->db->order_by($this->order, $this->direction);
-		}
+            return [];
+        }
+    }
 
-		$datas = $this->db->get($this->table);
-		$this->_debug_array[] = $this->db->last_query();
-		return $datas->result();
-	}
+    /** Supprime les lignes enfants rattachées à $id par la clé étrangère. */
+    public function DeleteLink($foreign_key, $id = null)
+    {
+        if ($id) {
+            $this->tb()->whereIn($foreign_key, (array) $id)->delete();
+            $this->log();
+        }
+    }
 
-	/**
-	 * @brief Variante de get() qui retourne TOUS les résultats filtrés/triés
-	 *        (pas de LIMIT). Utilisée pour l'export CSV.
-	 * @returns array
-	 */
-	public function get_all_filtered(){
-		$this->_set_filter();
-		$this->_set_search();
-		$this->db->select( $this->_set_list_fields() );
-		if (is_array($this->order) && count($this->order) > 0) {
-			$dirs = is_array($this->direction) ? $this->direction : array();
-			foreach ($this->order as $i => $field) {
-				$dir = isset($dirs[$i]) ? $dirs[$i] : 'asc';
-				$this->db->order_by($field, $dir);
-			}
-		} else {
-			$this->db->order_by($this->order, $this->direction);
-		}
-		$datas = $this->db->get($this->table);
-		$this->_debug_array[] = $this->db->last_query();
-		return $datas->result();
-	}
+    /** Rattache les lignes provisoires (clé étrangère 99999) à $id. */
+    public function SetLink($foreign_key, $id = null)
+    {
+        if ($id) {
+            $this->tb()->set($foreign_key, $id)->where($foreign_key, 99999)->update();
+            $this->log();
+        }
+    }
 
-	/**
-	 * @brief Supprime plusieurs lignes en une fois.
-	 * @param array $ids Liste d'identifiants de la clé primaire.
-	 * @returns int Nombre de lignes supprimées.
-	 */
-	public function delete_bulk(array $ids){
-		$ids = array_filter(array_map('intval', $ids));
-		if (empty($ids)) {
-			return 0;
-		}
-		$this->db->where_in($this->key, $ids)
-		         ->delete($this->table);
-		$this->_debug_array[] = $this->db->last_query();
-		return $this->db->affected_rows();
-	}
+    /** Requête SQL libre. */
+    public function query($sql, $binds = null, bool $setEscapeFlags = true, $queryClass = '')
+    {
+        try {
+            $datas = $this->db->query($sql)->getResult();
+            $this->log();
 
+            return $datas;
+        } catch (\Throwable $e) {
+            log_message('error', 'Core_model::query : ' . $e->getMessage());
 
-	/**
-	 * @brief 
-	 * @returns 
-	 * 
-	 * 
-	 */
-	public function put($id = null)
-	{
-		foreach ($this->datas AS $field=>$data){
-			if (!in_array($field, $this->autorized_fields)){
-				unset($this->datas[$field]);
-			}
-		}
-		if ($id){
-			$this->key_value = $id;
-		}
-		$this->db->where($this->key, $this->key_value);
-		$this->db->update($this->table, $this->datas);		
-		$this->_debug_array[] = $this->db->last_query();
-	}
+            return [];
+        }
+    }
 
-	/**
-	 * @brief 
-	 * @returns 
-	 * 
-	 * 
-	 */
-	public function delete()
-	{
-		$this->db->where_in($this->key, $this->key_value)
-				 ->delete($this->table);
-		$this->_debug_array[] = $this->db->last_query();
-	}
+    /**
+     * Instancie les définitions de champs depuis le schéma JSON.
+     */
+    public function _init_def()
+    {
+        $this->defs                    = [];
+        $this->autorized_fields        = [];
+        $this->autorized_fields_search = [];
+        $this->required                = [];
 
-	/**
-	 * @brief 
-	 * @param $field 
-	 * @param $value 
-	 * @returns 
-	 * 
-	 * 
-	 */
-	public function _set($field,$value){
-		$this->$field = $value;
-		//initialisation de l'id parent des objets
-		switch($field){
-			case 'key_value':
-				foreach($this->defs AS $obj){
-					$obj->_set('parent_id',$value);
-				}
-			break;
-		}
+        $json = json_decode(file_get_contents($this->json_path . $this->json));
+        foreach ($json as $field => $defs) {
+            $this->autorized_fields[] = $field;
+            if ($defs->search) {
+                $this->autorized_fields_search[] = $field;
+            }
+            if ($defs->rules) {
+                $this->required[] = $field;
+            }
 
-	}
+            // Élément de formulaire correspondant au type du champ
+            $object_name = 'App\\Libraries\\Elements\\element_' . $defs->type;
+            if (! class_exists($object_name)) {
+                $object_name = 'App\\Libraries\\Elements\\element';
+            }
+            $obj = new $object_name();
+            foreach ($defs as $key => $value) {
+                $obj->_set($key, $value);
+            }
+            if ($obj->_get('param')) {
+                $op_mg = $obj->SetParams();
+                if (isset($op_mg->method) && method_exists($this, $op_mg->method)) {
+                    $datas_select = [];
+                    $datas        = $this->{$op_mg->method}($op_mg);
+                    foreach ($datas as $data) {
+                        $datas_select[$data->{$op_mg->key}] = $data->{$op_mg->data};
+                    }
+                    $obj->_set('values', $datas_select);
+                }
+            } elseif (method_exists($obj, 'SetValues')) {
+                $obj->SetValues();
+            }
+            $obj->_set('_model_name', $this->_get('_model_name'));
+            $obj->_set('name', $field);
+            $this->defs[$field] = $obj;
+        }
+    }
 
-	/**
-	 * @brief 
-	 * @param $field 
-	 * @returns 
-	 * 
-	 * 
-	 */
-	public function _get($field){
-		return $this->$field;
-	}
-	
-	/**
-	 * @brief 
-	 * @returns 
-	 * 
-	 * 
-	 */
-	public function __destruct(){
-		if ($this->_debug){
-			echo debug($this->_debug_array, __file__);
-			//$this->CI->bootstrap_tools->render_debug($this->_debug_array);
-			foreach($this->_debug_array AS $msg)
-				log_message('debug', debug($msg, get_class($this)));			
-		}
+    public function truncate()
+    {
+        $this->tb()->truncate();
+    }
 
-	}	
+    /** Retourne la ligne correspondante ou false. */
+    public function is_exist($field = 'id', $value = null, $fields = null)
+    {
+        $row = $this->tb()->where($fields ?: [$field => $value])->get()->getRow();
+        $this->log();
 
+        return $row ?: false;
+    }
+
+    /** Toutes les lignes (filtre + recherche globale + tri simple), sans pagination. */
+    public function get_all()
+    {
+        $b = $this->tb();
+        foreach ((array) $this->filter as $key => $value) {
+            $b->where($key, $value);
+        }
+        if ($this->global_search) {
+            foreach ($this->autorized_fields_search as $value) {
+                $b->orLike($value, $this->global_search);
+            }
+        }
+        $datas = $b->select(implode(',', $this->autorized_fields))
+            ->orderBy((string) $this->order, (string) $this->direction)
+            ->get()
+            ->getResult();
+        $this->log();
+
+        return $datas;
+    }
+
+    public function get_distinct($field)
+    {
+        $datas = $this->tb()->distinct()->select($field)->get()->getResult();
+        $this->log();
+
+        return $datas;
+    }
+
+    /** La ligne dont la clé primaire vaut $key_value. */
+    public function get_one()
+    {
+        $datas = $this->tb()->select('*')->where($this->primaryKey, $this->key_value)->get()->getRow();
+        $this->log();
+
+        return $datas;
+    }
+
+    /** Insère une ligne et retourne son identifiant. */
+    public function post($datas)
+    {
+        $this->tb()->insert($datas);
+        $this->log();
+
+        return $this->db->insertID();
+    }
+
+    // ------------------------------------------------------------------
+    // Filtres, recherche, tri (appliqués au builder $b)
+    // ------------------------------------------------------------------
+
+    protected function applyFilter(BaseBuilder $b): void
+    {
+        if (is_array($this->filter) && count($this->filter)) {
+            $b->groupStart();
+            foreach ($this->filter as $key => $value) {
+                $b->where($key, $value);
+            }
+            $b->groupEnd();
+        }
+    }
+
+    protected function applyOrder(BaseBuilder $b): void
+    {
+        // Pile de tris : $order = ['a','b'] aligné sur $direction = ['asc','desc']
+        if (is_array($this->order) && count($this->order) > 0) {
+            $dirs = is_array($this->direction) ? $this->direction : [];
+            foreach ($this->order as $i => $field) {
+                $b->orderBy($field, $dirs[$i] ?? 'asc');
+            }
+        } elseif (is_string($this->order) && $this->order !== '') {
+            $b->orderBy($this->order, (string) $this->direction);
+        }
+    }
+
+    /** Nom de colonne qualifié ; ajoute la jointure quand le champ référence une autre table. */
+    protected function qualifiedField(BaseBuilder $b, string $field): string
+    {
+        $def = $this->defs[$field] ?? null;
+        if ($def !== null && isset($def->table[$field])) {
+            $this->_mode = 'join';
+            $b->join($def->table[$field], $this->table . '.' . $field . '=' . $def->table[$field] . '.' . $def->foreignKey[$field], 'left');
+
+            return $def->table[$field] . '.' . $def->foreignField[$field];
+        }
+
+        return $this->_mode === 'join' ? $this->table . '.' . $field : $field;
+    }
+
+    protected function applySearch(BaseBuilder $b): void
+    {
+        if ($this->global_search) {
+            $b->groupStart();
+            foreach ($this->autorized_fields_search as $key => $value) {
+                $col = $this->qualifiedField($b, $value);
+                if (! $key && is_array($this->filter) && count($this->filter)) {
+                    $b->like($col, $this->global_search);
+                } else {
+                    $b->orLike($col, $this->global_search);
+                }
+            }
+            $b->groupEnd();
+        }
+    }
+
+    protected function listFields(): string
+    {
+        if (! $this->autorized_fields) {
+            return '*';
+        }
+        $cols = [];
+        foreach ($this->autorized_fields as $field) {
+            $cols[] = $this->_mode === 'join' ? $this->table . '.' . $field : $field;
+        }
+
+        return implode(',', $cols);
+    }
+
+    /** Nombre total de lignes (filtre + recherche), mis en cache. */
+    public function get_pagination()
+    {
+        if (! $this->nb) {
+            $b = $this->tb();
+            $this->applyFilter($b);
+            $this->applySearch($b);
+            $this->nb = $b->select($this->table . '.' . $this->primaryKey)->get()->getNumRows();
+        }
+        $this->_debug_array[] = 'get_pagination : ' . $this->nb;
+
+        return $this->nb;
+    }
+
+    /** Page courante de la liste (filtre, recherche, tri, pagination). */
+    public function get()
+    {
+        $b = $this->tb();
+        $this->applyFilter($b);
+        $this->applySearch($b);
+        if ($this->per_page) {
+            if (! $this->page) {
+                $this->page = 1;
+            }
+            $b->limit((int) $this->per_page, ($this->page - 1) * $this->per_page);
+        }
+        $b->select($this->listFields());
+        $this->applyOrder($b);
+        $datas = $b->get()->getResult();
+        $this->log();
+
+        return $datas;
+    }
+
+    /** Comme get() mais sans LIMIT (export CSV). */
+    public function get_all_filtered()
+    {
+        $b = $this->tb();
+        $this->applyFilter($b);
+        $this->applySearch($b);
+        $b->select($this->listFields());
+        $this->applyOrder($b);
+        $datas = $b->get()->getResult();
+        $this->log();
+
+        return $datas;
+    }
+
+    /** Supprime plusieurs lignes ; retourne le nombre de lignes supprimées. */
+    public function delete_bulk(array $ids)
+    {
+        $ids = array_filter(array_map('intval', $ids));
+        if (empty($ids)) {
+            return 0;
+        }
+        $this->tb()->whereIn($this->primaryKey, $ids)->delete();
+        $this->log();
+
+        return $this->db->affectedRows();
+    }
+
+    /** Met à jour la ligne courante avec $this->datas (limitée aux champs autorisés). */
+    public function put($id = null)
+    {
+        foreach ($this->datas as $field => $data) {
+            if (! in_array($field, $this->autorized_fields, true)) {
+                unset($this->datas[$field]);
+            }
+        }
+        if ($id) {
+            $this->key_value = $id;
+        }
+        $this->tb()->where($this->primaryKey, $this->key_value)->update($this->datas);
+        $this->log();
+    }
+
+    /** Supprime la ligne $id (ou la ligne courante). */
+    public function delete($id = null, bool $purge = false)
+    {
+        $id ??= $this->key_value;
+        $this->tb()->whereIn($this->primaryKey, (array) $id)->delete();
+        $this->log();
+
+        return true;
+    }
+
+    // ------------------------------------------------------------------
+    // Accesseurs génériques
+    // ------------------------------------------------------------------
+
+    public function _set($field, $value)
+    {
+        $this->$field = $value;
+        if ($field === 'key_value') {
+            foreach ($this->defs as $obj) {
+                $obj->_set('parent_id', $value);
+            }
+        }
+    }
+
+    public function _get($field)
+    {
+        return $this->$field;
+    }
+
+    public function __destruct()
+    {
+        if ($this->_debug) {
+            echo debug($this->_debug_array, __FILE__);
+        }
+    }
 }
-
-/* End of file Core_model.php */
-/* Location: ./application/models/Core_model.php */

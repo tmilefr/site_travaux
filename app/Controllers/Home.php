@@ -4,16 +4,16 @@ namespace App\Controllers;
 
 use StdClass;
 
-class Home extends MY_Controller {
+class Home extends CrudController {
 
-	public function __construct(){
-		parent::__construct();
+	protected function boot(): void
+	{
 		$this->_controller_name = 'Home';  //controller name for routing
 		$this->_model_name 		= 'Acl_users_model';	   //DataModel
-		$this->title .= $this->lang->line($this->_controller_name);
+		$this->title .= tr($this->_controller_name);
 		$this->data_view['content'] = '';
 		$this->_set('_debug', FALSE);
-		$this->load->library('Acl');
+		
 
 		$this->LoadModel('Familys_model');
 		$this->LoadModel('Email_model');
@@ -37,10 +37,10 @@ class Home extends MY_Controller {
 
 		$captcha_error = '';
 		$login_error = '';
-		if($this->input->server('REQUEST_METHOD') == 'POST'){
-			if ($this->config->item('captcha')){ //TODO : mettre ça dans l'ACL
-				$this->{$this->_model_name}->_get('defs')['recaptchaResponse']->change_password = $this->input->post('g-recaptcha-response_check');
-				$captcha = json_decode($this->{$this->_model_name}->_get('defs')['recaptchaResponse']->PrepareForDBA($this->input->post("g-recaptcha-response")));
+		if ($this->request->is('post')){
+			if (config('Travaux')->captcha){ //TODO : mettre ça dans l'ACL
+				$this->{$this->_model_name}->_get('defs')['recaptchaResponse']->change_password = $this->request->getPost('g-recaptcha-response_check');
+				$captcha = json_decode($this->{$this->_model_name}->_get('defs')['recaptchaResponse']->PrepareForDBA($this->request->getPost("g-recaptcha-response")));
 				//echo '<pre>'.print_r($captcha, TRUE).'</pre>';
 			} else {
 				$captcha = new \stdClass();
@@ -49,20 +49,20 @@ class Home extends MY_Controller {
 			if (isset( $captcha->{'error-codes'}))
 				$captcha_error = implode('<br/>', $captcha->{'error-codes'});
 
-			if ($this->form_validation->run('Acl_users_model') == true AND isset($captcha) AND $captcha->success == true) {
-				$data = $this->input->post();
+			if ($this->runValidation('Acl_users_model') == true AND isset($captcha) AND $captcha->success == true) {
+				$data = $this->request->getPost();
 				/* on force le login en admin */
 				if ($data['login'] == 'admin' )
 					$data['type_cnx'] = 'NORM';
 				$login_error = $this->acl->CheckLogin($data);
-				//$this->session->set_flashdata('login_error', $this->acl->CheckLogin($data));
+				//$this->session->setFlashdata('login_error', $this->acl->CheckLogin($data));
 				if ($this->acl->IsLog()){ 
-					ci_redirect('/Home');
+					$this->goTo('/Home');
 				}
 			}	
         }
 		//BUG d'appel à l'objet, compensation
-		$this->{$this->_model_name}->_get('defs')['recaptchaResponse']->_set('captcha',  $this->config->item('captcha') );
+		$this->{$this->_model_name}->_get('defs')['recaptchaResponse']->_set('captcha',  config('Travaux')->captcha );
 		$this->data_view['required_field'] = $this->{$this->_model_name}->_get('required');
 		$this->data_view['captcha_error'] = $captcha_error;
 		$this->data_view['login_error'] = $login_error;
@@ -83,7 +83,7 @@ class Home extends MY_Controller {
 		
 		//compte de type admin
 		if ($this->acl->getType()  == "sys"){
-			ci_redirect('Acl_users_controller/edit/'.$this->acl->getUserId());
+			$this->goTo('Acl_users_controller/edit/'.$this->acl->getUserId());
 		}
 		$this->data_view['msg'] = '';
 		$this->LoadModel('Familys_model'); //loading Infos_model ELements
@@ -98,8 +98,8 @@ class Home extends MY_Controller {
 			$this->data_view['id'] = $id;
 		}		
 
-		if ($this->form_validation->run('Familys_model') === FALSE){
-			$this->_debug(validation_errors(),'edit','form_validation',__FILE__,__LINE__);
+		if ($this->runValidation('Familys_model') === FALSE){
+			$this->_debug(implode(' ', service('validation')->getErrors()),'edit','form_validation',__FILE__,__LINE__);
 		} else {
 
 			//suppression du champ password pour éviter le double PrepareForDBA de l'objet password;
@@ -109,20 +109,20 @@ class Home extends MY_Controller {
 					unset($override_fields[$key]);
 			}
 			$datas = $this->_ProcessPost('Familys_model',$override_fields);
-			$this->data_view['msg'] = $this->lang->line('SAVED_OK');
+			$this->data_view['msg'] = tr('SAVED_OK');
 		}
 		
 		$this->data_view['required_field'] = $this->Familys_model->_get('required');
 		$this->_set('view_inprogress','edition/Account_form.php');
-		$routes = $this->session->userdata('routes');
+		$routes = $this->session->get('routes');
 		$this->data_view['routes_history'] = $routes;
 		$this->render_view();
 	}
 
 	
 	public function logout(){
-		$this->session->sess_destroy();
-        ci_redirect('/Home/login');
+		$this->session->destroy();
+        $this->goTo('/Home/login');
 	}
 
 	public function index()
@@ -150,7 +150,7 @@ class Home extends MY_Controller {
 	public function no_right()
 	{
 		$this->_set('view_inprogress','unique/no_right');
-		$routes = $this->session->userdata('routes');
+		$routes = $this->session->get('routes');
 		$this->data_view['routes_history'] = $routes;
 		$this->render_view();
 	}

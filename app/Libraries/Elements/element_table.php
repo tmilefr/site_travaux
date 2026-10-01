@@ -24,35 +24,29 @@ class element_table extends element
 
 	public function __construct(){
 		parent::__construct();
-		$this->CI =& get_instance();
 		if (isset($this->RenderTools))
 		{
 			$this->RenderTools->_SetHead('assets/js/dynamic_row.js','js');
 		}
-		$this->_load_model();
 	}	
 
-	private function _load_model(){
-		$this->CI->load->model($this->model);
-	}
-
 	public function AfterExec($datas){
-		$this->CI->{$this->model}->SetLink($this->foreignkey, $datas['id']);
+		$this->mdl()->SetLink($this->foreignkey, $datas['id']);
 	}
 
 	public function PrepareForDBA($value){
 		//echo debug($_POST);
-		//$this->CI->{$this->model}->_set('debug',TRUE);
+		//$this->mdl()->_set('debug',TRUE);
 
-		$id_parent = $this->CI->render_object->_get('id'); //PUSH data in object instead ?
+		$id_parent = $this->render_object->_get('id'); //PUSH data in object instead ?
 		$obj = [];
 		$datas = [];
 		//return json_encode($obj);
-		if (method_exists($this->CI->{$this->model},'DeleteLink'))
-			$this->CI->{$this->model}->DeleteLink($this->foreignkey, $id_parent);
+		if (method_exists($this->mdl(),'DeleteLink'))
+			$this->mdl()->DeleteLink($this->foreignkey, $id_parent);
 
-		foreach($this->CI->{$this->model}->_get('defs') AS $field=>$defs){
-			$datas[$field] = $this->CI->input->post($field.'_'.$this->model);
+		foreach($this->mdl()->_get('defs') AS $field=>$defs){
+			$datas[$field] = $this->post($field.'_'.$this->model);
 		}	
 
 		/*if ($this->model == 'Trombi_model'){
@@ -65,7 +59,7 @@ class element_table extends element
 		foreach($datas[$this->ref] AS $key=>$value){
 			if ($value != '...'){
 				$lgn = new \stdClass();
-				foreach($this->CI->{$this->model}->_get('defs') AS $field=>$defs){
+				foreach($this->mdl()->_get('defs') AS $field=>$defs){
 					$lgn->{$field} = $datas[$field][$key];
 				}
 				if ($lgn->{$this->ref}){
@@ -74,7 +68,7 @@ class element_table extends element
 					} else {
 						$lgn->{$this->foreignkey} = 99999; //todo : find best way ?
 					}					
-					$this->CI->{$this->model}->post($lgn);
+					$this->mdl()->post($lgn);
 					$obj[] = $lgn->{$this->ref};
 				}
 			}
@@ -83,20 +77,20 @@ class element_table extends element
 	}
 
 	public function RenderFormElement(){
-		//return $this->CI->bootstrap_tools->input_text($this->name, $this->CI->lang->line($this->name) , $this->value);
-		$id = $this->CI->render_object->_get('id');
+		//return $this->RenderTools->input_text($this->name, tr($this->name) , $this->value);
+		$id = $this->render_object->_get('id');
 		$ref = [];
 		$table = '<div class="Dynamic_row" id="DR_'.$this->name.'">';
 		if ($id){
-			$this->CI->{$this->model}->_set('filter', [$this->foreignkey => $id ]);
-			$this->CI->{$this->model}->_set('order', $this->foreignkey);
-			$datas = $this->CI->{$this->model}->get_all();
+			$this->mdl()->_set('filter', [$this->foreignkey => $id ]);
+			$this->mdl()->_set('order', $this->foreignkey);
+			$datas = $this->mdl()->get_all();
 			if (count($datas)){
 				foreach($datas AS $key => $data){
 					$table .= '<div class="input-group mb-3">';
-					foreach($this->CI->{$this->model}->_get('defs') AS $field=>$defs){
-						//echo debug($this->CI->render_object->_get('form_mod'), __file__.' '.__line__);
-						$defs->_set('form_mod', $this->CI->render_object->_get('form_mod'));
+					foreach($this->mdl()->_get('defs') AS $field=>$defs){
+						//echo debug($this->render_object->_get('form_mod'), __file__.' '.__line__);
+						$defs->_set('form_mod', $this->render_object->_get('form_mod'));
 						$defs->_set('value', $data->{$field});
 						$defs->_set('parent_id', $data->id);
 						
@@ -110,12 +104,12 @@ class element_table extends element
 							$table .= $defs->RenderFormElement();
 						}				
 					}
-					$table .= '<div class="input-group-append"><button id="removeRow'.$data->id.'" type="button" class="removeRow btn btn-danger">'.$this->CI->lang->line('RemoveRow').'</button></div></div>';
+					$table .= '<div class="input-group-append"><button id="removeRow'.$data->id.'" type="button" class="removeRow btn btn-danger">'.tr('RemoveRow').'</button></div></div>';
 				}
 			}
 		}
 		$table .= '<div class="d-none" id="model'.$this->name.'"><div class="input-group mb-3">';
-		foreach($this->CI->{$this->model}->_get('defs') AS $field=>$defs){
+		foreach($this->mdl()->_get('defs') AS $field=>$defs){
 			$defs->_set('value', '');
 			$defs->set_name('_'.$this->model);
 			$defs->SetMultiple(TRUE);
@@ -127,25 +121,24 @@ class element_table extends element
 				$table .= $defs->RenderFormElement();
 			}			
 		}
-		$table .= '<div class="input-group-append"><button id="removeRow" type="button" class="removeRow btn btn-danger">'.$this->CI->lang->line('RemoveRow').'</button></div></div></div>';
-		$table .= '</div><button type="button" ref="'.$this->name.'" class="addRow btn btn-info">'.$this->CI->lang->line('AddRow').'</button> '.$this->CI->lang->line($this->name.'_AddRow').'';
-		return form_hidden($this->name , $this->value ).$table;
+		$table .= '<div class="input-group-append"><button id="removeRow" type="button" class="removeRow btn btn-danger">'.tr('RemoveRow').'</button></div></div></div>';
+		$table .= '</div><button type="button" ref="'.$this->name.'" class="addRow btn btn-info">'.tr('AddRow').'</button> '.tr($this->name.'_AddRow').'';
+		return form_hidden($this->name, (string) $this->value).$table;
 
 	}
 
 	//TODO : pilote render mode ( json, html, raw ...)	
 	public function Render($format = false){
-		$this->_load_model();
 		$tmp = $this->value;
 		if($this->parent_id){
-			if (isset($this->CI->{$this->model})){
-				$this->CI->{$this->model}->_set('filter', [$this->foreignkey => $this->parent_id ]);
-				$this->CI->{$this->model}->_set('order', $this->foreignkey);
-				$datas = $this->CI->{$this->model}->get_all();
+			if ($this->model){
+				$this->mdl()->_set('filter', [$this->foreignkey => $this->parent_id ]);
+				$this->mdl()->_set('order', $this->foreignkey);
+				$datas = $this->mdl()->get_all();
 				$dts = [];
 				foreach($datas AS $data){
 					$lgn = [];
-					foreach($this->CI->{$this->model}->_get('defs') AS $field=>$defs){
+					foreach($this->mdl()->_get('defs') AS $field=>$defs){
 						$obj = new \stdClass();
 						$obj->list = $defs->_get('list');
 						$obj->raw = $data->{$field};
@@ -196,7 +189,6 @@ class element_table extends element
 	 */
     public function __destruct()
     {
-        unset($this->CI);
     }
 	
 	/**

@@ -12,9 +12,9 @@
             <div class="grid grid_12">
                 <div class="nicdark_space100"></div>
                 <div class="nicdark_space100"></div>
-                <h1 class="white subtitle"><?php echo ci_lang('PUBLICS_FILES'); ?></h1>
+                <h1 class="white subtitle"><?php echo tr('PUBLICS_FILES'); ?></h1>
                 <div class="nicdark_space10"></div>
-                <h3 class="subtitle white"><?php echo ci_lang('PUBLICS_FILES_subtitle'); ?></h3>
+                <h3 class="subtitle white"><?php echo tr('PUBLICS_FILES_subtitle'); ?></h3>
                 <div class="nicdark_space20"></div>
                 <div class="nicdark_divider left big"><span class="nicdark_bg_white nicdark_radius"></span></div>
                 <div class="nicdark_space40"></div>
@@ -44,7 +44,7 @@
                 <table class="nicdark_table extrabig nicdark_bg_yellow nicdark_radius ">
                     <thead class="nicdark_border_yellow">
                         <tr>
-                            <td class="white"><h4 class="white"><?php echo LANG('DOCUMENTS');?></h4></td>
+                            <td class="white"><h4 class="white"><?php echo tr('DOCUMENTS');?></h4></td>
                             <td class="nicdark_width_percentage20"></td>
                         </tr>
                     </thead>
@@ -53,8 +53,8 @@
                         if (is_array($pvca) AND count($pvca)){
                             foreach($pvca AS $file){ ?>                            
                             <tr>
-                                    <td><p><?php echo $this->render_object->RenderElement('memo',$file->memo, null, 'Files_model'); ?></p></td>
-                                    <td><p><a class="grey nicdark_btn nicdark_bg_grey2  medium nicdark_radius nicdark_shadow" target='_new' href="<?php echo $this->render_object->RenderElement('path',$file->path, null, 'Files_model'); ?>"><i class="icon-download-outline"></i> <?php echo $this->render_object->RenderElement('name',$file->name, null, 'Files_model'); ?></a></p></td>
+                                    <td><p><?php echo $render_object->RenderElement('memo',$file->memo, null, 'Files_model'); ?></p></td>
+                                    <td><p><a class="grey nicdark_btn nicdark_bg_grey2  medium nicdark_radius nicdark_shadow" target='_new' href="<?php echo $render_object->RenderElement('path',$file->path, null, 'Files_model'); ?>"><i class="icon-download-outline"></i> <?php echo $render_object->RenderElement('name',$file->name, null, 'Files_model'); ?></a></p></td>
                                 </tr>
                             <?php
                             }

@@ -12,14 +12,13 @@ use DateTime;
  */
 class CantineGeneration_model extends Core_model {
 
-    function __construct(){
-        parent::__construct();
-        $this->_set('table' , 'cantine_generation');
-        $this->_set('key'   , 'id');
-        $this->_set('order' , 'created');
-        $this->_set('direction' , 'desc');
-        $this->_set('json'  , 'CantineGeneration.json');
-    }
+	protected $table = 'cantine_generation';
+	protected $primaryKey = 'id';
+	protected $order = 'created';
+	protected $direction = 'desc';
+	protected $json = 'CantineGeneration.json';
+
+
 
     /**
      * Retourne les sessions cantine à venir (et celles du mois en cours, même passées),
@@ -37,23 +36,14 @@ class CantineGeneration_model extends Core_model {
             $date_from = date('Y-m-01');
         }
 
-        $rows = $this->db->select('
+        $rows = $this->db->table('travaux t')->select('
                 t.id,
                 t.date_travaux,
                 t.heure_deb_trav,
                 t.heure_fin_trav,
                 t.nb_inscrits_max,
                 (SELECT COUNT(*) FROM infos i WHERE i.id_travaux = t.id) AS nb_inscrits
-            ', false)
-            ->from('travaux t')
-            ->where('t.type', 'can')
-            ->where('t.accespar', $ecole)
-            ->where('t.civil_year', $civil_year)
-            ->where('t.archived !=', 1)
-            ->where('t.date_travaux >=', $date_from)
-            ->order_by('t.date_travaux','ASC')
-            ->order_by('t.heure_deb_trav','ASC')
-            ->get()->result();
+            ', false)->where('t.type', 'can')->where('t.accespar', $ecole)->where('t.civil_year', $civil_year)->where('t.archived !=', 1)->where('t.date_travaux >=', $date_from)->orderBy('t.date_travaux','ASC')->orderBy('t.heure_deb_trav','ASC')->get()->getResult();
         $by_date = [];
         foreach($rows AS $r){
             $by_date[$r->date_travaux][] = $r;
@@ -96,18 +86,12 @@ class CantineGeneration_model extends Core_model {
                 $cfg = $config[$id_day];
 
                 // Vérification qu'il n'existe pas déjà
-                $existing = $this->db->select('id')
-                    ->from('travaux')
-                    ->where('date_travaux', $date)
-                    ->where('type', 'can')
-                    ->where('accespar', $ecole)
-                    ->where('civil_year', $civil_year)
-                    ->get()->row();
+                $existing = $this->db->table('travaux')->select('id')->where('date_travaux', $date)->where('type', 'can')->where('accespar', $ecole)->where('civil_year', $civil_year)->get()->getRow();
 
                 if ($existing){
                     $result->nb_skipped++;
                 } else {
-                    $this->db->insert('travaux', [
+                    $this->db->table('travaux')->insert([
                         'date_travaux'     => $date,
                         'heure_deb_trav'   => !empty($cfg->heure_deb) ? $cfg->heure_deb : '11:45',
                         'heure_fin_trav'   => !empty($cfg->heure_fin) ? $cfg->heure_fin : '13:30',
@@ -135,7 +119,7 @@ class CantineGeneration_model extends Core_model {
         }
 
         // Log de la génération
-        $this->db->insert($this->table, [
+        $this->db->table($this->table)->insert([
             'date_deb'   => $date_deb,
             'date_fin'   => $date_fin,
             'ecole'      => $ecole,
@@ -152,26 +136,14 @@ class CantineGeneration_model extends Core_model {
      * Récupère les dernières générations effectuées, pour affichage dans la vue config.
      */
     function GetLastGenerations($ecole, $civil_year, $limit = 5){
-        return $this->db->select('*')
-            ->from($this->table)
-            ->where('ecole', $ecole)
-            ->where('civil_year', $civil_year)
-            ->order_by('created','DESC')
-            ->limit($limit)
-            ->get()->result();
+        return $this->db->table($this->table)->select('*')->where('ecole', $ecole)->where('civil_year', $civil_year)->orderBy('created','DESC')->limit($limit)->get()->getResult();
     }
 
     /**
      * Compte les sessions cantine à venir pour une école (non passées, non archivées).
      */
     function CountUpcoming($ecole, $civil_year){
-        return (int) $this->db->from('travaux')
-            ->where('type', 'can')
-            ->where('accespar', $ecole)
-            ->where('civil_year', $civil_year)
-            ->where('date_travaux >=', date('Y-m-d'))
-            ->where('archived !=', 1)
-            ->count_all_results();
+        return (int) $this->db->table('travaux')->where('type', 'can')->where('accespar', $ecole)->where('civil_year', $civil_year)->where('date_travaux >=', date('Y-m-d'))->where('archived !=', 1)->countAllResults();
     }
 
     private function _frWeekday(DateTime $d){

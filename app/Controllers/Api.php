@@ -2,152 +2,108 @@
 
 namespace App\Controllers;
 
-use StdClass;
+use CodeIgniter\HTTP\ResponseInterface;
+use Config\Database;
 
+/**
+ * API REST (JSON) : e-mails, familles, modèles de texte, login JWT, maintenance des tables.
+ *
+ * Chaque action renvoie un objet Response (jamais d'exit) ; les en-têtes CORS sont posés par cors().
+ */
+class Api extends CrudController
+{
 
-class Api extends MY_Controller {
+	/** Pas d'actions CRUD génériques pour ce contrôleur. */
+	protected $_expose_crud = false;
 
-	public $dbforge;
 	public $SQL;
 
-	public function __construct(){
-		parent::__construct();
-		$this->_api = TRUE; //declaration du mode api sur ce controlleur, impact sur MY_Exceptions.php
+	protected function boot(): void
+	{
+		$this->_api = TRUE; //déclaration du mode api sur ce contrôleur
 	}
-	
+
 	/**
-	 * Set response of API
-	 * @param array $AllowMethods 
-	 * @return void 
+	 * Pose les en-têtes CORS selon la méthode HTTP.
+	 *
+	 * @param array $allowMethods méthodes acceptées par l'action
+	 * @return ResponseInterface|null une réponse à renvoyer immédiatement
+	 *                                (pré-requête OPTIONS ou méthode refusée), sinon null
 	 */
-	private function _SetHeaders($AllowMethods = ['POST','GET','DELETE','PUT','PATCH','OPTIONS']){
-		$notallowed = TRUE;
-		switch($_SERVER['REQUEST_METHOD'])
-		{
-			case 'OPTIONS': //need for js access
-				if (in_array('OPTIONS', $AllowMethods )){
-					header('Access-Control-Allow-Origin: *');
-					header('Access-Control-Allow-Credentials: true');
-					header('Access-Control-Allow-Methods: '.implode(',',$AllowMethods));
-					header('Access-Control-Allow-Headers: token, Content-Type');
-					header('Access-Control-Max-Age: 1728000');
-					header('Content-Length: 0');
-					header('Content-Type: text/plain');
-					die();
-				} 
-			break;
-			case 'POST':
-				if (in_array('POST',$AllowMethods )){
-					header('Access-Control-Allow-Origin: *');
-					header('Access-Control-Allow-Methods:'.implode(',',$AllowMethods));
-					header('Access-Control-Allow-Headers: Content-Type, Authorization');
-					header('Access-Control-Allow-Credentials: true');
-					header("Content-Type: application/json");
-					$notallowed = FALSE;
-				}				
-			break;
-			case 'GET':
-				if (in_array('GET',$AllowMethods )){
-					header('Access-Control-Allow-Origin: *');
-					header('Access-Control-Allow-Methods:'.implode(',',$AllowMethods));
-					header('Access-Control-Allow-Headers: Content-Type, Authorization');
-					header('Access-Control-Allow-Credentials: true');
-					header("Content-Type: application/json");
-					$notallowed = FALSE;
-				}				
-			break;
-			case 'PUT':
-				if (in_array('PUT',$AllowMethods )){
-					header('Access-Control-Allow-Origin: *');
-					header('Access-Control-Allow-Methods:'.implode(',',$AllowMethods));
-					header('Access-Control-Allow-Headers: Content-Type, Authorization');
-					header('Access-Control-Allow-Credentials: true');
-					header("Content-Type: application/json");
-					$notallowed = FALSE;
-				}				
-			break;
-			case 'PATCH':
-				if (in_array('PATCH',$AllowMethods )){
-					header('Access-Control-Allow-Origin: *');
-					header('Access-Control-Allow-Methods:'.implode(',',$AllowMethods));
-					header('Access-Control-Allow-Headers: Content-Type, Authorization');
-					header('Access-Control-Allow-Credentials: true');
-					header("Content-Type: application/json");
-					$notallowed = FALSE;
-				}				
-			break;	
-			case 'DELETE':
-				if (in_array('DELETE',$AllowMethods )){
-					header('Access-Control-Allow-Origin: *');
-					header('Access-Control-Allow-Methods:'.implode(',',$AllowMethods));
-					header('Access-Control-Allow-Headers: Content-Type, Authorization');
-					header('Access-Control-Allow-Credentials: true');
-					header("Content-Type: application/json");
-					$notallowed = FALSE;
-				}				
-			break;												
-		}
-		if ($notallowed ){
-			$this->_renderJson(405,["message" => "Method Not Allowed"]);
+	private function cors(array $allowMethods = ['POST','GET','DELETE','PUT','PATCH','OPTIONS']): ?ResponseInterface
+	{
+		$method = strtoupper($this->request->getMethod());
+
+		if (! in_array($method, $allowMethods, true)) {
+			return $this->_renderJson(405, ["message" => "Method Not Allowed"]);
 		}
 
+		$this->response->setHeader('Access-Control-Allow-Origin', '*');
+		$this->response->setHeader('Access-Control-Allow-Credentials', 'true');
+
+		if ($method === 'OPTIONS') { //nécessaire pour l'accès JS
+			return $this->response
+				->setHeader('Access-Control-Allow-Methods', implode(',', $allowMethods))
+				->setHeader('Access-Control-Allow-Headers', 'token, Content-Type, Authorization')
+				->setHeader('Access-Control-Max-Age', '1728000')
+				->setContentType('text/plain')
+				->setBody('');
+		}
+
+		$this->response->setHeader('Access-Control-Allow-Methods', implode(',', $allowMethods));
+		$this->response->setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+		return null;
 	}
 
 	/**
 	 * Entry Point FOR Templates (exemple of 'correct' implement of API)
 	 * Don't forget set rules
-	 * And manage Roles 
-	 * 
-	 * @param mixed $id 
-	 * @return void 
+	 * And manage Roles
+	 *
+	 * @param mixed $id
 	 */
 	public function Templates($id = null ){
-		$this->_SetHeaders(['GET','OPTIONS']);
+		if ($early = $this->cors(['GET','OPTIONS'])) return $early;
 		//ONLY GET
-		$this->_getObject('Templates_model', $id);
+		return $this->_getObject('Templates_model', $id);
 	}
-
 
 	/**
 	 * Entry Point FOR Familys (exemple of 'correct' implement of API)
 	 * Don't forget set rules @Acl_controllers_controller/edit/14 [14 = id of api controller]
 	 * And manage Roles @Acl_roles_controller/set_rules/1 [1 = id of admin role]
-	 * 
-	 * @param mixed $id 
-	 * @return void 
+	 *
+	 * @param mixed $id
 	 */
 	public function Familys($id = null ){
-		$this->_SetHeaders(['GET','OPTIONS']);
+		if ($early = $this->cors(['GET','OPTIONS'])) return $early;
 		//ONLY GET
-		$this->_getObject('Familys_model', $id);
+		return $this->_getObject('Familys_model', $id);
 	}
 
-
 	public function GetTables(){
-		$this->_SetHeaders(['GET','OPTIONS']);
-		$working_dir = APPPATH.'Models/';
-		$models = scandir($working_dir);
+		if ($early = $this->cors(['GET','OPTIONS'])) return $early;
 
+		$models = scandir(APPPATH.'Models/');
 		$models = array_diff($models , array('..', '.', 'json','index.html','Core_model.php','GenericSql_model.php'));
 
-		$this->_renderJson(200, $models);
+		return $this->_renderJson(200, array_values($models));
 	}
 
 	/**
-	 * Entry Point FOR Familys (exemple of 'correct' implement of API)
-	 * Don't forget set rules @Acl_controllers_controller/edit/14 [14 = id of api controller]
-	 * And manage Roles @Acl_roles_controller/set_rules/1 [1 = id of admin role]
-	 * 
-	 * @param mixed $id 
-	 * @return void 
+	 * Crée ou met à jour la table d'un modèle à partir de la définition "dbforge" de son schéma JSON.
+	 *
+	 * @param string $model_name
 	 */
 	public function SetTable($model_name = 'Sendmail_model'){
-		$this->_SetHeaders(['GET','OPTIONS']);
-		$this->load->dbforge();
-		$this->load->model('GenericSql_model','SQL');
+		if ($early = $this->cors(['GET','OPTIONS'])) return $early;
+
 		$this->_model_name = $model_name;
-		$this->load->model($this->_model_name);
-		// Préparation pour DB forge => TODO : extend db forge ?
+		$this->LoadModel($this->_model_name);
+		$forge_db = Database::forge();
+
+		// Préparation pour DB forge
 		$defs = $this->{$this->_model_name}->_get('defs');
 		$forge = [];
 		foreach($defs  AS $key=>$data){
@@ -160,158 +116,130 @@ class Api extends MY_Controller {
 			$forge[$key] = $def;
 		}
 
-		$sql = $this->SQL->exec("SHOW FIELDS FROM ".$this->{$this->_model_name}->_get('table').";");
-		if (!is_object($sql)){
-			$error = get_instance()->db->error();
-			switch($error['code']){
-				case 1146 : //création de la table puis création des champs
-					$attributes = array('ENGINE' => 'InnoDB');
-					$this->dbforge->add_field($forge);
-					foreach($forge AS $field=>$defs){
-						if (isset($defs['auto_increment']) && $defs['auto_increment'] == true){
-							$this->dbforge->add_key($field, TRUE);
-						}
-					}
-					$this->dbforge->create_table($this->{$this->_model_name}->_get('table'), FALSE,  $attributes);
-				break;
-				default:
-					$this->_renderJson(500, $error);
-					die();
+		$table = $this->{$this->_model_name}->_get('table');
+		if (! $this->db->tableExists($table)) { //création de la table puis création des champs
+			$forge_db->addField($forge);
+			foreach($forge AS $field=>$def){
+				if (isset($def['auto_increment']) && $def['auto_increment'] == true){
+					$forge_db->addKey($field, TRUE);
+				}
 			}
+			$forge_db->createTable($table, FALSE, ['ENGINE' => 'InnoDB']);
 		} else { //juste mise à jour des champs au besoin
-			$this->dbforge->modify_column($this->{$this->_model_name}->_get('table'), $forge);
+			$forge_db->modifyColumn($table, $forge);
 		}
-		
+
 		if (!count($forge))
-			$this->_renderJson(204, ['message'=>'Not Found']);
+			return $this->_renderJson(204, ['message'=>'Not Found']);
 
-
-
-		$this->_renderJson(200, $forge);
-		
+		return $this->_renderJson(200, $forge);
 	}
 
-	
 	/**
 	 * WS de soumission d'e-mail
-	 * Un pool d'envois en cron met à jour le statut de celui-ci 
-	 * @param mixed $id 
-	 * @return void 
-	 * @throws RuntimeException 
+	 * Un pool d'envois en cron met à jour le statut de celui-ci
+	 *
+	 * @param mixed $id
 	 */
 	public function mails($id = null){
-		$this->_SetHeaders(['POST','PUT','GET','DELETE','OPTIONS']);
-		
+		if ($early = $this->cors(['POST','PUT','GET','DELETE','OPTIONS'])) return $early;
+
 		$this->LoadModel('Sendmail_statut_model');
 		$this->LoadModel('Sendmail_model');
+		$this->_model_name = 'Sendmail_model';
 		$this->render_object->_set('_render_model','json');
 
-		switch($_SERVER['REQUEST_METHOD'])
+		$method = strtoupper($this->request->getMethod());
+		$input  = $this->request->getJSON();
+
+		switch($method)
 		{
 			case 'PUT':
-				//TODO : block PUT if STATUS IS SENDED nL 26/06/2023 
-				$input = json_decode(file_get_contents("php://input"));
+				//TODO : block PUT if STATUS IS SENDED nL 26/06/2023
 				//dans les données plutot que sur le path
 				if (!$id  && isset($input->id))
 					$id = $input->id;
 
-				if ($id){
-					
-					//STD CLass to ARRAY;
-					$sendmail = [];
-					foreach($input AS $field=>$value){
-						$sendmail[$field] = $value;
-					}
-					//validation des données
-					$this->form_validation->set_data($sendmail);
-
-					if ($this->form_validation->run($this->_model_name) === FALSE){
-						echo $this->_renderJson(400, validation_errors('{','}'));
-						die();
-					} else {
-						$sendmail['updated'] = date('Y-m-d h:i:s');
-						$this->{$this->_model_name}->_set('key_value', $id);	
-						$this->{$this->_model_name}->_set('datas', $sendmail);
-						$this->{$this->_model_name}->put();
-
-						$this->_renderJson(202 ,["id" => $id,'last_query'=>$this->{$this->_model_name}->_get('_debug_array')]);
-					}
-				} else {
-					$this->_renderJson(400, ['message'=>'id est requis ']);
-					die();
+				if (!$id){
+					return $this->_renderJson(400, ['message'=>'id est requis ']);
 				}
-			break;			
-			case 'POST':
-				$input = json_decode(file_get_contents("php://input"));
-				//STD CLass to ARRAY;
-				$sendmail = [];
-				foreach($input AS $field=>$value){
-					$sendmail[$field] = $value;
-				}
+
+				$sendmail = (array) $input;
 				//validation des données
-				$this->form_validation->set_data($sendmail);
-
-				if ($this->form_validation->run($this->_model_name) === FALSE){
-					$this->_renderJson(400, validation_errors('{','}'));
-					die();
-				} else {
-					$sendmail['created'] = date('Y-m-d h:i:s');
-					$id = $this->{$this->_model_name}->post($sendmail);
-					/* Init E-mail Statut  */
-					$statut = [];
-					$statut['id_sen'] = $id;
-					$statut['date'] = date('Y-m-d H:i:s');
-					$statut['statut'] = 0; //nouveau
-					$statut['created'] = date('Y-m-d h:i:s');
-					$id = $this->Sendmail_statut_model->post($statut);
-
-					$this->_renderJson(201 ,["id" => $id]);
+				if ($this->runValidation($this->_model_name, $sendmail) === FALSE){
+					return $this->_renderJson(400, ['message' => implode(' ', service('validation')->getErrors())]);
 				}
-			break;
+				$sendmail['updated'] = date('Y-m-d H:i:s');
+				$this->{$this->_model_name}->_set('key_value', $id);
+				$this->{$this->_model_name}->_set('datas', $sendmail);
+				$this->{$this->_model_name}->put();
+
+				return $this->_renderJson(202 ,["id" => $id,'last_query'=>$this->{$this->_model_name}->_get('_debug_array')]);
+
+			case 'POST':
+				$sendmail = (array) $input;
+				//validation des données
+				if ($this->runValidation($this->_model_name, $sendmail) === FALSE){
+					return $this->_renderJson(400, ['message' => implode(' ', service('validation')->getErrors())]);
+				}
+				$sendmail['created'] = date('Y-m-d H:i:s');
+				$id = $this->{$this->_model_name}->post($sendmail);
+				/* Init E-mail Statut  */
+				$statut = [];
+				$statut['id_sen'] = $id;
+				$statut['date'] = date('Y-m-d H:i:s');
+				$statut['statut'] = 0; //nouveau
+				$statut['created'] = date('Y-m-d H:i:s');
+				$id = $this->Sendmail_statut_model->post($statut);
+
+				return $this->_renderJson(201 ,["id" => $id]);
+
 			case 'GET':
 				//version standard de l'exposition
-				$this->_getObject($this->_model_name, $id);
-			break;
+				return $this->_getObject($this->_model_name, $id);
+
 			case 'DELETE':
-				$input = json_decode(file_get_contents("php://input"));
 				//dans les donnes plutot que sur le path
 				if (!$id  && isset($input->id))
 					$id = $input->id;
-				if ($id){
-					$this->{$this->_model_name}->_set('key_value',$id);
-					$dba_data = $this->{$this->_model_name}->delete();
-					$this->_renderJson(200, $dba_data );
-				} else {
-					$this->_renderJson(400, ['message'=>'id est requis ']);
-					die();
+				if (!$id){
+					return $this->_renderJson(400, ['message'=>'id est requis ']);
 				}
-			break;
+				$this->{$this->_model_name}->delete($id);
+
+				return $this->_renderJson(200, ['id' => $id]);
 		}
+
+		return $this->_renderJson(405, ["message" => "Method Not Allowed"]);
 	}
-	
 
 	public function logout(){
-		$this->session->sess_destroy();
-		$this->_renderJson(401 ,["message" => "Good Bye"]);
-		die;
+		$this->session->destroy();
+
+		return $this->_renderJson(401 ,["message" => "Good Bye"]);
 	}
 
+	/**
+	 * Connexion API : retourne un JWT.
+	 * Corps JSON : login, password, type_cnx (NORM | DELTA).
+	 */
 	public function login(){
-		$this->_SetHeaders(['POST','OPTIONS']);
-		$input = json_decode(file_get_contents("php://input")); //TODO check codignter for input use instead
+		if ($early = $this->cors(['POST','OPTIONS'])) return $early;
+
+		$input = $this->request->getJSON();
 
 		$data = [];
-		$data['login'] = $input->login;
-		$data['password'] = $input->password;
-		$data['api-key'] = $input->{'api-key'};
-		$data['type_cnx'] = $input->{'type_cnx'};
+		$data['login']    = $input->login ?? '';
+		$data['password'] = $input->password ?? '';
+		$data['api-key']  = $input->{'api-key'} ?? '';
+		$data['type_cnx'] = $input->type_cnx ?? 'NORM';
 
-		$usercheck = $this->acl->CheckLogin($data);
-		if (!$usercheck || !$usercheck->autorize){
-			$this->_renderJson(403,["message" => "Forbiden"]);
-			die;
+		$usercheck = service('auth')->Login($data);
+		if (empty($usercheck->autorize)){
+			return $this->_renderJson(403,["message" => "Forbiden"]);
 		}
-		$data =	array(
+
+		return $this->_renderJson(200, array(
 			"message" => "Successful login.",
 			"jwt" => $usercheck->token,
 			"id" => $usercheck->id,
@@ -319,43 +247,39 @@ class Api extends MY_Controller {
 			"type" => $usercheck->type,
 			"expireAt" => $usercheck->expireAt,
 			"expireAtRender" => date('Y-m-d H:i:s', $usercheck->expireAt)
-		);
-		$this->_renderJson(200, $data);
+		));
 	}
-	
+
 	/**
-	 * Simple GET METHOD JS output
-	 * @param mixed $_model_name 
-	 * @param mixed $id 
-	 * @return void 
-	 * @throws RuntimeException 
+	 * Simple GET METHOD JSON output
+	 *
+	 * @param mixed $_model_name
+	 * @param mixed $id
 	 */
 	private function _getObject($_model_name = null ,$id = null){
 		$this->_model_name = $_model_name;
 		$this->LoadModel($this->_model_name);
 		$this->render_object->_set('_render_model','json');
-		header("Content-Type: application/json");
 		if ($id){
 			$this->{$this->_model_name}->_set('key_value',$id);
 			$dba_data = $this->{$this->_model_name}->get_one();
 			if (!$dba_data){
-				$this->_renderJson(204, ['message'=>'Not Found']);
-				die();
+				return $this->_renderJson(204, ['message'=>'Not Found']);
 			}
-			
-			$this->_renderJson(200, $this->_set_render($dba_data));
-		} else {
-			$datas = $this->{$this->_model_name}->get_all();
-			if (!count($datas))
-				$this->_renderJson(204, ['message'=>'Not Found']);
-			$response = new \stdClass();
-			$response->raw = $datas;
-			$resp = [];
-			foreach($datas AS $key=>$data){
-				$resp[$key] = $this->_set_render($data);
-			}
-			$this->_renderJson(200, $resp);
+
+			return $this->_renderJson(200, $this->_set_render($dba_data));
 		}
+
+		$datas = $this->{$this->_model_name}->get_all();
+		if (!count($datas))
+			return $this->_renderJson(204, ['message'=>'Not Found']);
+
+		$resp = [];
+		foreach($datas AS $key=>$data){
+			$resp[$key] = $this->_set_render($data);
+		}
+
+		return $this->_renderJson(200, $resp);
 	}
 
 	function _set_render($data){
@@ -368,7 +292,4 @@ class Api extends MY_Controller {
 		}
 		return $res;
 	}
-
 }
-
-?>

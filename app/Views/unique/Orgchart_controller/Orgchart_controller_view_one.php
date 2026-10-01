@@ -1,5 +1,5 @@
 <?php
-$colors = $this->render_object->GetColors($group->color);
+$colors = $render_object->GetColors($group->color);
 
 ?>
 
@@ -13,7 +13,7 @@ $colors = $this->render_object->GetColors($group->color);
         <div class="grid grid_12">
             <h1 class="subtitle greydark"><?php echo $group->title;?></h1>
             <div class="nicdark_space20"></div>
-            <h3 class="subtitle grey"><?php echo $this->render_object->RenderElement('mission', $group->mission, null, 'Orgchart_model'); ?></h3>
+            <h3 class="subtitle grey"><?php echo $render_object->RenderElement('mission', $group->mission, null, 'Orgchart_model'); ?></h3>
             <div class="nicdark_space20"></div>
             <div class="nicdark_divider left big"><span class="<?php echo $colors->color;?> nicdark_radius"></span></div>
             <div class="nicdark_space10"></div>
@@ -23,23 +23,23 @@ $colors = $this->render_object->GetColors($group->color);
 
         
             <h5 class="nicdark_toogle_header grey nicdark_textevidence nicdark_bg_grey big nicdark_radius nicdark_shadow">
-                <?php echo ci_lang('COM_TTILE_ACTIONS');?>
+                <?php echo tr('COM_TTILE_ACTIONS');?>
                 <i class="icon-info-outline nicdark_iconbg right medium grey"></i>
             </h5>
             <div class="nicdark_toogle_content nicdark_bg_grey nicdark_radius_bottom nicdark_shadow">
                 <div class="nicdark_space20"></div>
-                <p><?php echo $this->render_object->RenderElement('actions', $group->actions, null, 'Orgchart_model'); ?></p>
+                <p><?php echo $render_object->RenderElement('actions', $group->actions, null, 'Orgchart_model'); ?></p>
             </div>
             <div class="nicdark_space20"></div>
            
             <!--start nicdark_toogle-->
             <div class="nicdark_toogle">
                 <h5 class="nicdark_toogle_header grey nicdark_textevidence nicdark_bg_grey big nicdark_radius nicdark_shadow">
-                <?php echo ci_lang('COM_TTILE_ROLE');?>
+                <?php echo tr('COM_TTILE_ROLE');?>
                     <i class="icon-info-outline nicdark_iconbg right medium grey"></i>
                 </h5>
                 <div class="nicdark_toogle_content nicdark_bg_grey nicdark_radius_bottom nicdark_shadow">
-                <p><?php echo $this->render_object->RenderElement('role', $group->role, null, 'Orgchart_model'); ?></p>
+                <p><?php echo $render_object->RenderElement('role', $group->role, null, 'Orgchart_model'); ?></p>
                 </div>
             </div>
             <!--end toogle-->
@@ -47,11 +47,11 @@ $colors = $this->render_object->GetColors($group->color);
             <!--start nicdark_toogle-->
             <div class="nicdark_toogle">
                 <h5 class="nicdark_toogle_header grey nicdark_textevidence nicdark_bg_grey big nicdark_radius nicdark_shadow">
-                    <?php echo ci_lang('COM_TTILE_NEEDS');?> 
+                    <?php echo tr('COM_TTILE_NEEDS');?> 
                     <i class="icon-info-outline nicdark_iconbg right medium grey"></i>
                 </h5>
                 <div class="nicdark_toogle_content nicdark_bg_grey nicdark_radius_bottom nicdark_shadow">
-                <p><?php echo $this->render_object->RenderElement('needs', $group->needs, null, 'Orgchart_model'); ?></p>
+                <p><?php echo $render_object->RenderElement('needs', $group->needs, null, 'Orgchart_model'); ?></p>
                 </div>
             </div>
             <!--end toogle-->
@@ -70,15 +70,15 @@ $colors = $this->render_object->GetColors($group->color);
                         <div class="nicdark_margin20 nicdark_relative">
                         <?php 
                         if (isset($group->RT->thumbnail)){
-                            echo $this->render_object->RenderElement('picture',$group->RT->thumbnail,null, 'GroupesMembers_model', 'nicdark_absolute nicdark_radius w60');
+                            echo $render_object->RenderElement('picture',$group->RT->thumbnail,null, 'GroupesMembers_model', 'nicdark_absolute nicdark_radius w60');
                         } else {
                             echo '<img alt="" class="nicdark_absolute nicdark_radius" style="width:60px;" src="<?php echo base_url();?>assets/img/team/videm.jpg">';
                         }
                         ?>
                         <div class="nicdark_activity nicdark_marginleft80">
-                            <h5 class="grey"><?php echo $this->render_object->RenderElement('classif',$group->RT->classif, null, 'Trombi_model'); ?></h5>                        
+                            <h5 class="grey"><?php echo $render_object->RenderElement('classif',$group->RT->classif, null, 'Trombi_model'); ?></h5>                        
                             <div class="nicdark_space10"></div>
-                            <p><?php echo $this->render_object->RenderElement('name',$group->RT->name, null, 'GroupesMembers_model'); ?> <?php echo $this->render_object->RenderElement('surname',$group->RT->surname, null, 'GroupesMembers_model'); ?></p>
+                            <p><?php echo $render_object->RenderElement('name',$group->RT->name, null, 'GroupesMembers_model'); ?> <?php echo $render_object->RenderElement('surname',$group->RT->surname, null, 'GroupesMembers_model'); ?></p>
                         </div></div>
                     </li>
                     <?php } ?>
@@ -88,12 +88,12 @@ $colors = $this->render_object->GetColors($group->color);
                             <li class="nicdark_border_grey">
                                 <div class="nicdark_margin20 nicdark_relative">
                                 <?php 
-                                echo $this->render_object->RenderElement('picture',$acteur->details->thumbnail,null, 'GroupesMembers_model', 'nicdark_absolute nicdark_radius w60');
+                                echo $render_object->RenderElement('picture',$acteur->details->thumbnail,null, 'GroupesMembers_model', 'nicdark_absolute nicdark_radius w60');
                                 ?>
                                 <div class="nicdark_activity nicdark_marginleft80">
-                                    <h5 class="grey"><?php echo $this->render_object->RenderElement('classif',$acteur->classif, null, 'Trombi_model'); ?></h5>                        
+                                    <h5 class="grey"><?php echo $render_object->RenderElement('classif',$acteur->classif, null, 'Trombi_model'); ?></h5>                        
                                     <div class="nicdark_space10"></div>
-                                    <p><?php echo $this->render_object->RenderElement('name',$acteur->details->name, null, 'GroupesMembers_model'); ?> <?php echo $this->render_object->RenderElement('surname',$acteur->details->surname, null, 'GroupesMembers_model'); ?></p>
+                                    <p><?php echo $render_object->RenderElement('name',$acteur->details->name, null, 'GroupesMembers_model'); ?> <?php echo $render_object->RenderElement('surname',$acteur->details->surname, null, 'GroupesMembers_model'); ?></p>
                                 </div></div>
                             </li>
                     <?php }
@@ -103,22 +103,22 @@ $colors = $this->render_object->GetColors($group->color);
                         <div class="nicdark_margin20 nicdark_relative">
                         <img alt="" class="nicdark_absolute nicdark_radius" style="width:60px;" src="<?php echo base_url();?>assets/img/team/videf.jpg">
                         <div class="nicdark_activity nicdark_marginleft80">
-                            <h5 class="grey"><?php echo LANG('NEED_YOU');?></h5>                        
+                            <h5 class="grey"><?php echo tr('NEED_YOU');?></h5>                        
                             <div class="nicdark_space10"></div>
-                            <p><?php echo $this->render_object->RenderElement('search',$group->search,'Grprelated_model');?></p>
+                            <p><?php echo $render_object->RenderElement('search',$group->search,'Grprelated_model');?></p>
                         </div></div>
 
                     </li>
                     <li class="nicdark_margin20">
-                        <a href="#" class="CondidateModal nicdark_press nicdark_btn nicdark_bg_green white nicdark_radius nicdark_shadow medium center"><?php echo ((($candidature)) ?  ci_lang('EDIT_CANDIDATE'): ci_lang('CANDIDATE'));?></a>
+                        <a href="#" class="CondidateModal nicdark_press nicdark_btn nicdark_bg_green white nicdark_radius nicdark_shadow medium center"><?php echo ((($candidature)) ?  tr('EDIT_CANDIDATE'): tr('CANDIDATE'));?></a>
                         
 
                         <?php if (($candidature)){ ?>
                             <div class="nicdark_space10"></div>
                             <?php
-                                echo form_open( base_url('Orgchart_controller/view_one/'.$group->id.'/cancel') , array('class' => '', 'id' => ''), array('form_mod'=>'add','id'=>((($candidature)) ? $candidature->id:'') ));
+                                echo open_form( base_url('Orgchart_controller/view_one/'.$group->id.'/cancel') , array('class' => '', 'id' => ''), array('form_mod'=>'add','id'=>((($candidature)) ? $candidature->id:'') ));
                             ?>
-                                <button type="submit" class="btn btn-danger nicdark_bg_orangedark white nicdark_radius nicdark_shadow center"><?php echo ci_lang('CANCEL_CANDIDATE');?></button>
+                                <button type="submit" class="btn btn-danger nicdark_bg_orangedark white nicdark_radius nicdark_shadow center"><?php echo tr('CANCEL_CANDIDATE');?></button>
                             <?php
                                 echo form_close();
                             ?>
@@ -135,7 +135,7 @@ $colors = $this->render_object->GetColors($group->color);
                     <i class="icon-info-outline nicdark_iconbg right medium grey"></i>
                 </h5>
                 <div class="nicdark_toogle_content nicdark_bg_grey nicdark_radius_bottom nicdark_shadow">
-                    <p><?php echo $this->render_object->RenderElement('related',$group->related, 'Grprelated_model');?> </p>
+                    <p><?php echo $render_object->RenderElement('related',$group->related, 'Grprelated_model');?> </p>
                 </div>
             </div>
             <!--end toogle-->
@@ -152,30 +152,30 @@ $colors = $this->render_object->GetColors($group->color);
     <div class="modal-dialog" role="document">
         <div class="modal-content">
         <div class="modal-header">
-            <h5 class="modal-title" id="exampleModalLabel"><?php echo ci_lang('CANDIDATE_COM');?> <?php echo $group->title;?></h5>
+            <h5 class="modal-title" id="exampleModalLabel"><?php echo tr('CANDIDATE_COM');?> <?php echo $group->title;?></h5>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">×</span>
             </button>
         </div>
         <div class="modal-body">
             <?php
-            echo form_open( base_url('Orgchart_controller/view_one/'.$group->id) , array('class' => '', 'id' => ''), array('form_mod'=>((($candidature)) ? 'edit':'add'),'id_fam'=>$id_fam,'id_grp'=>$group->id  ,'id'=>((($candidature)) ? $candidature->id:'')) );
+            echo open_form( base_url('Orgchart_controller/view_one/'.$group->id) , array('class' => '', 'id' => ''), array('form_mod'=>((($candidature)) ? 'edit':'add'),'id_fam'=>$id_fam,'id_grp'=>$group->id  ,'id'=>((($candidature)) ? $candidature->id:'')) );
             //champ obligatoire
             foreach($required_field AS $name){
-                echo form_error($name, 	'<div class="alert alert-danger">', '</div>');
+                echo field_error($name, 	'<div class="alert alert-danger">', '</div>');
             }
             ?>
             <div class="form-row">
 				<div class="form-group col-md-6">
 					<?php 
-						echo $this->render_object->label('name');
-						echo $this->render_object->RenderFormElement('name',  ((isset($candidature->name)) ? $candidature->name:'') , 'Candidatures_model');
+						echo $render_object->label('name');
+						echo $render_object->RenderFormElement('name',  ((isset($candidature->name)) ? $candidature->name:'') , 'Candidatures_model');
 					?>
 				</div>
 				<div class="form-group col-md-6">
 					<?php 
-						echo $this->render_object->label('surname');
-						echo $this->render_object->RenderFormElement('surname', ((isset($candidature->surname)) ? $candidature->surname:''), 'Candidatures_model');
+						echo $render_object->label('surname');
+						echo $render_object->RenderFormElement('surname', ((isset($candidature->surname)) ? $candidature->surname:''), 'Candidatures_model');
 					?>
 				</div>
 												
@@ -183,31 +183,31 @@ $colors = $this->render_object->GetColors($group->color);
 			<div class="form-row">	
 				<div class="form-group col-md-6">
 					<?php 
-						echo $this->render_object->label('phone');
-						echo $this->render_object->RenderFormElement('phone', ((isset($candidature->phone)) ? $candidature->phone:''), 'Candidatures_model'); 
+						echo $render_object->label('phone');
+						echo $render_object->RenderFormElement('phone', ((isset($candidature->phone)) ? $candidature->phone:''), 'Candidatures_model'); 
 					?>
 				</div>	
 				<div class="form-group col-md-6">														
 					<?php 
-						echo $this->render_object->label('email');
-						echo $this->render_object->RenderFormElement('email',((isset($candidature->email)) ? $candidature->email:''), 'Candidatures_model');
+						echo $render_object->label('email');
+						echo $render_object->RenderFormElement('email',((isset($candidature->email)) ? $candidature->email:''), 'Candidatures_model');
 					?>
 				</div>			
             </div>
             <div class="form-row">		
 				<div class="form-group col-md-12">
 					<?php 
-						echo $this->render_object->label('memo');
-						echo $this->render_object->RenderFormElement('memo', ((isset($candidature->memo)) ? $candidature->memo:''), 'Candidatures_model');
+						echo $render_object->label('memo');
+						echo $render_object->RenderFormElement('memo', ((isset($candidature->memo)) ? $candidature->memo:''), 'Candidatures_model');
 					?>
 				</div>
 			</div>	
             <div class="modal-footer">
-                <button type="submit" class="btn btn-success nicdark_bg_greendark  white nicdark_radius nicdark_shadow"><?php echo ci_lang('REGISTER_CHANGE');?></button>
+                <button type="submit" class="btn btn-success nicdark_bg_greendark  white nicdark_radius nicdark_shadow"><?php echo tr('REGISTER_CHANGE');?></button>
             </div>
             <?php
-            echo $this->render_object->RenderFormElement('created'); 
-            echo $this->render_object->RenderFormElement('updated'); 
+            echo $render_object->RenderFormElement('created'); 
+            echo $render_object->RenderFormElement('updated'); 
             echo form_close();
             ?>
         </div>

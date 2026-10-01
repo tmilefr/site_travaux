@@ -1,116 +1,111 @@
-# Migration CodeIgniter 3.1.13 → CodeIgniter 4.7
+# Réécriture en CodeIgniter 4 (branche `ci4-natif`)
 
-Le site tourne désormais sur **CodeIgniter 4.7.x** (PHP ≥ 8.2). Ce document décrit ce qui a changé,
-comment installer / déployer, et les choix techniques faits pour migrer sans réécrire les ~29 000 lignes
-de code métier.
+Le site tourne sur **CodeIgniter 4.7.x** (PHP ≥ 8.2) avec le code réécrit « à la CI4 » : plus de couche
+de compatibilité CI3, plus de `get_instance()`, plus de `$this->load`. Cette branche remplace l'approche
+« shim » de la branche `develop` (qui reproduisait l'API CI3 au-dessus de CI4).
 
-## 1. Stratégie : une couche de compatibilité plutôt qu'une réécriture
+## 1. Ce qui est natif CodeIgniter 4
 
-Le code historique (contrôleurs, modèles, bibliothèques, vues) est très couplé à l'API CI3
-(`$this->load`, `$this->input`, `$this->session`, `$this->db`, `get_instance()`...). Plutôt que de tout
-réécrire (risque de régressions sur un back-office de gestion), le framework a été remplacé et une fine couche
-`app/Libraries/Compat/` reproduit l'API CI3 au-dessus des services CI4 :
-
-| Classe `Compat\…` | Remplace | S'appuie sur |
+| Domaine | CI3 | CI4 (cette branche) |
 |---|---|---|
-| `Loader` | `CI_Loader` (`library()`, `model()`, `view()`, `helper()`, `dbforge()`) | autoload PSR-4, `Services::renderer` |
-| `Db`, `Result`, `Forge` | `CI_DB_query_builder`, résultats, `dbforge` | Query Builder CI4 (appels mis en file puis rejoués sur `table()`) |
-| `Input` | `CI_Input` (`post()`, `get()`, `server()`, `is_ajax_request()`) | superglobales (le code modifie `$_POST` en cours de requête) |
-| `Session` | `CI_Session` (`userdata`, `set_flashdata`, `sess_destroy`...) | `session()` CI4 (driver base de données) |
-| `Lang` | `CI_Lang` + fichiers `$lang['CLE']` | `app/Language/french/*_lang.php` (inchangés) |
-| `Config` | `CI_Config` | `app/Config/legacy/*.php` (`$config['x']`) |
-| `Uri`, `Router`, `Output` | `CI_URI`, `CI_Router`, `CI_Output` | Router/Request CI4 |
-| `Form_validation` | `CI_Form_validation` (`run($groupe)`, `set_data`, `form_error`) | validateur autonome (mêmes règles, mêmes messages FR) |
-| `Pagination`, `Email` | `CI_Pagination`, `CI_Email` | rendu Bootstrap identique / service Email CI4 |
-| `CompatView` | contexte `$this` des vues CI3 | `CodeIgniter\View\View` (`$this->render_object`, `$this->lang`...) |
-| `Model` | `CI_Model` | accès aux composants du contrôleur courant |
+| Cycle d'un contrôleur | constructeur + `parent::__construct()` | `initController()` puis `boot()` (réglages du contrôleur enfant) |
+| Requête | `$this->input->post()` | `$this->request->getPost()` / `getFile()` / `isAJAX()` / `is('post')` |
+| Session | `$this->session->userdata()` | `session()->get()/set()/setFlashdata()` (driver base de données) |
+| Redirections | `redirect()` (exit) | `goTo()` : exception `RedirectException` + `redirect()->to()` |
+| Réponses | `echo`, `header()`, `die` | objets `Response` (CSV, PDF, JSON), vues rendues avec `view()` |
+| Base de données | `$this->db->select()->from()->get()->result()` | Query Builder `table()->select()->get()->getResult()` |
+| Modèles | `CI_Model` + `$this->load->model()` | `CodeIgniter\Model` (`Core_model`) + `model()` |
+| Bibliothèques | `$this->load->library()` | services partagés `service('acl' \| 'auth' \| 'renderObject' ...)` (`app/Config/Services.php`) |
+| Hook ACL | `post_controller_constructor` | filtre `App\Filters\AclFilter` (`Config\Filters`) |
+| Routage | automatique (`controleur/methode`) | `app/Config/Routes.php`, auto-routage désactivé |
+| Validation | `CI_Form_validation` | `service('validation')` (règles issues des schémas JSON) |
+| E-mail | `CI_Email` | `service('email')`, configuration `Config\Email` |
+| Configuration | `config/app.php`, `secured.php` | `Config\Travaux` + variables du `.env` |
+| Langues | `$lang['CLE']` + `$this->lang->line()` | tableaux `return [...]` dans `app/Language/fr/` + helper `tr()` |
+| Pagination | `CI_Pagination` | helper `pagination_links()` (même rendu Bootstrap, URL `.../list/page/N`) |
+| Journal d'erreurs | `MY_Exceptions` | `abort()` (404/400...), gestionnaire d'erreurs CI4 |
 
-`app/Common.php` ajoute les fonctions globales CI3 absentes de CI4 : `get_instance()`, `ci_redirect()`,
-`ci_lang()`, `form_error()`, `validation_errors()`, `html_escape()`, `config_item()`, `show_error()`,
-`form_hidden()` (non typée)... Dans le code métier, `redirect()` est devenu `ci_redirect()` et `lang()` /
-`Lang()` sont devenus `ci_lang()` (les fonctions homonymes de CI4 ont une autre signature).
+## 2. Conventions de l'application
 
-## 2. Ce qui a changé dans l'arborescence
+* **`CrudController`** (`app/Controllers/CrudController.php`) : contrôleur de base abstrait (liste, ajout,
+  édition, suppression, export CSV, actions groupées) piloté par les schémas JSON des modèles.
+  Un contrôleur enfant surcharge `boot()` pour déclarer `$_controller_name`, `$_model_name`, `$_autorize`…
+  puis appelle `$this->init()`.
+* **Routage** : chaque contrôleur est listé dans `app/Config/Routes.php` (liste vérifiée par les tests) et reçoit
+  ses URL `Controleur/action/p1/p2…` par `CrudController::dispatch()`, qui ne laisse passer que :
+  les méthodes publiques déclarées par le contrôleur, et le CRUD générique seulement si le contrôleur déclare
+  `$_autorize` (et uniquement pour `list/add/edit/delete/view` présents dans `$_autorize`).
+  Les helpers internes (`init`, `LoadModel`, méthodes `_xxx`…) ne sont jamais joignables. Les URL gardent la casse
+  d'origine ou le minuscule (compatible avec les droits ACL et les liens des e-mails).
+* **Vues** : les services utiles arrivent comme variables (`$render_object`, `$bootstrap_tools`, `$render_menu`, `$acl`) ;
+  traductions par `tr('CLE')`, erreurs de formulaire par `field_error('champ', '<div>', '</div>')`,
+  formulaires par `open_form()` (variante de `form_open()` qui accepte des identifiants non textuels).
+* **Modèles** : propriétés `$table`, `$primaryKey`, `$order`, `$direction`, `$json` ; les requêtes utilisent le Query
+  Builder natif. Les noms de classes (`Familys_model`, `Admwork_controller`…) sont conservés : ils sont stockés dans les
+  droits ACL et dans les URL.
+* **Traductions** : `tr()` cherche la clé dans `<Controleur>.php`, `Cantine.php`, `Inscriptions.php`, `Menu.php`, puis
+  `Traduction.php`. Une clé absente s'affiche `<i>CLE</i>`. L'écran « Traductions » édite ces tableaux.
+* **Avertissements PHP** : l'application historique émet des avertissements (clé/propriété absente) sans conséquence ;
+  `Config\Events` les journalise (niveau `warning`) au lieu de lever une exception, comme avec `error_reporting()` de CI3.
+
+## 3. Arborescence
 
 | CI3 | CI4 |
 |---|---|
 | `system/` | `vendor/codeigniter4/framework` (Composer) |
-| `index.php` | `public/index.php` (document root = `public/`) |
-| `assets/` | `public/assets/` |
-| `application/controllers` | `app/Controllers` (namespace `App\Controllers`) |
-| `application/models` (+ `json/`) | `app/Models` (namespace `App\Models`) |
-| `application/libraries` (+ `elements/`) | `app/Libraries` (+ `Elements/`) |
-| `application/views`, `language`, `helpers` | `app/Views`, `app/Language`, `app/Helpers` |
-| `application/config/app.php`, `secured.php` | `app/Config/legacy/app.php`, `secured.php` |
-| `application/config/<env>/config.php`, `database.php` | `.env` + `app/Config/*.php` |
-| `application/hooks/Loginchecker` (hook `post_controller_constructor`) | `app/Config/Events.php` (même événement) |
-| `application/core/MY_Controller` | `app/Controllers/MY_Controller.php` (abstrait) |
-| `application/core/MY_Lang`, `MY_Exceptions` | `Compat\Lang`, `show_error()` dans `Common.php` |
-| `application/libraries/Form_validation.php` | `Compat\Form_validation` |
+| `index.php`, `assets/` | `public/index.php`, `public/assets/` (document root = `public/`) |
+| `application/controllers`, `models`, `libraries`, `views`, `helpers` | `app/Controllers`, `Models`, `Libraries`, `Views`, `Helpers` |
+| `application/language/french/*_lang.php` | `app/Language/fr/*.php` (tableaux) |
+| `application/config/app.php`, `secured.php`, `<env>/` | `app/Config/Travaux.php` + `.env` |
+| `application/hooks/Loginchecker` | `app/Filters/AclFilter.php` |
 | `application/migrations/*.sql` | `database/sql/*.sql` |
 | `application/cache`, `application/logs` | `writable/cache`, `writable/logs` |
-| `php index.php cron sendmail` | `php public/index.php cron sendmail` |
 
-URLs inchangées : le routage « automatique » CI3 (`Controleur/methode/arg`) est conservé
-(`Routing::$autoRoute = true`, `Feature::$autoRoutesImproved = false`) ; seul `index.php` disparaît des URLs.
-
-## 3. Installation / déploiement
+## 4. Installation / déploiement
 
 ```bash
-composer install --no-dev -o          # dépendances (CI4, dompdf, firebase/php-jwt, sodium_compat)
-cp env.example .env                   # puis renseigner CI_ENVIRONMENT, app.baseURL et database.default.*
-cp app/Config/legacy/secured.sample.php app/Config/legacy/secured.php   # puis renseigner les secrets
+composer install --no-dev -o
+cp env.example .env     # CI_ENVIRONMENT, app.baseURL, database.default.*, travaux.*, email.*
 chmod -R u+rwX writable public/files public/data
 ```
 
-1. **Document root** du serveur web : `public/` (un `.htaccess` racine redirige vers `public/` sur mutualisé).
-2. **Table des sessions** : CI4 stocke l'activité dans une colonne `TIMESTAMP` (CI3 : entier). Exécuter une fois
-   `database/sql/ci4_ci_sessions.sql` (purge les sessions : les utilisateurs devront se reconnecter).
-3. **Cron** : remplacer `php index.php cron …` par `php public/index.php cron …` (le dernier argument n'est plus
-   l'environnement ; il vient de `CI_ENVIRONMENT` dans `.env`).
-4. Vérifier que `app.baseURL` se termine par `/` et correspond à l'URL publique.
+1. **Document root** du serveur web : `public/` (un `.htaccess` racine redirige vers `public/` en mutualisé).
+2. **Table des sessions** : exécuter une fois `database/sql/ci4_ci_sessions.sql` (colonne `TIMESTAMP` au lieu d'un entier ;
+   purge les sessions : les utilisateurs devront se reconnecter).
+3. **Secrets** : reporter l'ancien `application/config/secured.php` dans le `.env` (voir `env.example`) :
+   `API_KEY` → `travaux.apiKey`, `PASSWORD_SALT` → `travaux.passwordSalt`, `SITE_CAPTCHA_KEY`/`SITE_CAPTCHA_SECRET_KEY` →
+   `travaux.siteCaptchaKey`/`travaux.siteCaptchaSecretKey`, `mail_from_*` → `travaux.mailFrom*`, `smtp_*` → `email.SMTP*`.
+4. **Cron** : `php public/index.php cron sendmail [n]` (le dernier argument n'est plus l'environnement : il vient de `CI_ENVIRONMENT`).
+5. **Traductions** : les langues sont désormais identifiées par leur code (`fr`) et non par `french`.
 
-## 4. Différences de comportement à connaître
+## 5. Changements de comportement et corrections
 
-* **Avertissements PHP** : CI4 transforme chaque avertissement en exception. Le code historique en émet
-  (clés/propriétés absentes) et tournait avec `error_reporting(E_ALL & ~E_NOTICE …)`. Pour conserver ce comportement,
-  `Events.php` journalise `E_WARNING/E_NOTICE` (niveau `warning`, `writable/logs`) sans interrompre la requête.
-  Les `TypeError`/`Error` restent fatales, comme en CI3 sous PHP 8.
-* **Validation** : `trim` est reporté dans `$_POST` ; `run()` sans données renvoie `FALSE` (comme CI3).
-* **Pagination / e-mail** : mêmes API ; la config SMTP CI3 (`smtp_host`, `smtp_crypto`…) est traduite vers
-  `Config\Email` par `Compat\Email`.
-* **ACL** : `Acl::Route()` s'exécute toujours juste après l'instanciation du contrôleur ; les redirections
-  (`ci_redirect`) lèvent `RedirectException` (équivalent du `exit` de `redirect()` CI3).
-* **Scan ACL** (`Acl_controllers_controller/scan`) : résout désormais `App\Controllers\<Classe>`.
-* **Chemins fichiers** : PDF dans `public/data/pdf/`, imports CSV dans `public/files/imports/`, uploads dans
-  `public/files/…`, flag d'archivage dans `writable/cache/`.
-* **Contrôleurs abstraits** : `MY_Controller` n'est plus routable (500 au lieu d'un contrôleur vide).
-
-## 5. Correctifs incidents découverts pendant la migration
-
-* `Familys_controller::import_history` n'avait jamais chargé `FamilyImport_model` (erreur 500).
-* `Admwork_controller::MakePdf` pointait vers une vue inexistante (`unique/<ctrl>_register_one_pdf`).
+* `Familys_controller::import_history` n'avait jamais chargé `FamilyImport_model` (erreur 500) — corrigé.
+* `Admwork_controller::MakePdf` visait une vue inexistante — corrigé ; le PDF est renvoyé par la réponse HTTP.
+* `Api::login` s'appuyait sur `Acl::CheckLogin()` (qui retourne un message) : il appelle maintenant `Auth::Login()` et renvoie le JWT.
+  L'accès non authentifié à `Api/login` reste bloqué par l'ACL (non modifié).
+* Le CRUD générique n'est plus joignable pour `Home`, `Cantine_controller`, `Parameters`… (contrôleurs sans `$_autorize`) :
+  c'était possible mais sans objet. `MY_Controller`/`BaseController` ne sont plus routables (404).
+* L'horodatage par défaut des champs « créé/modifié » est en 24 h (`H`) au lieu de 12 h (`h`).
+* Un champ vide non requis n'est plus soumis aux autres règles (comportement CI3 conservé explicitement : `permit_empty`).
 
 ## 6. Vérifications
 
 ```bash
-php tools/check_classes.php           # toutes les classes référencées dans app/ se résolvent
-vendor/bin/phpunit tests/unit         # tests de la couche de compatibilité
-tools/smoke.sh http://localhost:8080 <login> <mot_de_passe> routes.txt   # GET de chaque route, détecte les 500
+php tools/check_classes.php              # toutes les classes référencées dans app/ se résolvent
+vendor/bin/phpunit tests/unit            # structure (routes, langues, API CI3 absente), helpers
+tools/smoke.sh http://localhost:8080 <login> <mot_de_passe> routes.txt   # GET de chaque route : 500 et pages HTML vides
 ```
 
-Les routes ont été passées en admin et en famille sur la base de recette (`database/sql/jeu_de_test/`) :
-connexion bcrypt et migration MD5 → bcrypt, listes/filtres/tri/pagination, formulaires CRUD, inscription à une
-session (POST), génération PDF, scan ACL, cron `sendmail` en CLI.
+Passé sur la base de recette (`database/sql/jeu_de_test/`) en admin et en famille : connexion bcrypt et migration MD5 → bcrypt,
+listes (filtres, tri, pagination, export CSV), formulaires CRUD, inscription à une session (POST), PDF, scan ACL,
+traductions, cron `sendmail` en CLI. Les pages `view/*` sans vue associée et `Jsondata` sans argument échouent comme avant.
 
 ## 7. Reste à faire / points d'attention
 
-* **Régression à tester en recette** : parcours d'upload de fichiers/images (`element_file`, `element_img`),
-  import CSV familles, cantine (génération), traductions (édition des fichiers de langue), envoi réel d'e-mails (SMTP).
-* `Api::login` s'appuie sur `Acl::CheckLogin()` qui retourne un message/`NULL` (et non un objet) : défaut
-  préexistant, non modifié.
-* À terme, le code peut être progressivement réécrit en idiomes CI4 (Entities, `Model`, Filters, `Validation`) puis
-  la couche `Compat/` réduite ; elle est volontairement isolée dans un seul dossier.
-* Les fichiers CI3 `readme.rst`, `contributing.md`, `license.txt` et le dossier vide `application/` n'ont plus
-  d'utilité et peuvent être supprimés.
+* À recetter : uploads de fichiers/images (`element_file`, `element_img`), import CSV des familles, génération cantine,
+  envoi SMTP réel.
+* Les actions renvoient encore souvent le HTML par `echo` dans `render_view()` (CI4 le capture comme corps de réponse) ; elles
+  peuvent progressivement `return view(...)`.
 * Les identifiants de l'ancien `.env` versionné (`DB_DEV_*`, `PWD`) figurent dans l'historique git : à changer.
+* Fichiers CI3 sans utilité (`readme.rst`, `contributing.md`, `license.txt`, dossier vide `application/`) : à supprimer.

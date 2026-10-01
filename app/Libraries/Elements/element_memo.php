@@ -23,7 +23,7 @@ class element_memo extends element
 		if ($this->disabled)
 			$txt = '<input type="hidden" name="'.$this->name.'" value="'.$this->value.'"><input class="form-control" type="text" value="'.$this->Render().'" readonly>';
 		else
-			$txt = $this->RenderTools->textarea($this->name,  $this->value, ci_lang($this->name), $this->required, $this->rows);
+			$txt = $this->RenderTools->textarea($this->name,  $this->value, tr($this->name), $this->required, $this->rows);
 		return $txt;
 	}
 	

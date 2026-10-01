@@ -3,15 +3,13 @@
 namespace App\Models;
 class Files_model extends Core_model{
 
-	function __construct(){
-		parent::__construct();
-		
-		$this->_set('table'	, 'files');
-		$this->_set('key'	, 'id');
-		$this->_set('order'	, 'name');
-		$this->_set('direction'	, 'desc');
-		$this->_set('json'	, 'Files.json');
-	}
+	protected $table = 'files';
+	protected $primaryKey = 'id';
+	protected $order = 'name';
+	protected $direction = 'desc';
+	protected $json = 'Files.json';
+
+
 	
 	/**
 	 * Method GetFilesByType
@@ -22,16 +20,11 @@ class Files_model extends Core_model{
 	 * @return void
 	 */
 	function GetFilesByType($type = null, $statut = 'P', $limit = 5){
-		$data=$this->db->select('*')
-		->from('files')
-		->where('files.type IN ("'.$type.'") AND statut ="'.$statut.'"' )
-		->order_by('`files`.`id` DESC')
-		->limit($limit)
-		->get();				
+		$data=$this->db->table('files')->select('*')->where('files.type IN ("'.$type.'") AND statut ="'.$statut.'"')->orderBy('`files`.`id` DESC')->limit($limit)->get();				
 		//echo 	 $this->db->last_query();
-		if ($data->num_rows()){
+		if ($data->getNumRows()){
 
-			return $data->result();
+			return $data->getResult();
 		}
 		return false;
 	}
