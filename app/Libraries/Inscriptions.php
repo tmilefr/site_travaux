@@ -2,6 +2,10 @@
 
 namespace App\Libraries;
 
+use App\Models\Admwork_model;
+use App\Models\Familys_model;
+use App\Models\Infos_model;
+
 /**
  * Inscriptions
  *
@@ -46,11 +50,11 @@ namespace App\Libraries;
  *
  * ## Usage type
  *
- *   $this->load->library('Inscriptions');
+ *   $inscriptions = service('inscriptions');
  *
  *   // -- Inscription famille classique --
  *   $r = $this->inscriptions->registerSelf($id_work, $id_fam);
- *   if ($r->success) { ... } else { $this->session->set_flashdata('error', $r->message); }
+ *   if ($r->success) { ... } else { $this->session->setFlashdata('error', $r->message); }
  *
  *   // -- Inscription cantine (type forcé en sécurité) --
  *   $r = $this->inscriptions->registerSelf($id_work, $id_fam, [], 'can');
@@ -75,8 +79,11 @@ namespace App\Libraries;
 #[\AllowDynamicProperties]
 class Inscriptions
 {
-    /** @var CI_Controller */
-    protected $CI;
+    protected $Admwork_model;
+    protected $Infos_model;
+    protected $Familys_model;
+    /** @var RefNotifier */
+    protected $refnotifier;
 
     /* ===== Codes de retour exposés ===== */
     const OK                 = 'ok';
@@ -92,20 +99,10 @@ class Inscriptions
 
     public function __construct()
     {
-        $this->CI = &get_instance();
-
-        // Chargement défensif des dépendances. Utilise le LoadModel maison
-        // si présent (déclenche l'init des défs/règles JSON), sinon fallback
-        // sur load->model().
-        $models = ['Admwork_model', 'Infos_model', 'Familys_model'];
-        foreach ($models as $m) {
-            if (method_exists($this->CI, 'LoadModel')) {
-                $this->CI->LoadModel($m);
-            } else {
-                $this->CI->load->model($m);
-            }
-        }
-        $this->CI->load->library('RefNotifier');
+        $this->Admwork_model = model(Admwork_model::class);
+        $this->Infos_model   = model(Infos_model::class);
+        $this->Familys_model = model(Familys_model::class);
+        $this->refnotifier   = service('refNotifier');
     }
 
     // ===================================================================
@@ -143,7 +140,7 @@ class Inscriptions
         $id_fam  = (int) $id_fam;
         $r       = $this->_newResult();
 
-        $work = $this->CI->Admwork_model->GetWorkById($id_work, $expected_type);
+        $work = $this->Admwork_model->GetWorkById($id_work, $expected_type);
         if (!$work) return $this->_fail($r, self::WORK_NOT_FOUND);
         $r->work = $work;
 
@@ -151,7 +148,7 @@ class Inscriptions
             return $this->_fail($r, self::PAST_DATE);
         }
 
-        if ($this->CI->Infos_model->IsRegister($id_fam, $id_work)) {
+        if ($this->Infos_model->IsRegister($id_fam, $id_work)) {
             return $this->_fail($r, self::ALREADY_REGISTERED);
         }
 
@@ -167,7 +164,7 @@ class Inscriptions
         }
 
         $datas   = $this->_buildInscriptionRow($id_fam, $work, $context, $type_participant, $nb_participants);
-        $id_info = $this->CI->Infos_model->Register($datas);
+        $id_info = $this->Infos_model->Register($datas);
         if (!$id_info) return $this->_fail($r, self::INSERT_ERROR);
 
         $r->id_info = (int) $id_info;
@@ -193,18 +190,18 @@ class Inscriptions
         $id_fam  = (int) $id_fam;
         $r       = $this->_newResult();
 
-        $work = $this->CI->Admwork_model->GetWorkById($id_work);
+        $work = $this->Admwork_model->GetWorkById($id_work);
         if (!$work) return $this->_fail($r, self::WORK_NOT_FOUND);
         $r->work = $work;
 
-        $info = $this->CI->Infos_model->IsRegister($id_fam, $id_work);
+        $info = $this->Infos_model->IsRegister($id_fam, $id_work);
         if (!$info) return $this->_fail($r, self::NOT_REGISTERED);
 
         if ((float) $info->nb_unites_valides_effectif > 0) {
             return $this->_fail($r, self::ALREADY_VALIDATED);
         }
 
-        $deleted = $this->CI->Infos_model->Unregister($id_fam, $id_work, true);
+        $deleted = $this->Infos_model->Unregister($id_fam, $id_work, true);
         if ($deleted <= 0) return $this->_fail($r, self::DELETE_ERROR);
 
         $this->_notify($work, $id_fam, 'unregister');
@@ -236,11 +233,11 @@ class Inscriptions
 
         if (!$id_fam || !$type_participant) return $this->_fail($r, self::MISSING_FIELDS);
 
-        $work = $this->CI->Admwork_model->GetWorkById($id_work);
+        $work = $this->Admwork_model->GetWorkById($id_work);
         if (!$work) return $this->_fail($r, self::WORK_NOT_FOUND);
         $r->work = $work;
 
-        if ($this->CI->Infos_model->IsRegister($id_fam, $id_work)) {
+        if ($this->Infos_model->IsRegister($id_fam, $id_work)) {
             return $this->_fail($r, self::ALREADY_REGISTERED);
         }
 
@@ -258,7 +255,7 @@ class Inscriptions
             'type_session'      => (int) $type_session ?: 1,
         ];
 
-        $id_info = $this->CI->Infos_model->Register($datas);
+        $id_info = $this->Infos_model->Register($datas);
         if (!$id_info) return $this->_fail($r, self::INSERT_ERROR);
 
         $r->id_info = (int) $id_info;
@@ -282,11 +279,11 @@ class Inscriptions
 
         if (!$id_info) return $this->_fail($r, self::MISSING_FIELDS);
 
-        $info = $this->CI->Infos_model->GetInfoForWork($id_info, $id_work);
+        $info = $this->Infos_model->GetInfoForWork($id_info, $id_work);
         if (!$info) return $this->_fail($r, self::NOT_REGISTERED);
 
-        $this->CI->Infos_model->_set('key_value', $id_info);
-        $this->CI->Infos_model->delete();
+        $this->Infos_model->_set('key_value', $id_info);
+        $this->Infos_model->delete();
 
         $r->id_fam = (int) $info->id_famille;
         return $this->_ok($r);
@@ -310,23 +307,23 @@ class Inscriptions
 
         if (!$id_info) return $this->_fail($r, self::MISSING_FIELDS);
 
-        $info = $this->CI->Infos_model->GetInfoById($id_info);
+        $info = $this->Infos_model->GetInfoById($id_info);
         if (!$info) return $this->_fail($r, self::NOT_REGISTERED);
         $id_fam    = (int) $info->id_famille;
         $r->id_fam = $id_fam;
 
-        $this->CI->Infos_model->_set('key_value', $id_info);
-        $this->CI->Infos_model->delete();
+        $this->Infos_model->_set('key_value', $id_info);
+        $this->Infos_model->delete();
 
         if ($is_self && $id_fam) {
-            $work = $this->CI->Admwork_model->GetWorkById($id_work);
+            $work = $this->Admwork_model->GetWorkById($id_work);
             if ($work) $this->_notify($work, $id_fam, 'unregister');
         }
 
 		// [AJOUT] Alerte e-mail désinscription, uniquement quand c'est
 		// la famille elle-même qui se désinscrit (pas l'admin sys).
-		if ($id_fam && $this->CI->acl->getType() === 'fam') {
-			$this->CI->refnotifier->notifyWorkRegistration(
+		if ($id_fam && service('acl')->getType() === 'fam') {
+			$this->refnotifier->notifyWorkRegistration(
 				(int) $id_work, $id_fam, 'unregister'
 			);
 		}
@@ -345,7 +342,7 @@ class Inscriptions
      */
     public function getFamiliesAvailableForWork($work)
     {
-        return $this->CI->Familys_model->GetAvailableForWork($work);
+        return $this->Familys_model->GetAvailableForWork($work);
     }
 
     // ===================================================================
@@ -402,8 +399,9 @@ class Inscriptions
 
     private function _lang($key, $fallback)
     {
-        $val = $this->CI->lang->line($key);
-        return $val ? $val : $fallback;
+        $val = tr($key);
+        // tr() renvoie la clé entre <i></i> quand le libellé est absent
+        return (strpos($val, '<i>') === 0) ? $fallback : $val;
     }
 
     /**
@@ -411,7 +409,7 @@ class Inscriptions
      */
     private function _hasCapacity($work, $nb_participants)
     {
-        $decompte = $this->CI->Infos_model->Decompte((int) $work->id);
+        $decompte = $this->Infos_model->Decompte((int) $work->id);
         $current  = $decompte ? (int) $decompte->nb_participants : 0;
         $max      = (int) $work->nb_inscrits_max;
         return ($current + $nb_participants) <= $max;
@@ -450,9 +448,9 @@ class Inscriptions
     {
         if (!$work) return;
         if ($work->type === 'can') {
-            $this->CI->refnotifier->notifyCantineRegistration((int) $work->id, (int) $id_fam, $action);
+            $this->refnotifier->notifyCantineRegistration((int) $work->id, (int) $id_fam, $action);
         } else {
-            $this->CI->refnotifier->notifyWorkRegistration((int) $work->id, (int) $id_fam, $action);
+            $this->refnotifier->notifyWorkRegistration((int) $work->id, (int) $id_fam, $action);
         }
     }
 }

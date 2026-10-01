@@ -25,15 +25,13 @@ class ValidationToken_model extends Core_model
 	const EXPIRY_DAYS    = 30;
 	const TOKEN_LENGTH   = 32; // 32 bytes -> 64 hex chars
 
-	function __construct()
-	{
-		parent::__construct();
-		$this->_set('table',     self::TABLE_NAME);
-		$this->_set('key',       'id');
-		$this->_set('order',     'created');
-		$this->_set('direction', 'desc');
-		$this->_set('json'	, 'Unites.json');
-	}
+	protected $table = self::TABLE_NAME;
+	protected $primaryKey = 'id';
+	protected $order = 'created';
+	protected $direction = 'desc';
+	protected $json = 'Unites.json';
+
+
 
 	/**
 	 * Génère et insère un nouveau token pour (session, référent).
@@ -50,14 +48,14 @@ class ValidationToken_model extends Core_model
 		$now     = date('Y-m-d H:i:s');
 		$expires = date('Y-m-d H:i:s', strtotime('+' . self::EXPIRY_DAYS . ' days'));
 
-		$this->db->insert(self::TABLE_NAME, [
+		$this->db->table(self::TABLE_NAME)->insert([
 			'id_travaux' => (int) $id_travaux,
 			'id_fam_ref' => (int) $id_fam_ref,
 			'token'      => $token,
 			'expires_at' => $expires,
 			'created'    => $now,
 		]);
-		$this->_debug_array[] = $this->db->last_query();
+		$this->log();
 
 		return $token;
 	}
@@ -75,13 +73,8 @@ class ValidationToken_model extends Core_model
 			return null;
 		}
 
-		$row = $this->db->select('*')
-			->from(self::TABLE_NAME)
-			->where('token', $token)
-			->where('expires_at >=', date('Y-m-d H:i:s'))
-			->get()
-			->row();
-		$this->_debug_array[] = $this->db->last_query();
+		$row = $this->db->table(self::TABLE_NAME)->select('*')->where('token', $token)->where('expires_at >=', date('Y-m-d H:i:s'))->get()->getRow();
+		$this->log();
 
 		return $row ?: null;
 	}
@@ -94,8 +87,7 @@ class ValidationToken_model extends Core_model
 	 */
 	public function markUsed($id)
 	{
-		$this->db->where('id', (int) $id)
-			->update(self::TABLE_NAME, ['used_at' => date('Y-m-d H:i:s')]);
-		$this->_debug_array[] = $this->db->last_query();
+		$this->db->table(self::TABLE_NAME)->where('id', (int) $id)->update(['used_at' => date('Y-m-d H:i:s')]);
+		$this->log();
 	}
 }

@@ -24,15 +24,13 @@ class AlertPref_model extends Core_model
 {
 	const TABLE_NAME = 'famille_alerts';
 
-	function __construct()
-	{
-		parent::__construct();
-		$this->_set('table',     self::TABLE_NAME);
-		$this->_set('key',       'id');
-		$this->_set('order',     'id_fam');
-		$this->_set('direction', 'asc');
-		$this->_set('json',      'AlertPref.json');
-	}
+	protected $table = self::TABLE_NAME;
+	protected $primaryKey = 'id';
+	protected $order = 'id_fam';
+	protected $direction = 'asc';
+	protected $json = 'AlertPref.json';
+
+
 
 	// -----------------------------------------------------------------------
 	// Hooks attendus par element_checkboxdb
@@ -49,8 +47,8 @@ class AlertPref_model extends Core_model
 	public function DeleteLink($foreignkey, $id = null)
 	{
 		if (!$id) return;
-		$this->db->where($foreignkey, (int) $id)->delete(self::TABLE_NAME);
-		$this->_debug_array[] = $this->db->last_query();
+		$this->db->table(self::TABLE_NAME)->where($foreignkey, (int) $id)->delete();
+		$this->log();
 	}
 
 	/**
@@ -82,26 +80,21 @@ class AlertPref_model extends Core_model
 	 */
 	public function GetSubscribers($id_type, $ecole = null)
 	{
-		$this->db->select('famille.id, famille.nom, famille.e_mail, famille.ecole')
-			->from(self::TABLE_NAME.' AS fa')
-			->join('famille', 'famille.id = fa.id_fam', 'inner')
-			->where('fa.id_type', $id_type)
-			->where('famille.e_mail !=', '')
-			->where('famille.e_mail IS NOT NULL', null, false);
+		$b = $this->db->table(self::TABLE_NAME.' AS fa')->select('famille.id, famille.nom, famille.e_mail, famille.ecole')->join('famille', 'famille.id = fa.id_fam', 'inner')->where('fa.id_type', $id_type)->where('famille.e_mail !=', '')->where('famille.e_mail IS NOT NULL', null, false);
 
 		// Filtrage écoles : la famille reçoit l'alerte si la session est
 		// pour les deux écoles (B), ou si la session cible spécifiquement
 		// son école, ou si la famille est sur les deux écoles.
 		if ($ecole && in_array($ecole, ['M', 'L'])) {
-			$this->db->group_start()
+			$b->groupStart()
 				->where('famille.ecole', $ecole)
-				->or_where('famille.ecole', 'B')
-				->group_end();
+				->orWhere('famille.ecole', 'B')
+				->groupEnd();
 		}
 
-		$query = $this->db->get();
-		$this->_debug_array[] = $this->db->last_query();
-		return ($query->num_rows()) ? $query->result() : [];
+		$query = $b->get();
+		$this->log();
+		return ($query->getNumRows()) ? $query->getResult() : [];
 	}
 
 	/**
@@ -112,13 +105,10 @@ class AlertPref_model extends Core_model
 	 */
 	public function GetSubscriptions($id_fam)
 	{
-		$query = $this->db->select('id_type')
-			->from(self::TABLE_NAME)
-			->where('id_fam', (int) $id_fam)
-			->get();
-		$this->_debug_array[] = $this->db->last_query();
+		$query = $this->db->table(self::TABLE_NAME)->select('id_type')->where('id_fam', (int) $id_fam)->get();
+		$this->log();
 		$out = [];
-		foreach ($query->result() as $row) {
+		foreach ($query->getResult() as $row) {
 			$out[] = $row->id_type;
 		}
 		return $out;

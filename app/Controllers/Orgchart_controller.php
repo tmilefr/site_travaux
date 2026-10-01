@@ -10,7 +10,7 @@ namespace App\Controllers;
  * @author      Tmile
  * @link        http://www.24bis.com
  */
-class Orgchart_controller extends MY_Controller {
+class Orgchart_controller extends CrudController {
 
 	public $Trombi_model;
 
@@ -18,8 +18,8 @@ class Orgchart_controller extends MY_Controller {
 	 * @return void 
 	 * @throws RuntimeException 
 	 */
-	public function __construct(){
-		parent::__construct();
+	protected function boot(): void
+	{
 		$this->_controller_name = 'Orgchart_controller';  //controller name for routing
 		$this->_model_name 		= 'Orgchart_model';	   //DataModel
 		$this->_edit_view 		= 'edition/Orgchart_form';//template for editing
@@ -35,7 +35,7 @@ class Orgchart_controller extends MY_Controller {
 		$this->LoadModel('Orgchart_model');
 		$this->LoadModel('GroupesMembers_model');
 		$this->LoadModel('Candidatures_model');
-		$this->load->library('RefNotifier');
+		$this->refnotifier = service('refNotifier');
 		
 
 		$this->_set('_debug', FALSE);
@@ -52,12 +52,12 @@ class Orgchart_controller extends MY_Controller {
 	 * 
 	 */
 	public function index(){
-		ci_redirect($this->_controller_name.'/orga');
+		$this->goTo($this->_controller_name.'/orga');
 	}
 	
 	public function featured($id){
 		$this->{$this->_model_name}->UpdateHit($id);
-		ci_redirect($this->_controller_name.'/list');
+		$this->goTo($this->_controller_name.'/list');
 	}
 	/** 
 	 * @return void 
@@ -158,12 +158,12 @@ class Orgchart_controller extends MY_Controller {
 
 		if ($state){
 			// [AJOUT] On retient le contexte avant suppression
-			$cand_id = (int) $this->input->post('id');
+			$cand_id = (int) $this->request->getPost('id');
 			$cand_row = $cand_id
-				? $this->db->from('candidatures')->where('id', $cand_id)->get()->row()
+				? $this->db->table('candidatures')->where('id', $cand_id)->get()->getRow()
 				: null;
 
-			$this->Candidatures_model->_set('key_value', $this->input->post('id'));
+			$this->Candidatures_model->_set('key_value', $this->request->getPost('id'));
 			$this->Candidatures_model->delete();
 
 			// [AJOUT] Alerte e-mail au RT de la commission
@@ -175,16 +175,16 @@ class Orgchart_controller extends MY_Controller {
 				);
 			}
 
-			ci_redirect($this->_controller_name.'/view_one/'.$id);
+			$this->goTo($this->_controller_name.'/view_one/'.$id);
 		} else {
-			if ($this->input->post('form_mod')){
-				if ($this->form_validation->run('Candidatures_model') === FALSE){ //les champs sont ok
+			if ($this->request->getPost('form_mod')){
+				if ($this->runValidation('Candidatures_model') === FALSE){ //les champs sont ok
 					//echo debug($_POST);
 					$this->bootstrap_tools->_SetHead('assets/js/activate_modal.js','js');
 				} else {
 					$datas = $this->_ProcessPost('Candidatures_model');	
-					$this->data_view['msg'] = ci_lang('CANDIDATE_SENDED');
-					//ci_redirect($this->_controller_name.'/view_one/'.$id);
+					$this->data_view['msg'] = tr('CANDIDATE_SENDED');
+					//$this->goTo($this->_controller_name.'/view_one/'.$id);
 
 					// [AJOUT] Alerte e-mail au RT pour toute candidature
 					// (création OU mise à jour).

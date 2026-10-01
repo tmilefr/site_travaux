@@ -12,21 +12,21 @@ use StdClass;
  * @author      Tmile
  * @link        http://www.24bis.com
  */
-class Units_controller extends MY_Controller {
+class Units_controller extends CrudController {
 
 
 	/**
 	 * @return void 
 	 * @throws RuntimeException 
 	 */
-	public function __construct(){
-		parent::__construct();
+	protected function boot(): void
+	{
 		$this->_controller_name = 'Units_controller';  //controller name for routing
 		$this->_model_name 		= 'Units_model';	   //DataModel
 		$this->_edit_view 		= 'edition/Units_controller_form';//template for editing
 		$this->_list_view		= 'unique/Units_controller_view.php';
 		$this->_autorize 		= array('list'=>true,'add'=>true,'edit'=>true,'delete'=>true,'view'=>true,'valid'=>true);
-		$this->title 			.=  $this->lang->line('GESTION').$this->lang->line($this->_controller_name);
+		$this->title 			.=  tr('GESTION').tr($this->_controller_name);
 
 		$this->_bg_color = 'nicdark_bg_violet';
 
@@ -64,21 +64,21 @@ class Units_controller extends MY_Controller {
 
 		$this->Infos_model->_set('order','travaux.date_travaux');
 		$this->Infos_model->_set('direction','desc');
-		$elements = $this->input->post('elements');
+		$elements = $this->request->getPost('elements');
 		//@todo gestion des erreurs nl 
-		if ($this->input->post('form_mod') == 'valid' ){
+		if ($this->request->getPost('form_mod') == 'valid' ){
 			foreach($elements AS $id){
 				$info = [];
-				$info['heure_debut_effective'] = $this->input->post('heure_debut_prevue'.$id);
-				$info['heure_fin_effective'] = $this->input->post('heure_fin_prevue'.$id);
-				$info['nb_unites_valides_effectif'] = $this->input->post('nb_units'.$id);
+				$info['heure_debut_effective'] = $this->request->getPost('heure_debut_prevue'.$id);
+				$info['heure_fin_effective'] = $this->request->getPost('heure_fin_prevue'.$id);
+				$info['nb_unites_valides_effectif'] = $this->request->getPost('nb_units'.$id);
 				$info['nb_unites_valides'] = 0;
 				$this->Infos_model->valid_unit($id,$info);
 			}
-			ci_redirect($this->_get('_controller_name').'/valid');
+			$this->goTo($this->_get('_controller_name').'/valid');
 		}
 		if (!$elements)
-			ci_redirect($this->_get('_controller_name').'/valid');
+			$this->goTo($this->_get('_controller_name').'/valid');
 		//objet options dans le  model Infos_model
 		$opt = new \stdClass();
 		$opt->ids = $elements;
@@ -157,10 +157,10 @@ class Units_controller extends MY_Controller {
 		$this->_set('view_inprogress', 'unique/'.$this->_controller_name.'_valid');
 
 		// var are stored in session
-		$this->Infos_model->_set('global_search', $this->session->userdata($this->set_ref_field('global_search')));
-		$this->Infos_model->_set('order'        , $this->session->userdata($this->set_ref_field('order')));
-		$this->Infos_model->_set('filter'       , $this->session->userdata($this->set_ref_field('filter')));
-		$this->Infos_model->_set('direction'    , $this->session->userdata($this->set_ref_field('direction')));
+		$this->Infos_model->_set('global_search', $this->session->get($this->set_ref_field('global_search')));
+		$this->Infos_model->_set('order'        , $this->session->get($this->set_ref_field('order')));
+		$this->Infos_model->_set('filter'       , $this->session->get($this->set_ref_field('filter')));
+		$this->Infos_model->_set('direction'    , $this->session->get($this->set_ref_field('direction')));
 
 		// options dans le model Infos_model
 		$opt = new \stdClass();

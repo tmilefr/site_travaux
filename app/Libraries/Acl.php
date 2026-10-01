@@ -2,6 +2,9 @@
 
 namespace App\Libraries;
 
+use App\Models\Acl_roles_model;
+use CodeIgniter\HTTP\RedirectResponse;
+
 /**
  * Acl
  * Gestion de la connexion et de la sécurité du site.
@@ -29,8 +32,11 @@ class Acl
 {
 	protected $is_log        = FALSE;
 
-	/** @var CI_Controller */
-	protected $CI;
+	/** @var \CodeIgniter\Session\Session */
+	protected $session;
+
+	/** @var Acl_roles_model */
+	protected $roles;
 
 	protected $userId        = NULL;
 	protected $userRoleId    = NULL;
@@ -51,7 +57,7 @@ class Acl
 		'admwork_controller/validate_by_token',
 		'cron/send_ref_validation_mails',  // ← accès par lien email
 		'cron/send_new_session_alerts',
-		'translations_controller/switch_lang' 
+		'translations_controller/switch_lang'
 	];
 
 	/**
@@ -63,30 +69,30 @@ class Acl
 	protected $_debug       = FALSE;
 	protected $_debug_array = [];
 
-	/** @var stdClass */
+	/** @var \stdClass */
 	protected $usercheck    = NULL;
 
 	// -----------------------------------------------------------------------
 
 	/**
-	 * Constructeur
-	 *
-	 * @param array $config
+	 * Le contrôleur et l'action courants sont lus dans le routeur CI4.
 	 */
-	public function __construct($config = [])
+	public function __construct()
 	{
-		$this->CI = &get_instance();
-		$this->CI->load->library('session');
-		$this->CI->load->library('auth');
-		$this->CI->load->helper('url');
-		$this->CI->load->model('Acl_roles_model');
-		$this->CI->load->model('Acl_users_model');
+		$this->session = session();
+		$this->roles   = model(Acl_roles_model::class);
 
-		$this->controller = strtolower($this->CI->uri->rsegment(1));
-		$this->action     = strtolower($this->CI->uri->rsegment(2));
+		$router = service('router');
+		$class  = $router->controllerName();
+		if (is_string($class) && $class !== '') {
+			$this->controller = strtolower(substr(strrchr('\\' . $class, '\\'), 1));
+		}
+		// Action = 2e segment de l'URL (Controleur/action/...), « index » par défaut
+		$segments     = array_values(array_filter(explode('/', trim(service('request')->getPath(), '/')), 'strlen'));
+		$this->action = strtolower($segments[1] ?? 'index');
 
 		// Récupère l'objet utilisateur depuis la session
-		$this->usercheck = $this->CI->session->userdata('usercheck');
+		$this->usercheck = $this->session->get('usercheck');
 
 		if (!isset($this->usercheck->autorize)) {
 			$this->_initGuestUsercheck();
@@ -146,43 +152,43 @@ class Acl
 	 *
 	 * @return void|mixed
 	 */
-	public function Route()
+	public function Route(): ?RedirectResponse
 	{
 		if ($this->DontCheck) {
-			return TRUE;
+			return NULL;
 		}
 		$currentPage = $this->controller . '/' . $this->action;
 		if ($this->IsLog()) {
-			if (!$this->CI->acl->hasAccess()) {
+			if (!$this->hasAccess()) {
 				if ($currentPage !== '/home/no_right'
-					&& !in_array($currentPage, $this->CI->acl->getGuestPages())
+					&& !in_array($currentPage, $this->getGuestPages())
 				) {
 					$this->routes_hisory[] = $currentPage;
-					$this->CI->session->set_userdata('routes', $this->routes_hisory);
-					return ci_redirect('/Home/no_right');
+					$this->session->set('routes', $this->routes_hisory);
+					return redirect()->to(site_url('Home/no_right'));
 				}
 			} else {
-				if ($this->CI->config->item('maintenance') == TRUE
-					&& $this->controller . '/' . $this->action !== 'home/maintenance'
+				if (config('Travaux')->maintenance == TRUE
+					&& $currentPage !== 'home/maintenance'
 				) {
 					if ($this->getType() !== 'sys') {
-						return ci_redirect('/Home/maintenance');
+						return redirect()->to(site_url('Home/maintenance'));
 					}
 				}
-				$this->_debug_array[] = $this->controller . '/' . $this->action . ' GRANTED';
+				$this->_debug_array[] = $currentPage . ' GRANTED';
 			}
 		} else {
-			if ( in_array($currentPage, $this->CI->acl->getGuestPages()) && !in_array($currentPage,['home/login','home/index'])){ //sauf login
-				return TRUE;
-			}	
-			if (php_sapi_name() == 'cli') {
+			if (in_array($currentPage, $this->getGuestPages()) && !in_array($currentPage, ['home/login', 'home/index'])) { //sauf login
+				return NULL;
+			}
+			if (is_cli()) {
 				echo "no access for $currentPage\n";
-			} else {
-				if ($this->controller . '/' . $this->action !== 'home/login') {
-					return ci_redirect('/Home/login');
-				}
+			} elseif ($currentPage !== 'home/login') {
+				return redirect()->to(site_url('Home/login'));
 			}
 		}
+
+		return NULL;
 	}
 
 	// -----------------------------------------------------------------------
@@ -200,18 +206,12 @@ class Acl
 	{
 		// Invalide d'abord le cache de l'ancien rôle éventuel
 		$previousRoleId = isset($this->usercheck->role_id) ? $this->usercheck->role_id : 0;
-		$this->CI->session->unset_userdata('acl_perms_' . $previousRoleId);
+		$this->session->remove('acl_perms_' . $previousRoleId);
 
-		// Garde-fou : Auth est normalement autoloadée via config/autoload.php.
-		// On recharge quand même au cas où, l'appel est idempotent côté CI.
-		if (!isset($this->CI->auth) || !is_object($this->CI->auth)) {
-			$this->CI->load->library('Auth');
-		}
-
-		$connectedUser = $this->CI->auth->Login($data);
+		$connectedUser = service('auth')->Login($data);
 
 		if (empty($connectedUser->autorize) || $connectedUser->autorize !== TRUE) {
-			return $this->CI->lang->line('WRONG_ACCES');
+			return tr('WRONG_ACCES');
 		}
 
 		// Construction de l'objet usercheck à partir du connected_user
@@ -222,7 +222,7 @@ class Acl
 		$usercheck->id       = (int) $connectedUser->id;
 		$usercheck->role_id  = (int) $connectedUser->role_id;
 
-		$this->CI->session->set_userdata('usercheck', $usercheck);
+		$this->session->set('usercheck', $usercheck);
 		$this->usercheck = $usercheck;
 
 		// Pré-charger les permissions en session dès la connexion
@@ -241,9 +241,9 @@ class Acl
 	public function Logout()
 	{
 		if ($this->IsLog()) {
-			$this->CI->session->unset_userdata('acl_perms_' . $this->usercheck->role_id);
+			$this->session->remove('acl_perms_' . $this->usercheck->role_id);
 		}
-		$this->CI->session->sess_destroy();
+		$this->session->destroy();
 	}
 
 	// -----------------------------------------------------------------------
@@ -312,7 +312,7 @@ class Acl
 	private function _getPermissionsFromCache()
 	{
 		$cacheKey = 'acl_perms_' . $this->usercheck->role_id;
-		$cached   = $this->CI->session->userdata($cacheKey);
+		$cached   = $this->session->get($cacheKey);
 
 		if ($cached !== NULL && is_array($cached)) {
 			$this->_debug_array[] = 'ACL permissions: cache hit (role_id=' . $this->usercheck->role_id . ')';
@@ -330,9 +330,9 @@ class Acl
 	 */
 	private function _loadAndCachePermissions($roleId)
 	{
-		$permissions = $this->CI->Acl_roles_model->getRolePermissions($roleId);
+		$permissions = $this->roles->getRolePermissions($roleId);
 		$cacheKey    = 'acl_perms_' . $roleId;
-		$this->CI->session->set_userdata($cacheKey, $permissions);
+		$this->session->set($cacheKey, $permissions);
 		$this->_debug_array[] = 'ACL permissions: chargées depuis BDD et mises en cache (role_id=' . $roleId . ')';
 		return $permissions;
 	}
@@ -342,11 +342,8 @@ class Acl
 	public function __destruct()
 	{
 		if ($this->_debug) {
-			unset($this->CI);
 			echo debug($this, __FILE__);
 		}
 	}
 }
 
-/* End of file Acl.php */
-/* Location: ./application/libraries/Acl.php */

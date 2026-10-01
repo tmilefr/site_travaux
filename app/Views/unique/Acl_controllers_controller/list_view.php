@@ -33,7 +33,7 @@ $acl_warnings = isset($acl_warnings) ? $acl_warnings : array();
                 <div class="acl-kpi__body">
                     <div class="acl-kpi__value"><?php echo (int) $acl_kpis['total_ctrls']; ?></div>
                     <div class="acl-kpi__label">
-                        <?php echo $this->lang->line('ACL_KPI_CONTROLLERS') ?: 'Contrôleurs'; ?>
+                        <?php echo tr('ACL_KPI_CONTROLLERS') ?: 'Contrôleurs'; ?>
                     </div>
                 </div>
             </div>
@@ -43,10 +43,10 @@ $acl_warnings = isset($acl_warnings) ? $acl_warnings : array();
                 <div class="acl-kpi__body">
                     <div class="acl-kpi__value"><?php echo (int) $acl_kpis['total_actions']; ?></div>
                     <div class="acl-kpi__label">
-                        <?php echo $this->lang->line('ACL_KPI_ACTIONS') ?: 'Actions'; ?>
+                        <?php echo tr('ACL_KPI_ACTIONS') ?: 'Actions'; ?>
                         <small class="text-muted">
                             (Ø <?php echo $acl_kpis['avg_actions']; ?>/<?php
-                                echo $this->lang->line('ACL_KPI_CTRL_SHORT') ?: 'ctrl'; ?>)
+                                echo tr('ACL_KPI_CTRL_SHORT') ?: 'ctrl'; ?>)
                         </small>
                     </div>
                 </div>
@@ -57,7 +57,7 @@ $acl_warnings = isset($acl_warnings) ? $acl_warnings : array();
                 <div class="acl-kpi__body">
                     <div class="acl-kpi__value"><?php echo (int) $acl_kpis['total_rules']; ?></div>
                     <div class="acl-kpi__label">
-                        <?php echo $this->lang->line('ACL_KPI_RULES') ?: 'Règles ACL'; ?>
+                        <?php echo tr('ACL_KPI_RULES') ?: 'Règles ACL'; ?>
                     </div>
                 </div>
             </div>
@@ -67,7 +67,7 @@ $acl_warnings = isset($acl_warnings) ? $acl_warnings : array();
                 <div class="acl-kpi__body">
                     <div class="acl-kpi__value"><?php echo (int) $acl_kpis['total_roles_using']; ?></div>
                     <div class="acl-kpi__label">
-                        <?php echo $this->lang->line('ACL_KPI_ROLES_USING') ?: 'Rôles actifs'; ?>
+                        <?php echo tr('ACL_KPI_ROLES_USING') ?: 'Rôles actifs'; ?>
                     </div>
                 </div>
             </div>
@@ -103,7 +103,7 @@ $acl_warnings = isset($acl_warnings) ? $acl_warnings : array();
                                     data-target="#<?php echo $collapse_id; ?>"
                                     aria-expanded="false"
                                     aria-controls="<?php echo $collapse_id; ?>">
-                                <?php echo $this->lang->line('ACL_WARN_DETAILS') ?: 'Voir'; ?>
+                                <?php echo tr('ACL_WARN_DETAILS') ?: 'Voir'; ?>
                                 <span class="oi oi-chevron-bottom" aria-hidden="true"></span>
                             </button>
                         </div>
@@ -127,16 +127,16 @@ $acl_warnings = isset($acl_warnings) ? $acl_warnings : array();
                 <?php } ?>
             </div>
         <?php } ?>
-        <?php if ($this->acl->hasAccess('Acl_controllers_controller/bulk_add_action')){ ?>
+        <?php if ($acl->hasAccess('Acl_controllers_controller/bulk_add_action')){ ?>
         <a href="<?php echo site_url('Acl_controllers_controller/bulk_add_action'); ?>" class="btn btn-warning">
             <i class="oi oi-plus"></i>
-            <?php echo $this->lang->line('Acl_controllers_controller_bulk_add_action'); ?>
+            <?php echo tr('Acl_controllers_controller_bulk_add_action'); ?>
         </a>
         <?php } ?>
-        <?php if ($this->acl->hasAccess('Acl_controllers_controller/scan')){ ?>
+        <?php if ($acl->hasAccess('Acl_controllers_controller/scan')){ ?>
         <a href="<?php echo site_url('Acl_controllers_controller/scan'); ?>" class="btn btn-warning">
             <i class="oi oi-plus"></i>
-            <?php echo $this->lang->line('Acl_controllers_controller_scan'); ?>
+            <?php echo tr('Acl_controllers_controller_scan'); ?>
         </a>
         <?php } ?>
     </div>
@@ -147,7 +147,7 @@ $acl_warnings = isset($acl_warnings) ? $acl_warnings : array();
 // On délègue ensuite à la vue de liste générique : on ne réécrit pas
 // le tri, les filtres, la pagination, etc. — tout reste au même endroit.
 // ===========================================================================
-$this->load->view('unique/list_view', isset($data_view) ? $data_view : array());
+echo view('unique/list_view', get_defined_vars());
 ?>
 
 <style>

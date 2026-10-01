@@ -22,15 +22,15 @@
  */
 
 // Petits raccourcis ------------------------------------------------------
-$ctrl   = $this->render_object->_getCi('_controller_name');
-$action = $this->render_object->_getCi('_action');
+$ctrl   = $render_object->_getCi('_controller_name');
+$action = $render_object->_getCi('_action');
 
 /**
  * Retourne la traduction pour $key si elle existe, sinon $default.
  * Évite les ternaires PHP imbriqués non parenthésés (PHP 8+).
  */
 $L = function ($key, $default = '') {
-    $line = $this->lang->line($key);
+    $line = tr($key);
     return ($line !== false && $line !== '') ? $line : $default;
 };
 
@@ -107,7 +107,7 @@ $type_label = function ($type_session) use ($L) {
                             if (is_array($dates)) {
                                 arsort($dates);
                                 foreach ($dates as $d) {
-                                    $label = $this->render_object->RenderElement('date_travaux', $d, null, 'Admwork_model');
+                                    $label = $render_object->RenderElement('date_travaux', $d, null, 'Admwork_model');
                                     echo '<option value="'.htmlspecialchars($d, ENT_QUOTES).'">'.$label.'</option>';
                                 }
                             }
@@ -170,7 +170,7 @@ $type_label = function ($type_session) use ($L) {
 
             <!-- ===== Formulaire ===== -->
             <?php
-                echo form_open(
+                echo open_form(
                     base_url($ctrl.'/valids'),
                     ['class' => '', 'id' => 'uv-form'],
                     ['form_mod' => 'edit', 'id' => '']
@@ -227,8 +227,8 @@ $type_label = function ($type_session) use ($L) {
                     $card_type  = (int) $work->type_session;
                     $card_count = count($works);
 
-                    $title_render  = $this->render_object->RenderElement('titre',            $work->titre,            null, 'Admwork_model');
-                    $referent_text = $this->render_object->RenderElement('referent_travaux', $work->referent_travaux, null, 'Admwork_model');
+                    $title_render  = $render_object->RenderElement('titre',            $work->titre,            null, 'Admwork_model');
+                    $referent_text = $render_object->RenderElement('referent_travaux', $work->referent_travaux, null, 'Admwork_model');
                     $type_text     = $type_label($work->type_session);
 
                     $haystack = mb_strtolower(strip_tags(
@@ -248,7 +248,7 @@ $type_label = function ($type_session) use ($L) {
                         <div class="uv-card-head-main">
                             <div class="uv-card-date">
                                 <i class="icon-calendar"></i>
-                                <?php echo $this->render_object->RenderElement('date_travaux', $work->date_travaux, null, 'Admwork_model'); ?>
+                                <?php echo $render_object->RenderElement('date_travaux', $work->date_travaux, null, 'Admwork_model'); ?>
                             </div>
                             <h4 class="uv-card-title">
                                 <?php echo $title_render; ?>
@@ -297,14 +297,14 @@ $type_label = function ($type_session) use ($L) {
                                 <tr>
                                     <th class="uv-col-check"></th>
                                     <th class="uv-col-fam">
-                                        <?php echo $this->render_object->render_link('id_famille', 'valid', 'Infos_model'); ?>
+                                        <?php echo $render_object->render_link('id_famille', 'valid', 'Infos_model'); ?>
                                     </th>
                                     <?php if ($is_horaire) { ?>
                                         <th class="uv-col-time">
-                                            <?php echo $this->render_object->render_link('heure_debut_prevue', 'valid', 'Infos_model'); ?>
+                                            <?php echo $render_object->render_link('heure_debut_prevue', 'valid', 'Infos_model'); ?>
                                         </th>
                                         <th class="uv-col-time">
-                                            <?php echo $this->render_object->render_link('heure_fin_prevue', 'valid', 'Infos_model'); ?>
+                                            <?php echo $render_object->render_link('heure_fin_prevue', 'valid', 'Infos_model'); ?>
                                         </th>
                                     <?php } ?>
                                     <th class="uv-col-units">
@@ -329,19 +329,19 @@ $type_label = function ($type_session) use ($L) {
                                     </td>
                                     <td class="uv-col-fam">
                                         <span class="uv-fam-name">
-                                            <?php echo $this->render_object->RenderElement('id_famille', $unit->id_famille, null, 'Infos_model'); ?>
+                                            <?php echo $render_object->RenderElement('id_famille', $unit->id_famille, null, 'Infos_model'); ?>
                                         </span>
                                     </td>
                                     <?php if ($is_horaire) { ?>
                                         <td class="uv-col-time">
-                                            <?php echo $this->render_object->RenderElement('heure_debut_prevue', $unit->heure_debut_prevue, null, 'Infos_model'); ?>
+                                            <?php echo $render_object->RenderElement('heure_debut_prevue', $unit->heure_debut_prevue, null, 'Infos_model'); ?>
                                         </td>
                                         <td class="uv-col-time">
-                                            <?php echo $this->render_object->RenderElement('heure_fin_prevue', $unit->heure_fin_prevue, null, 'Infos_model'); ?>
+                                            <?php echo $render_object->RenderElement('heure_fin_prevue', $unit->heure_fin_prevue, null, 'Infos_model'); ?>
                                         </td>
                                     <?php } ?>
                                     <td class="uv-col-units">
-                                        <?php echo $this->render_object->RenderElement('nb_units', $unit->nb_units, null, 'Admwork_model'); ?>
+                                        <?php echo $render_object->RenderElement('nb_units', $unit->nb_units, null, 'Admwork_model'); ?>
                                     </td>
                                 </tr>
                                 <?php } ?>

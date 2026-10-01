@@ -5,7 +5,11 @@ namespace App\Controllers;
 use App\Models\ValidationToken_model;
 
 
-class Cron extends MY_Controller {
+class Cron extends CrudController {
+
+	/** Pas d'actions CRUD génériques pour ce contrôleur. */
+	protected $_expose_crud = false;
+
     
     protected $lockFile = '';
     public $Sendmail_model = NULL;
@@ -18,11 +22,9 @@ class Cron extends MY_Controller {
      *
      * @return void
      */
-    function __construct()
-    {
-        parent::__construct();
-        // MY_Controller charge déjà app.php + secured.php, donc les
-        // config_item('smtp_*') et mail_from_* sont disponibles ici.
+    protected function boot(): void
+	{
+        // la configuration e-mail vient de Config\Email (.env).
         $this->lockFile = rtrim(ROOTPATH,'/\\').'/process.loc';
     }
 
@@ -40,39 +42,34 @@ class Cron extends MY_Controller {
 		$this->LoadModel('Sendmail_model');
         $this->LoadModel('Sendmail_statut_model');
 
-        $this->load->library('email');
+        // Le service e-mail lit Config\Email (surchargée par les variables email.* du .env)
+        $this->email = service('email');
 
-        // Initialisation explicite avec les valeurs venues de
-        // app.php (non-sensibles) + secured.php (sensibles, non versionné).
-        // On force ici plutôt que de dépendre de l'auto-init de la lib,
-        // pour rendre l'origine de la config tracable.
-        $this->email->initialize($this->_buildEmailConfig());
-
-        // Adresse expéditeur : on la lit en config (secured.php).
+        // Adresse expéditeur : on la lit en config (.env : travaux.mailFromEmail).
         // Fallback explicite pour ne pas envoyer avec un From vide
         // si l'environnement n'a pas été configuré.
-        $fromEmail = $this->config->item('mail_from_email');
-        $fromName  = $this->config->item('mail_from_name');
+        $fromEmail = config('Travaux')->mailFromEmail;
+        $fromName  = config('Travaux')->mailFromName;
         if (empty($fromEmail)) {
-            log_message('error', 'Cron sendmail : mail_from_email non configuré dans secured.php, abandon.');
-            echo "Erreur : mail_from_email non configuré (voir secured.php)\n";
+            log_message('error', 'Cron sendmail : travaux.mailFromEmail non configuré dans .env, abandon.');
+            echo "Erreur : travaux.mailFromEmail non configuré (voir .env)\n";
             return;
         }
-        $replyTo = $this->config->item('mail_reply_to');
+        $replyTo = config('Travaux')->mailReplyTo;
 
         $listemails = $this->Sendmail_model->get4send($size);
         foreach($listemails as $key=>$listemail){
 
-            $this->email->clear(TRUE);
-            $this->email->from($fromEmail, $fromName ?: $fromEmail);
+            $this->email->clear(true);
+            $this->email->setFrom($fromEmail, $fromName ?: $fromEmail);
             if (!empty($replyTo)) {
-                $this->email->reply_to($replyTo);
+                $this->email->setReplyTo($replyTo);
             }
-            $this->email->to($listemail->email);
-            $this->email->subject($listemail->object);
-            $this->email->message($listemail->message);
+            $this->email->setTo($listemail->email);
+            $this->email->setSubject($listemail->object);
+            $this->email->setMessage($listemail->message);
 
-            $listemail->statut = (($this->email->send()) ? 1:2);
+            $listemail->statut = (($this->email->send(false)) ? 1:2);
             // Bug fix : 'h' = format 12h (sans AM/PM), donc 14h devenait 02h.
             // 'H' = format 24h, qui est le bon pour un timestamp en BDD.
             $listemail->updated = date('Y-m-d H:i:s');
@@ -92,38 +89,12 @@ class Cron extends MY_Controller {
             $statut['date'] = date('Y-m-d H:i:s');
             $statut['sendstatut'] = $listemail->statut; //nouveau
             $statut['created'] = date('Y-m-d H:i:s');
-            $statut['error'] = $this->email->print_debugger();
+            $statut['error'] = $this->email->printDebugger();
             $statut['sendstatut'] = $listemail->statut;
             $this->Sendmail_statut_model->post($statut);
             echo 'e-mail '.$key.' : '.$listemail->statut."\n";
         }
 	}
-
-    /**
-     * Construit le tableau de config attendu par CI_Email à partir des
-     * config items chargés (app.php + secured.php).
-     *
-     * Centraliser ce mapping ici évite que les futures fonctions cron
-     * (send_ref_validation_mails, etc.) aient à le re-faire chacune.
-     *
-     * @return array
-     */
-    protected function _buildEmailConfig()
-    {
-        return [
-            'protocol'    => $this->config->item('protocol')    ?: 'smtp',
-            'smtp_host'   => $this->config->item('smtp_host'),
-            'smtp_port'   => $this->config->item('smtp_port'),
-            'smtp_user'   => $this->config->item('smtp_user'),
-            'smtp_pass'   => $this->config->item('smtp_pass'),
-            'smtp_crypto' => $this->config->item('smtp_crypto') ?: 'tls',
-            'charset'     => $this->config->item('charset')     ?: 'utf-8',
-            'mailtype'    => $this->config->item('mailtype')    ?: 'html',
-            'wordwrap'    => $this->config->item('wordwrap'),
-            'newline'     => $this->config->item('newline')     ?: "\r\n",
-            'crlf'        => $this->config->item('crlf')        ?: "\r\n",
-        ];
-    }
 
     function __destruct()
     {
@@ -166,7 +137,7 @@ class Cron extends MY_Controller {
             return;
         }
 
-        $base_url = config_item('base_url') ?: base_url();
+        $base_url = base_url() ?: base_url();
 
         foreach ($works as $work) {
             // 1) Retrouver la famille référente (via groupes_member.id_fam)
@@ -263,7 +234,7 @@ class Cron extends MY_Controller {
             return;
         }
 
-        $base_url = config_item('base_url') ?: base_url();
+        $base_url = base_url() ?: base_url();
         $register_url = rtrim($base_url, '/') . '/Admwork_controller/register';
 
         $total_mails  = 0;
@@ -351,24 +322,20 @@ class Cron extends MY_Controller {
     {
         $today = date('Y-m-d');
 
-        $this->db->select('travaux.*')
-            ->from('travaux')
-            ->where('travaux.archived !=', 1)
-            ->where('travaux.alert_sent_at IS NULL', null, false)
-            ->where('travaux.statut', '1')        // Publié uniquement
+        $b = $this->db->table('travaux')->select('travaux.*')->where('travaux.archived !=', 1)->where('travaux.alert_sent_at IS NULL', null, false)->where('travaux.statut', '1')        // Publié uniquement
             ->where('travaux.date_travaux >=', $today)
             ->where('travaux.type IS NOT NULL', null, false)
             ->where('travaux.type !=', '');
 
         if ($lookahead_days > 0) {
-            $this->db->where(
+            $b->where(
                 'travaux.date_travaux <=',
                 date('Y-m-d', strtotime('+'.(int) $lookahead_days.' days'))
             );
         }
 
-        $data = $this->db->order_by('travaux.date_travaux', 'ASC')->get();
-        return ($data->num_rows()) ? $data->result() : [];
+        $data = $b->orderBy('travaux.date_travaux', 'ASC')->get();
+        return ($data->getNumRows()) ? $data->getResult() : [];
     }
 
 
@@ -381,13 +348,7 @@ class Cron extends MY_Controller {
      */
     private function _GetTypeLabel($cle)
     {
-        $row = $this->db->select('value')
-            ->from('options')
-            ->where('cle', $cle)
-            ->where('filter', 'type')
-            ->limit(1)
-            ->get()
-            ->row();
+        $row = $this->db->table('options')->select('value')->where('cle', $cle)->where('filter', 'type')->limit(1)->get()->getRow();
         return $row ? $row->value : $cle;
     }
 

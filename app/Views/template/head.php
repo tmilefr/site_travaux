@@ -9,8 +9,8 @@
 	<!-- Required meta tags -->
 	<meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!--meta responsive-->
-	<?php $this->bootstrap_tools->RenderAttachFiles('css');?>
-	<?php $this->bootstrap_tools->RenderAttachFiles('font');?>
+	<?php $bootstrap_tools->RenderAttachFiles('css');?>
+	<?php $bootstrap_tools->RenderAttachFiles('font');?>
 	<title
 	><?php echo $app_name;?></title>
 	<!--[if lt IE 9]>  
@@ -40,7 +40,7 @@
 								<?php
 								if ($search_object->autorize){
 									$attributes = array('class' => 'form-inline', 'id' => 'myform');
-									echo form_open($search_object->url, $attributes);?>
+									echo open_form($search_object->url, $attributes);?>
 									<input class="form-control mr-sm-2" type="search" name='global_search' id='global_search' placeholder="Search" aria-label="Search" value="<?php echo $search_object->global_search;?>">
 									<button class="btn btn-success btn-sm" type="submit"><span class="oi oi-magnifying-glass"></span></button>&nbsp;
 									<?php if ($search_object->global_search){ ?>
@@ -51,9 +51,9 @@
 								}
 								?>
 								</li>
-								<?php echo $this->render_menu->Get('sysmenu');?>						
-								<?php echo $this->render_menu->Get('optionmenu');?>	
-								<?php if ( $this->acl->Islog() ) { ?>
+								<?php echo $render_menu->Get('sysmenu');?>						
+								<?php echo $render_menu->Get('optionmenu');?>	
+								<?php if ( $acl->Islog() ) { ?>
 
 								<?php
 									// [i18n] Sélecteur de langue.
@@ -69,15 +69,15 @@
 										}
 										sort($_available_idioms);
 									}
-									$_current_idiom = $this->session->userdata('user_language');
-									if (!$_current_idiom) { $_current_idiom = $this->conf->item('language'); }
-									if (!$_current_idiom) { $_current_idiom = 'french'; }
+									$_current_idiom = session()->get('user_language');
+									if (!$_current_idiom) { $_current_idiom = service('request')->getLocale(); }
+									if (!$_current_idiom) { $_current_idiom = 'fr'; }
 
 									if (count($_available_idioms) > 1) { ?>
 										<li class="nav-item dropdown">
 											<a class="nav-link dropdown-toggle" href="#" id="langDropdown" role="button"
 											data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
-											title="<?php echo $this->lang->line('LANG_SWITCHER_TITLE') ?: 'Changer de langue'; ?>">
+											title="<?php echo tr('LANG_SWITCHER_TITLE') ?: 'Changer de langue'; ?>">
 												<span class="oi oi-globe" aria-hidden="true"></span>
 												<span class="d-none d-lg-inline text-gray-600 small ml-1">
 													<?php echo htmlspecialchars(strtoupper(substr($_current_idiom, 0, 2)), ENT_QUOTES, 'UTF-8'); ?>
@@ -95,12 +95,12 @@
 									<?php } ?>
 									<li class="nav-item dropdown">
 										<a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-											<span class="mr-2 d-none d-lg-inline text-gray-600 small"><?php echo $this->acl->GetUserName(); ?></span>
+											<span class="mr-2 d-none d-lg-inline text-gray-600 small"><?php echo $acl->GetUserName(); ?></span>
 										</a>
 										<!-- Dropdown - User Information -->
 										<div class="dropdown-menu dropdown-menu" aria-labelledby="userDropdown">
-											<a class="dropdown-item" href="<?php echo base_url('Home/myaccount');?>"><span class="oi oi-person"></span> <?php echo ci_lang('Myaccount');?></a>
-											<a class="dropdown-item" href="<?php echo base_url('Home/logout');?>"><span class="oi oi-account-logout"></span> <?php echo ci_lang('Login_out');?></a>
+											<a class="dropdown-item" href="<?php echo base_url('Home/myaccount');?>"><span class="oi oi-person"></span> <?php echo tr('Myaccount');?></a>
+											<a class="dropdown-item" href="<?php echo base_url('Home/logout');?>"><span class="oi oi-account-logout"></span> <?php echo tr('Login_out');?></a>
 										</div>
 										
 									</li>
@@ -124,15 +124,15 @@
 
                         <div class="nicdark_logo nicdark_marginleft10">
                             <a href="<?php echo base_url('Home');?>">
-								<?php echo $this->render_object->RenderImg('regio.png',$slogan);?>
+								<?php echo $render_object->RenderImg('regio.png',$slogan);?>
 							</a>
                         </div>
-						<?php if ($this->render_object->In_maintenance()){
-									echo '<span class="badge badge-warning">'.ci_lang('Maintenance_in_progress').'</span>';
+						<?php if ($render_object->In_maintenance()){
+									echo '<span class="badge badge-warning">'.tr('Maintenance_in_progress').'</span>';
 								} ?>
 						<nav>
                             <ul class="nicdark_menu blue nicdark_margin010 nicdark_padding50">
-								<?php echo $this->render_menu->Get('mainmenu');?>	
+								<?php echo $render_menu->Get('mainmenu');?>	
                             </ul>
 							
                         </nav>

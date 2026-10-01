@@ -2,37 +2,35 @@
 
 namespace App\Models;
 
-use Exception;
-#[\AllowDynamicProperties]
-class GenericSql_model extends \App\Libraries\Compat\Model {
-	public function __construct()
+use CodeIgniter\Model;
+use Throwable;
+
+/**
+ * Requêtes SQL libres (outils d'administration de l'API).
+ */
+class GenericSql_model extends Model
+{
+	public function distinct($table, $id, $value)
 	{
-		parent::__construct();
+		return $this->db->table($table)->distinct()->select("$id,$value")->get()->getResult();
 	}
-	
-	public function distinct($table,$id,$value){
-		$this->db->distinct();
-		return $this->db->select("$id,$value")->get($table)->result();
-	}
-	
-	public function exec($sql){
+
+	/**
+	 * Exécute une requête SQL ; retourne le résultat, false si vide ou le message d'erreur.
+	 */
+	public function exec($sql)
+	{
 		try {
-			if ($datas = $this->db->query($sql)){
-				return $datas ;
-			} else {
-				return false;
-			}
-		} catch (Exception $e) {
-			return  'Exception reçue : '. $e->getMessage(). "\n";
+			$datas = $this->db->query($sql);
+
+			return $datas ?: false;
+		} catch (Throwable $e) {
+			return 'Exception reçue : ' . $e->getMessage() . "\n";
 		}
 	}
-	
-	public function get($table,$order,$direction ){
-		$datas = $this->db->select('*')
-                           ->order_by($this->order, $this->direction )
-                           ->get($table)
-						   ->result();
-		return $datas;
+
+	public function get($table, $order = null, $direction = null)
+	{
+		return $this->db->table($table)->select('*')->orderBy((string) $order, (string) $direction)->get()->getResult();
 	}
-	
 }

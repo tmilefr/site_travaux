@@ -66,7 +66,7 @@ function _v5_countdown($date) {
     return ['dans '.$d.' j',''];
 }
 
-$acl = $this->acl->getType();
+$acl_type = $acl->getType();
 ?>
 
 <section class="nicdark_section">
@@ -77,9 +77,9 @@ $acl = $this->acl->getType();
 <div class="grid grid_12">
     <div class="aw-page-head">
         <div>
-            <h1 class="subtitle greydark"><?php echo $this->lang->line('work_planned'); ?></h1>
+            <h1 class="subtitle greydark"><?php echo tr('work_planned'); ?></h1>
             <div class="nicdark_space10"></div>
-            <h3 class="subtitle grey"><?php echo $this->lang->line('work_planned_subtitle'); ?></h3>
+            <h3 class="subtitle grey"><?php echo tr('work_planned_subtitle'); ?></h3>
         </div>
         <!-- Toggle vue -->
         <div class="aw-view-toggle">
@@ -140,7 +140,7 @@ $acl = $this->acl->getType();
     <div id="aw-view-cards">
     <div class="aw-cards-grid">
     <?php foreach ($upcoming as $w):
-        $design = $this->render_object->GetDesign($w->type);
+        $design = $render_object->GetDesign($w->type);
         list($cd,$cd_cls) = _v5_countdown($w->date_travaux);
         $mine  = !empty($w->already_registred) ? 'mine'  : '';
         $dispo = $w->register                  ? 'dispo' : '';
@@ -163,11 +163,11 @@ $acl = $this->acl->getType();
                     <p class="aw-card-title"><?php echo htmlspecialchars($w->titre); ?></p>
                     <span class="aw-type-badge <?php echo _v5_badge_cls($w->type); ?>"><?php echo $bl; ?></span>
                     <div class="aw-card-meta">
-                        <div class="aw-meta-row"><i class="icon-pin-outline"></i><?php echo $this->render_object->RenderElement('ecole',$w->ecole); ?></div>
+                        <div class="aw-meta-row"><i class="icon-pin-outline"></i><?php echo $render_object->RenderElement('ecole',$w->ecole); ?></div>
                         <?php if ($w->type_session==1): ?>
                         <div class="aw-meta-row"><i class="icon-clock-1"></i><?php echo $w->heure_deb_trav; ?> – <?php echo $w->heure_fin_trav; ?></div>
                         <?php endif; ?>
-                        <div class="aw-meta-row"><i class="icon-info-outline"></i><?php echo $this->render_object->RenderElement('type_session',$w->type_session); ?></div>
+                        <div class="aw-meta-row"><i class="icon-info-outline"></i><?php echo $render_object->RenderElement('type_session',$w->type_session); ?></div>
                     </div>
                 </div>
                 <div class="aw-card-footer">
@@ -176,15 +176,15 @@ $acl = $this->acl->getType();
                         <?php if (!empty($w->already_registred)): ?>&nbsp;<span class="aw-badge-inscrit">&#10003; Inscrit</span><?php endif; ?>
                     </span>
                     <div class="aw-footer-actions">
-                        <?php if ($this->acl->hasAccess('Admwork_controller/managed_one')): ?>
-                            <a href="<?php echo base_url('Admwork_controller/managed_one/'.$w->id); ?>" class="aw-btn adm"><?php echo $this->lang->line('ADM_WORK'); ?></a>
+                        <?php if ($acl->hasAccess('Admwork_controller/managed_one')): ?>
+                            <a href="<?php echo base_url('Admwork_controller/managed_one/'.$w->id); ?>" class="aw-btn adm"><?php echo tr('ADM_WORK'); ?></a>
                         <?php endif;
-                        if ($this->acl->hasAccess('Admwork_controller/edit')): ?>
-                            <a href="<?php echo base_url('Admwork_controller/edit/'.$w->id); ?>" class="aw-btn adm"><?php echo $this->lang->line('EDIT_WORK'); ?></a>
+                        if ($acl->hasAccess('Admwork_controller/edit')): ?>
+                            <a href="<?php echo base_url('Admwork_controller/edit/'.$w->id); ?>" class="aw-btn adm"><?php echo tr('EDIT_WORK'); ?></a>
                         <?php endif;
                         if ($w->register): ?>
                             <a href="<?php echo base_url('Admwork_controller/register_one/'.$w->id); ?>" class="aw-btn<?php echo !empty($w->already_registred)?' inscrit':''; ?>">
-                                <?php echo !empty($w->already_registred) ? '&#10003; '.$this->lang->line('SEE_YOUR_REGISTRED_WORK') : $this->lang->line('REGISTER_WORK'); ?>
+                                <?php echo !empty($w->already_registred) ? '&#10003; '.tr('SEE_YOUR_REGISTRED_WORK') : tr('REGISTER_WORK'); ?>
                             </a>
                         <?php else: ?>
                             <span class="aw-btn complet">Complet</span>
@@ -206,7 +206,7 @@ $acl = $this->acl->getType();
             <span class="aw-list-sep-count"><?php echo count($mdata['works']); ?> session<?php echo count($mdata['works'])>1?'s':''; ?></span>
         </div>
         <?php foreach ($mdata['works'] as $w):
-            $design = $this->render_object->GetDesign($w->type);
+            $design = $render_object->GetDesign($w->type);
             list($cd,$cd_cls) = _v5_countdown($w->date_travaux);
             $mine  = !empty($w->already_registred) ? 'mine'  : '';
             $dispo = $w->register                  ? 'dispo' : '';
@@ -224,7 +224,7 @@ $acl = $this->acl->getType();
             <div class="aw-list-info">
                 <div class="aw-list-title"><?php echo htmlspecialchars($w->titre); ?></div>
                 <div class="aw-list-meta">
-                    <span><?php echo $this->render_object->RenderElement('ecole',$w->ecole); ?></span>
+                    <span><?php echo $render_object->RenderElement('ecole',$w->ecole); ?></span>
                     <?php if ($w->type_session==1): ?>
                         <span class="aw-list-sep-dot">·</span><span><?php echo $w->heure_deb_trav; ?>–<?php echo $w->heure_fin_trav; ?></span>
                     <?php endif; ?>
@@ -238,11 +238,11 @@ $acl = $this->acl->getType();
             </div>
             <div class="aw-list-cd <?php echo $cd_cls; ?>"><?php echo $cd; ?></div>
             <div class="aw-list-action">
-                <?php if ($acl==='sys'): ?>
-                    <a href="<?php echo base_url('Admwork_controller/managed_one/'.$w->id); ?>" class="aw-btn adm"><?php echo $this->lang->line('ADM_WORK'); ?></a>
+                <?php if ($acl_type==='sys'): ?>
+                    <a href="<?php echo base_url('Admwork_controller/managed_one/'.$w->id); ?>" class="aw-btn adm"><?php echo tr('ADM_WORK'); ?></a>
                 <?php elseif ($w->register): ?>
                     <a href="<?php echo base_url('Admwork_controller/register_one/'.$w->id); ?>" class="aw-btn<?php echo !empty($w->already_registred)?' inscrit':''; ?>">
-                        <?php echo !empty($w->already_registred) ? '&#10003; '.$this->lang->line('SEE_YOUR_REGISTRED_WORK') : $this->lang->line('REGISTER_WORK'); ?>
+                        <?php echo !empty($w->already_registred) ? '&#10003; '.tr('SEE_YOUR_REGISTRED_WORK') : tr('REGISTER_WORK'); ?>
                     </a>
                 <?php else: ?>
                     <span class="aw-btn complet">Complet</span>
@@ -292,7 +292,7 @@ $acl = $this->acl->getType();
 
         <div class="aw-month-body <?php echo $first?'is-open':''; ?>" id="month-<?php echo $mkey; ?>">
         <?php foreach ($mdata['works'] as $w):
-            $design = $this->render_object->GetDesign($w->type);
+            $design = $render_object->GetDesign($w->type);
             list($cd,$cd_cls) = _v5_countdown($w->date_travaux);
             $mine = !empty($w->already_registred)?'mine':'';
             $bl   = isset($design->title)?$design->title:$w->type;
@@ -309,7 +309,7 @@ $acl = $this->acl->getType();
                 <div class="aw-list-info">
                     <div class="aw-list-title"><?php echo htmlspecialchars($w->titre); ?></div>
                     <div class="aw-list-meta">
-                        <span><?php echo $this->render_object->RenderElement('ecole',$w->ecole); ?></span>
+                        <span><?php echo $render_object->RenderElement('ecole',$w->ecole); ?></span>
                         <?php if ($w->type_session==1): ?>
                             <span class="aw-list-sep-dot">·</span><span><?php echo $w->heure_deb_trav; ?>–<?php echo $w->heure_fin_trav; ?></span>
                         <?php endif; ?>
@@ -326,8 +326,8 @@ $acl = $this->acl->getType();
                 </div>
                 <div class="aw-list-cd is-past"><?php echo $cd; ?></div>
                 <div class="aw-list-action">
-                    <?php if ($acl==='sys'): ?>
-                        <a href="<?php echo base_url('Admwork_controller/managed_one/'.$w->id); ?>" class="aw-btn adm"><?php echo $this->lang->line('ADM_WORK'); ?></a>
+                    <?php if ($acl_type==='sys'): ?>
+                        <a href="<?php echo base_url('Admwork_controller/managed_one/'.$w->id); ?>" class="aw-btn adm"><?php echo tr('ADM_WORK'); ?></a>
                     <?php else: ?>
                         <a href="<?php echo base_url('Admwork_controller/register_one/'.$w->id); ?>" class="aw-btn details">Détails</a>
                     <?php endif; ?>

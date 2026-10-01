@@ -29,25 +29,25 @@ $days_to_go = floor((strtotime($work->date_travaux) - strtotime('today')) / 8640
         <div class="grid grid_12">
             <h1 class="subtitle greydark">
                 <?php echo $is_validation_open
-                    ? $this->lang->line('REF_VALIDATE_PAGE_TITLE')
-                    : $this->lang->line('REF_PREVIEW_PAGE_TITLE'); ?>
+                    ? tr('REF_VALIDATE_PAGE_TITLE')
+                    : tr('REF_PREVIEW_PAGE_TITLE'); ?>
                 :
-                <?php echo $this->render_object->RenderElement('titre', $work->titre); ?>
+                <?php echo $render_object->RenderElement('titre', $work->titre); ?>
             </h1>
             <div class="nicdark_space10"></div>
             <h3 class="subtitle grey">
                 <i class="icon-calendar"></i>
-                <?php echo $this->render_object->RenderElement('date_travaux', $work->date_travaux); ?>
+                <?php echo $render_object->RenderElement('date_travaux', $work->date_travaux); ?>
                 &nbsp;&nbsp;
                 <?php if ($work->type_session == 1) { ?>
                     <i class="icon-clock-1"></i>
-                    <?php echo $this->render_object->RenderElement('heure_deb_trav', $work->heure_deb_trav); ?>
+                    <?php echo $render_object->RenderElement('heure_deb_trav', $work->heure_deb_trav); ?>
                     –
-                    <?php echo $this->render_object->RenderElement('heure_fin_trav', $work->heure_fin_trav); ?>
+                    <?php echo $render_object->RenderElement('heure_fin_trav', $work->heure_fin_trav); ?>
                     &nbsp;&nbsp;
                 <?php } ?>
                 <i class="icon-pin-outline"></i>
-                <?php echo $this->render_object->RenderElement('ecole', $work->ecole); ?>
+                <?php echo $render_object->RenderElement('ecole', $work->ecole); ?>
             </h3>
             <div class="nicdark_space20"></div>
             <div class="nicdark_divider left big">
@@ -58,44 +58,44 @@ $days_to_go = floor((strtotime($work->date_travaux) - strtotime('today')) / 8640
             <?php if (!$is_validation_open) { /* MODE GESTION ------------------------- */ ?>
                 <div class="alert alert-info">
                     <i class="icon-info-outline"></i>
-                    <b><?php echo $this->lang->line('REF_PREVIEW_INTRO'); ?></b>
+                    <b><?php echo tr('REF_PREVIEW_INTRO'); ?></b>
                     <br/>
                     <?php
                     if ($days_to_go > 1) {
-                        echo sprintf($this->lang->line('REF_PREVIEW_DAYS_LEFT'), (int) $days_to_go);
+                        echo sprintf(tr('REF_PREVIEW_DAYS_LEFT'), (int) $days_to_go);
                     } elseif ($days_to_go == 1) {
-                        echo $this->lang->line('REF_PREVIEW_TOMORROW');
+                        echo tr('REF_PREVIEW_TOMORROW');
                     } else {
-                        echo $this->lang->line('REF_PREVIEW_TODAY');
+                        echo tr('REF_PREVIEW_TODAY');
                     }
                     ?>
                     <br/><br/>
-                    <?php echo $this->lang->line('REF_MANAGE_HELP'); ?>
+                    <?php echo tr('REF_MANAGE_HELP'); ?>
                 </div>
             <?php } else { /* MODE VALIDATION ----------------------------------------- */ ?>
                 <div class="alert alert-info">
-                    <b><?php echo $this->lang->line('REF_VALIDATE_INTRO'); ?></b><br/>
-                    <?php echo $this->lang->line('REF_VALIDATE_HELP'); ?>
+                    <b><?php echo tr('REF_VALIDATE_INTRO'); ?></b><br/>
+                    <?php echo tr('REF_VALIDATE_HELP'); ?>
                 </div>
             <?php } ?>
 
             <?php /*if ($work->description) { ?>
                 <p>
-                    <?php echo $this->render_object->RenderElement('description', $work->description); ?>
+                    <?php echo $render_object->RenderElement('description', $work->description); ?>
                 </p>
             <?php } */?>
 
             <p>
-                <b><?php echo $this->lang->line('INFO_NB_UNIT'); ?></b>
-                <?php echo $this->render_object->RenderElement('nb_units', $work->nb_units); ?>
-                <?php echo $this->lang->line('INFO_UNIT'); ?>
+                <b><?php echo tr('INFO_NB_UNIT'); ?></b>
+                <?php echo $render_object->RenderElement('nb_units', $work->nb_units); ?>
+                <?php echo tr('INFO_UNIT'); ?>
                 &nbsp;|&nbsp;
-                <b><?php echo $this->lang->line('REF_PLACES_TAKEN'); ?></b>
+                <b><?php echo tr('REF_PLACES_TAKEN'); ?></b>
                 <?php echo $work->nb_inscrits; ?> / <?php echo $work->nb_inscrits_max; ?>
                 <?php if ($work->places_restantes > 0 && !$is_validation_open) { ?>
                     <span class="text-success">
                         (<?php echo $work->places_restantes; ?>
-                        <?php echo $this->lang->line('REF_PLACES_LEFT'); ?>)
+                        <?php echo tr('REF_PLACES_LEFT'); ?>)
                     </span>
                 <?php } ?>
             </p>
@@ -114,7 +114,7 @@ $days_to_go = floor((strtotime($work->date_travaux) - strtotime('today')) / 8640
             <!-- Liste des inscrits avec bouton "Retirer" -->
             <div class="grid grid_12">
                 <h3 class="subtitle greydark">
-                    <?php echo $this->lang->line('REF_REGISTERED_LIST'); ?>
+                    <?php echo tr('REF_REGISTERED_LIST'); ?>
                     (<?php echo count($work->registred); ?>)
                 </h3>
                 <div class="nicdark_space10"></div>
@@ -123,12 +123,12 @@ $days_to_go = floor((strtotime($work->date_travaux) - strtotime('today')) / 8640
                     <thead class="<?php echo $design->bordercolor; ?>">
                         <tr>
                             <th><h5 class="white">#</h5></th>
-                            <th><h5 class="white"><?php echo $this->lang->line('nom'); ?></h5></th>
-                            <th><h5 class="white"><?php echo $this->lang->line('type_participant'); ?></h5></th>
+                            <th><h5 class="white"><?php echo tr('nom'); ?></h5></th>
+                            <th><h5 class="white"><?php echo tr('type_participant'); ?></h5></th>
                             <?php if ($work->type_session == 1) { ?>
-                                <th><h5 class="white"><?php echo $this->lang->line('horaires'); ?></h5></th>
+                                <th><h5 class="white"><?php echo tr('horaires'); ?></h5></th>
                             <?php } ?>
-                            <th><h5 class="white"><?php echo $this->lang->line('ACTION'); ?></h5></th>
+                            <th><h5 class="white"><?php echo tr('ACTION'); ?></h5></th>
                         </tr>
                     </thead>
                     <tbody class="nicdark_bg_grey nicdark_border_grey">
@@ -144,7 +144,7 @@ $days_to_go = floor((strtotime($work->date_travaux) - strtotime('today')) / 8640
                                 <b><?php echo isset($unit->family) ? $unit->family->nom : '—'; ?></b>
                             </td>
                             <td>
-                                <?php echo $this->render_object->RenderElement('type_participant', $unit->type_participant, null, 'Infos_model'); ?>
+                                <?php echo $render_object->RenderElement('type_participant', $unit->type_participant, null, 'Infos_model'); ?>
                                 <?php if ($unit->nb_participants > 1) { ?>
                                     <span class="badge badge-info">
                                         ×<?php echo $unit->nb_participants; ?>
@@ -154,23 +154,23 @@ $days_to_go = floor((strtotime($work->date_travaux) - strtotime('today')) / 8640
                             <?php if ($work->type_session == 1) { ?>
                                 <td>
                                     <?php
-                                    echo $this->render_object->RenderElement('heure_debut_prevue', $unit->heure_debut_prevue, null, 'Infos_model');
+                                    echo $render_object->RenderElement('heure_debut_prevue', $unit->heure_debut_prevue, null, 'Infos_model');
                                     echo ' → ';
-                                    echo $this->render_object->RenderElement('heure_fin_prevue', $unit->heure_fin_prevue, null, 'Infos_model');
+                                    echo $render_object->RenderElement('heure_fin_prevue', $unit->heure_fin_prevue, null, 'Infos_model');
                                     ?>
                                 </td>
                             <?php } ?>
                             <td>
                                 <?php
-                                echo form_open(
+                                echo open_form(
                                     $postUrl,
-                                    ['class' => 'd-inline', 'onsubmit' => 'return confirm("' . $this->lang->line('REF_REMOVE_CONFIRM') . '");'],
+                                    ['class' => 'd-inline', 'onsubmit' => 'return confirm("' . tr('REF_REMOVE_CONFIRM') . '");'],
                                     ['action' => 'remove', 'id_info' => $unit->id]
                                 );
                                 ?>
                                     <button type="submit" class="btn btn-sm btn-danger">
                                         <i class="icon-trash"></i>
-                                        <?php echo $this->lang->line('REF_REMOVE_BTN'); ?>
+                                        <?php echo tr('REF_REMOVE_BTN'); ?>
                                     </button>
                                 <?php echo form_close(); ?>
                             </td>
@@ -180,7 +180,7 @@ $days_to_go = floor((strtotime($work->date_travaux) - strtotime('today')) / 8640
                     } else {
                         $colspan = ($work->type_session == 1) ? 5 : 4;
                         echo '<tr><td colspan="' . $colspan . '" class="center">'
-                            . $this->lang->line('REGISTRED_NONE') . '</td></tr>';
+                            . tr('REGISTRED_NONE') . '</td></tr>';
                     }
                     ?>
                     </tbody>
@@ -193,11 +193,11 @@ $days_to_go = floor((strtotime($work->date_travaux) - strtotime('today')) / 8640
                     <div class="nicdark_space20"></div>
                     <div class="card">
                         <div class="card-header <?php echo $design->color; ?>">
-                            <h4 class="white"><?php echo $this->lang->line('REF_ADD_FAMILY'); ?></h4>
+                            <h4 class="white"><?php echo tr('REF_ADD_FAMILY'); ?></h4>
                         </div>
                         <div class="card-body">
                             <?php
-                            echo form_open(
+                            echo open_form(
                                 $postUrl,
                                 ['class' => '', 'id' => 'ref_add_form'],
                                 ['action' => 'add', 'type_session' => $work->type_session]
@@ -206,10 +206,10 @@ $days_to_go = floor((strtotime($work->date_travaux) - strtotime('today')) / 8640
                             <div class="form-row">
                                 <div class="form-group col-md-5">
                                     <label for="id_famille">
-                                        <b><?php echo $this->lang->line('id_famille'); ?> *</b>
+                                        <b><?php echo tr('id_famille'); ?> *</b>
                                     </label>
                                     <select name="id_famille" id="id_famille" class="form-control" required>
-                                        <option value="">— <?php echo $this->lang->line('SELECT_FAMILY'); ?> —</option>
+                                        <option value="">— <?php echo tr('SELECT_FAMILY'); ?> —</option>
                                         <?php foreach ($available_families as $fam) { ?>
                                             <option value="<?php echo $fam->id; ?>">
                                                 <?php echo htmlspecialchars($fam->nom, ENT_QUOTES); ?>
@@ -222,7 +222,7 @@ $days_to_go = floor((strtotime($work->date_travaux) - strtotime('today')) / 8640
                                 </div>
                                 <div class="form-group col-md-4">
                                     <label for="type_participant">
-                                        <b><?php echo $this->lang->line('type_participant'); ?> *</b>
+                                        <b><?php echo tr('type_participant'); ?> *</b>
                                     </label>
                                     <select name="type_participant" id="type_participant" class="form-control" required>
                                         <?php
@@ -241,13 +241,13 @@ $days_to_go = floor((strtotime($work->date_travaux) - strtotime('today')) / 8640
                                 <div class="form-group col-md-3 d-flex align-items-end">
                                     <button type="submit" class="btn btn-success btn-block">
                                         <i class="icon-plus"></i>
-                                        <?php echo $this->lang->line('REF_ADD_BTN'); ?>
+                                        <?php echo tr('REF_ADD_BTN'); ?>
                                     </button>
                                 </div>
                             </div>
                             <?php echo form_close(); ?>
                             <p class="small text-muted">
-                                * <?php echo $this->lang->line('REQUIRED_FIELDS'); ?>
+                                * <?php echo tr('REQUIRED_FIELDS'); ?>
                             </p>
                         </div>
                     </div>
@@ -257,7 +257,7 @@ $days_to_go = floor((strtotime($work->date_travaux) - strtotime('today')) / 8640
                     <div class="nicdark_space20"></div>
                     <div class="alert alert-warning">
                         <i class="icon-attention"></i>
-                        <?php echo $this->lang->line('REF_NO_PLACES_LEFT'); ?>
+                        <?php echo tr('REF_NO_PLACES_LEFT'); ?>
                     </div>
                 </div>
             <?php } ?>
@@ -266,7 +266,7 @@ $days_to_go = floor((strtotime($work->date_travaux) - strtotime('today')) / 8640
                 <div class="nicdark_space20"></div>
                 <div class="alert alert-secondary small">
                     <i class="icon-clock-1"></i>
-                    <?php echo $this->lang->line('REF_PREVIEW_FOOTER'); ?>
+                    <?php echo tr('REF_PREVIEW_FOOTER'); ?>
                 </div>
             </div>
 
@@ -274,7 +274,7 @@ $days_to_go = floor((strtotime($work->date_travaux) - strtotime('today')) / 8640
 
             <div class="grid grid_12">
                 <?php
-                echo form_open(
+                echo open_form(
                     $postUrl,
                     ['class' => '', 'id' => 'ref_validate'],
                     ['action' => 'validate', 'id_travaux' => $work->id]
@@ -284,12 +284,12 @@ $days_to_go = floor((strtotime($work->date_travaux) - strtotime('today')) / 8640
                 <table class="nicdark_table extrabig <?php echo $design->color; ?> nicdark_radius">
                     <thead class="<?php echo $design->bordercolor; ?>">
                         <tr>
-                            <th><h5 class="white"><?php echo $this->lang->line('PRESENT'); ?></h5></th>
-                            <th><h5 class="white"><?php echo $this->lang->line('nom'); ?></h5></th>
-                            <th><h5 class="white"><?php echo $this->lang->line('type_participant'); ?></h5></th>
-                            <th><h5 class="white"><?php echo $this->lang->line('nb_unites_valides'); ?></h5></th>
-                            <th><h5 class="white"><?php echo $this->lang->line('REF_COMMENT'); ?></h5></th>
-                            <th><h5 class="white"><?php echo $this->lang->line('REF_NO_SHOW'); ?></h5></th>
+                            <th><h5 class="white"><?php echo tr('PRESENT'); ?></h5></th>
+                            <th><h5 class="white"><?php echo tr('nom'); ?></h5></th>
+                            <th><h5 class="white"><?php echo tr('type_participant'); ?></h5></th>
+                            <th><h5 class="white"><?php echo tr('nb_unites_valides'); ?></h5></th>
+                            <th><h5 class="white"><?php echo tr('REF_COMMENT'); ?></h5></th>
+                            <th><h5 class="white"><?php echo tr('REF_NO_SHOW'); ?></h5></th>
                         </tr>
                     </thead>
                     <tbody class="nicdark_bg_grey nicdark_border_grey">
@@ -318,15 +318,15 @@ $days_to_go = floor((strtotime($work->date_travaux) - strtotime('today')) / 8640
                                 <?php if ($work->type_session == 1) { ?>
                                     <p class="small">
                                         <?php
-                                        echo $this->render_object->RenderElement('heure_debut_prevue', $unit->heure_debut_prevue, null, 'Infos_model');
+                                        echo $render_object->RenderElement('heure_debut_prevue', $unit->heure_debut_prevue, null, 'Infos_model');
                                         echo ' → ';
-                                        echo $this->render_object->RenderElement('heure_fin_prevue', $unit->heure_fin_prevue, null, 'Infos_model');
+                                        echo $render_object->RenderElement('heure_fin_prevue', $unit->heure_fin_prevue, null, 'Infos_model');
                                         ?>
                                     </p>
                                 <?php } ?>
                             </td>
                             <td>
-                                <?php echo $this->render_object->RenderElement('type_participant', $unit->type_participant, null, 'Infos_model'); ?>
+                                <?php echo $render_object->RenderElement('type_participant', $unit->type_participant, null, 'Infos_model'); ?>
                             </td>
                             <td>
                                 <input type="number"
@@ -344,7 +344,7 @@ $days_to_go = floor((strtotime($work->date_travaux) - strtotime('today')) / 8640
                                 <input type="text"
                                        name="commentaire_<?php echo $unit->id; ?>"
                                        value="<?php echo htmlspecialchars($existing_com, ENT_QUOTES); ?>"
-                                       placeholder="<?php echo $this->lang->line('REF_COMMENT_PLACEHOLDER'); ?>"
+                                       placeholder="<?php echo tr('REF_COMMENT_PLACEHOLDER'); ?>"
                                        class="form-control form-control-sm"
                                        maxlength="500">
                             </td>
@@ -355,7 +355,7 @@ $days_to_go = floor((strtotime($work->date_travaux) - strtotime('today')) / 8640
                                            value="<?php echo $unit->id; ?>"
                                            class="unregister-check"
                                            data-unit-id="<?php echo $unit->id; ?>">
-                                    <?php echo $this->lang->line('REF_NO_SHOW_LABEL'); ?>
+                                    <?php echo tr('REF_NO_SHOW_LABEL'); ?>
                                 </label>
                             </td>
                         </tr>
@@ -363,7 +363,7 @@ $days_to_go = floor((strtotime($work->date_travaux) - strtotime('today')) / 8640
                         }
                     } else {
                         echo '<tr><td colspan="6" class="center">'
-                            . $this->lang->line('REGISTRED_NONE') . '</td></tr>';
+                            . tr('REGISTRED_NONE') . '</td></tr>';
                     }
                     ?>
                     </tbody>
@@ -373,22 +373,22 @@ $days_to_go = floor((strtotime($work->date_travaux) - strtotime('today')) / 8640
                     <div class="nicdark_space20"></div>
                     <div class="form-group">
                         <label for="commentaire_global">
-                            <b><?php echo $this->lang->line('REF_COMMENT_GLOBAL'); ?></b>
+                            <b><?php echo tr('REF_COMMENT_GLOBAL'); ?></b>
                         </label>
                         <textarea name="commentaire_global"
                                   id="commentaire_global"
                                   class="form-control"
                                   rows="2"
                                   maxlength="500"
-                                  placeholder="<?php echo $this->lang->line('REF_COMMENT_GLOBAL_PLACEHOLDER'); ?>"></textarea>
+                                  placeholder="<?php echo tr('REF_COMMENT_GLOBAL_PLACEHOLDER'); ?>"></textarea>
                     </div>
                     <div class="nicdark_space20"></div>
                     <div class="right">
                         <button type="submit"
                                 class="btn btn-success btn-lg"
-                                onclick="return confirm('<?php echo $this->lang->line('REF_VALIDATE_CONFIRM'); ?>');">
+                                onclick="return confirm('<?php echo tr('REF_VALIDATE_CONFIRM'); ?>');">
                             <i class="icon-ok"></i>
-                            <?php echo $this->lang->line('REF_VALIDATE_SUBMIT'); ?>
+                            <?php echo tr('REF_VALIDATE_SUBMIT'); ?>
                         </button>
                     </div>
                 <?php } ?>

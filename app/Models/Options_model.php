@@ -3,15 +3,13 @@
 namespace App\Models;
 class Options_model extends Core_model{
 
-	function __construct(){
-		parent::__construct();
-		
-		$this->_set('table'	, 'options');
-		$this->_set('key'	, 'id');
-		$this->_set('order'	, 'filter');
-		$this->_set('direction'	, 'desc');
-		$this->_set('json'	, 'Options.json');
-	}
+	protected $table = 'options';
+	protected $primaryKey = 'id';
+	protected $order = 'filter';
+	protected $direction = 'desc';
+	protected $json = 'Options.json';
+
+
 
 	function GetOpt($type){
 		$options = [];

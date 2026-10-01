@@ -3,11 +3,11 @@
  * Vue d'édition d'un fichier de langue.
  *
  * Variables disponibles :
- *   $idiom              : langue cible (ex: 'english')
- *   $file               : fichier sans .php (ex: 'menu_lang')
+ *   $idiom              : langue cible (ex: 'en')
+ *   $file               : fichier sans .php (ex: 'Menu')
  *   $target_entries     : [clé => valeur cible] (déjà décapée)
  *   $ref_entries        : [clé => valeur de référence (français)]
- *   $ref_idiom          : 'french'
+ *   $ref_idiom          : 'fr'
  *   $file_exists        : bool
  *   $available_languages: array
  */
@@ -24,8 +24,8 @@ foreach ($ref_entries as $k => $v)    { $all_keys[$k] = true; }
 foreach ($target_entries as $k => $v) { $all_keys[$k] = true; }
 $all_keys = array_keys($all_keys);
 
-$flash_success = $this->session->flashdata('flash_success');
-$flash_error   = $this->session->flashdata('flash_error');
+$flash_success = session()->getFlashdata('flash_success');
+$flash_error   = session()->getFlashdata('flash_error');
 ?>
 <section class="nicdark_section">
 <div class="nicdark_container nicdark_clearfix">
@@ -33,17 +33,17 @@ $flash_error   = $this->session->flashdata('flash_error');
 
     <div class="grid grid_12">
         <h1 class="subtitle greydark">
-            <?php echo $this->lang->line('TRANSLATIONS_EDITING'); ?>
+            <?php echo tr('TRANSLATIONS_EDITING'); ?>
             &nbsp;:&nbsp;
             <code><?php echo htmlspecialchars($file, ENT_QUOTES, 'UTF-8'); ?>.php</code>
         </h1>
         <div class="nicdark_space10"></div>
         <h3 class="subtitle grey">
-            <?php echo $this->lang->line('TRANSLATIONS_LANGUAGE'); ?> :
+            <?php echo tr('TRANSLATIONS_LANGUAGE'); ?> :
             <strong><?php echo htmlspecialchars($idiom, ENT_QUOTES, 'UTF-8'); ?></strong>
             <?php if ($is_ref_lang) { ?>
                 <span class="badge badge-info ml-2">
-                    <?php echo $this->lang->line('TRANSLATIONS_REFERENCE'); ?>
+                    <?php echo tr('TRANSLATIONS_REFERENCE'); ?>
                 </span>
             <?php } ?>
         </h3>
@@ -57,7 +57,7 @@ $flash_error   = $this->session->flashdata('flash_error');
     <?php if (!$file_exists && !$is_ref_lang) { ?>
         <div class="alert alert-warning">
             <span class="oi oi-warning"></span>
-            <?php echo $this->lang->line('TRANSLATIONS_FILE_DOES_NOT_EXIST_YET'); ?>
+            <?php echo tr('TRANSLATIONS_FILE_DOES_NOT_EXIST_YET'); ?>
         </div>
     <?php } ?>
 
@@ -74,16 +74,16 @@ $flash_error   = $this->session->flashdata('flash_error');
             <a href="<?php echo base_url($ctrl.'/list?idiom='.urlencode($idiom)); ?>"
                class="btn btn-light btn-sm">
                 <span class="oi oi-arrow-thick-left"></span>
-                <?php echo $this->lang->line('TRANSLATIONS_BACK_TO_LIST'); ?>
+                <?php echo tr('TRANSLATIONS_BACK_TO_LIST'); ?>
             </a>
         </div>
         <div class="col-md-6 text-right">
             <input type="text" id="trans-filter" class="form-control form-control-sm d-inline-block"
                    style="width:auto;"
-                   placeholder="<?php echo $this->lang->line('TRANSLATIONS_FILTER_PLACEHOLDER'); ?>">
+                   placeholder="<?php echo tr('TRANSLATIONS_FILTER_PLACEHOLDER'); ?>">
             <label class="ml-3">
                 <input type="checkbox" id="trans-only-missing">
-                <?php echo $this->lang->line('TRANSLATIONS_ONLY_MISSING'); ?>
+                <?php echo tr('TRANSLATIONS_ONLY_MISSING'); ?>
             </label>
         </div>
     </div>
@@ -95,7 +95,7 @@ $flash_error   = $this->session->flashdata('flash_error');
         <div class="card">
             <div class="card-header">
                 <?php echo sprintf(
-                    $this->lang->line('TRANSLATIONS_KEYS_COUNT'),
+                    tr('TRANSLATIONS_KEYS_COUNT'),
                     count($all_keys)
                 ); ?>
             </div>
@@ -104,14 +104,14 @@ $flash_error   = $this->session->flashdata('flash_error');
                 <table class="table table-sm trans-table">
                     <thead>
                         <tr>
-                            <th style="width:24%;"><?php echo $this->lang->line('TRANSLATIONS_KEY'); ?></th>
+                            <th style="width:24%;"><?php echo tr('TRANSLATIONS_KEY'); ?></th>
                             <?php if (!$is_ref_lang) { ?>
                                 <th style="width:34%;">
                                     <span class="badge badge-info">
                                         <?php echo htmlspecialchars($ref_idiom, ENT_QUOTES, 'UTF-8'); ?>
                                     </span>
                                     <small class="text-muted ml-1">
-                                        (<?php echo $this->lang->line('TRANSLATIONS_REFERENCE'); ?>)
+                                        (<?php echo tr('TRANSLATIONS_REFERENCE'); ?>)
                                     </small>
                                 </th>
                                 <th style="width:34%;">
@@ -152,12 +152,12 @@ $flash_error   = $this->session->flashdata('flash_error');
                                 <code class="trans-key"><?php echo htmlspecialchars($k, ENT_QUOTES, 'UTF-8'); ?></code>
                                 <?php if ($is_missing) { ?>
                                     <span class="badge badge-danger ml-1" style="font-size:0.7em;">
-                                        <?php echo $this->lang->line('TRANSLATIONS_MISSING'); ?>
+                                        <?php echo tr('TRANSLATIONS_MISSING'); ?>
                                     </span>
                                 <?php } ?>
                                 <?php if ($is_extra) { ?>
                                     <span class="badge badge-warning ml-1" style="font-size:0.7em;">
-                                        <?php echo $this->lang->line('TRANSLATIONS_EXTRA'); ?>
+                                        <?php echo tr('TRANSLATIONS_EXTRA'); ?>
                                     </span>
                                 <?php } ?>
                             </td>
@@ -171,7 +171,7 @@ $flash_error   = $this->session->flashdata('flash_error');
                                         </div>
                                     <?php } else { ?>
                                         <em class="text-muted">
-                                            <?php echo $this->lang->line('TRANSLATIONS_NOT_IN_REF'); ?>
+                                            <?php echo tr('TRANSLATIONS_NOT_IN_REF'); ?>
                                         </em>
                                     <?php } ?>
                                 </td>
@@ -199,9 +199,9 @@ $flash_error   = $this->session->flashdata('flash_error');
                                               .urlencode($idiom).'/'.urlencode($file).'/'
                                               .urlencode($k)); ?>"
                                        class="btn btn-link btn-sm text-danger confirmModalLink"
-                                       title="<?php echo $this->lang->line('TRANSLATIONS_DELETE_KEY'); ?>"
+                                       title="<?php echo tr('TRANSLATIONS_DELETE_KEY'); ?>"
                                        onclick="return confirm('<?php
-                                          echo $this->lang->line('TRANSLATIONS_DELETE_KEY_CONFIRM'); ?>');">
+                                          echo tr('TRANSLATIONS_DELETE_KEY_CONFIRM'); ?>');">
                                         <span class="oi oi-trash"></span>
                                     </a>
                                 <?php } ?>
@@ -217,12 +217,12 @@ $flash_error   = $this->session->flashdata('flash_error');
             <div class="card-footer">
                 <h5 class="mb-2">
                     <span class="oi oi-plus"></span>
-                    <?php echo $this->lang->line('TRANSLATIONS_ADD_NEW_KEY'); ?>
+                    <?php echo tr('TRANSLATIONS_ADD_NEW_KEY'); ?>
                 </h5>
                 <div class="form-row">
                     <div class="form-group col-md-3">
                         <label class="small text-muted">
-                            <?php echo $this->lang->line('TRANSLATIONS_KEY'); ?>
+                            <?php echo tr('TRANSLATIONS_KEY'); ?>
                         </label>
                         <input type="text" name="new_key"
                                class="form-control form-control-sm"
@@ -231,14 +231,14 @@ $flash_error   = $this->session->flashdata('flash_error');
                     </div>
                     <div class="form-group col-md-9">
                         <label class="small text-muted">
-                            <?php echo $this->lang->line('TRANSLATIONS_VALUE'); ?>
+                            <?php echo tr('TRANSLATIONS_VALUE'); ?>
                         </label>
                         <input type="text" name="new_val"
                                class="form-control form-control-sm">
                     </div>
                 </div>
                 <small class="text-muted">
-                    <?php echo $this->lang->line('TRANSLATIONS_ADD_KEY_HELP'); ?>
+                    <?php echo tr('TRANSLATIONS_ADD_KEY_HELP'); ?>
                 </small>
             </div>
 
@@ -246,11 +246,11 @@ $flash_error   = $this->session->flashdata('flash_error');
             <div class="card-footer text-right bg-light">
                 <a href="<?php echo base_url($ctrl.'/list?idiom='.urlencode($idiom)); ?>"
                    class="btn btn-link text-muted">
-                    <?php echo $this->lang->line('CANCEL'); ?>
+                    <?php echo tr('CANCEL'); ?>
                 </a>
                 <button type="submit" class="btn btn-success">
                     <span class="oi oi-check"></span>
-                    <?php echo $this->lang->line('TRANSLATIONS_SAVE'); ?>
+                    <?php echo tr('TRANSLATIONS_SAVE'); ?>
                 </button>
             </div>
         </div>

@@ -5,13 +5,13 @@
  * Variables disponibles :
  *   $available_languages : array de strings (idiomes existants)
  *   $current_idiom       : idiome cible courant
- *   $ref_idiom           : idiome de référence (ex: 'french')
+ *   $ref_idiom           : idiome de référence (ex: 'fr')
  *   $files               : liste des fichiers _lang.php (sans extension)
  *   $coverage            : [file => ['total_ref','present','missing','extra','exists']]
  */
 
-$flash_success = $this->session->flashdata('flash_success');
-$flash_error   = $this->session->flashdata('flash_error');
+$flash_success = session()->getFlashdata('flash_success');
+$flash_error   = session()->getFlashdata('flash_error');
 
 $ctrl = 'Translations_controller';
 ?>
@@ -21,11 +21,11 @@ $ctrl = 'Translations_controller';
 
     <div class="grid grid_12">
         <h1 class="subtitle greydark">
-            <?php echo $this->lang->line('GESTION_Translations_controller'); ?>
+            <?php echo tr('GESTION_Translations_controller'); ?>
         </h1>
         <div class="nicdark_space20"></div>
         <h3 class="subtitle grey">
-            <?php echo $this->lang->line('Translations_controller_subtitle'); ?>
+            <?php echo tr('Translations_controller_subtitle'); ?>
         </h3>
         <div class="nicdark_space20"></div>
         <div class="nicdark_divider left big">
@@ -47,12 +47,12 @@ $ctrl = 'Translations_controller';
     <div class="card">
         <div class="card-header">
             <span class="oi oi-globe" aria-hidden="true"></span>
-            &nbsp;<?php echo $this->lang->line('TRANSLATIONS_PICK_LANGUAGE'); ?>
+            &nbsp;<?php echo tr('TRANSLATIONS_PICK_LANGUAGE'); ?>
         </div>
         <div class="card-body">
             <form method="get" action="<?php echo base_url($ctrl.'/list'); ?>" class="form-inline">
                 <label class="mr-2" for="idiom-select">
-                    <?php echo $this->lang->line('TRANSLATIONS_LANGUAGE'); ?> :
+                    <?php echo tr('TRANSLATIONS_LANGUAGE'); ?> :
                 </label>
                 <select id="idiom-select" name="idiom" class="form-control mr-2"
                         onchange="this.form.submit()">
@@ -61,7 +61,7 @@ $ctrl = 'Translations_controller';
                                 <?php echo ($lng === $current_idiom) ? 'selected' : ''; ?>>
                             <?php echo htmlspecialchars($lng, ENT_QUOTES, 'UTF-8');
                                   echo ($lng === $ref_idiom)
-                                       ? ' ('.$this->lang->line('TRANSLATIONS_REFERENCE').')'
+                                       ? ' ('.tr('TRANSLATIONS_REFERENCE').')'
                                        : ''; ?>
                         </option>
                     <?php } ?>
@@ -73,7 +73,7 @@ $ctrl = 'Translations_controller';
 
             <div class="nicdark_space10"></div>
             <small class="text-muted">
-                <?php echo $this->lang->line('TRANSLATIONS_PICK_LANGUAGE_HELP'); ?>
+                <?php echo tr('TRANSLATIONS_PICK_LANGUAGE_HELP'); ?>
             </small>
         </div>
     </div>
@@ -86,26 +86,26 @@ $ctrl = 'Translations_controller';
     <div class="card">
         <div class="card-header">
             <span class="oi oi-plus" aria-hidden="true"></span>
-            &nbsp;<?php echo $this->lang->line('TRANSLATIONS_ADD_LANGUAGE'); ?>
+            &nbsp;<?php echo tr('TRANSLATIONS_ADD_LANGUAGE'); ?>
         </div>
         <div class="card-body">
             <form method="post" action="<?php echo base_url($ctrl.'/add_language'); ?>"
                   class="form-inline" onsubmit="return confirm('<?php
-                      echo $this->lang->line('TRANSLATIONS_ADD_LANGUAGE_CONFIRM'); ?>');">
+                      echo tr('TRANSLATIONS_ADD_LANGUAGE_CONFIRM'); ?>');">
                 <label class="mr-2">
-                    <?php echo $this->lang->line('TRANSLATIONS_NEW_LANGUAGE_NAME'); ?> :
+                    <?php echo tr('TRANSLATIONS_NEW_LANGUAGE_NAME'); ?> :
                 </label>
                 <input type="text" name="idiom" pattern="[a-z][a-z0-9_\-]*"
                        placeholder="english, german, italian..."
                        class="form-control mr-2" required maxlength="32">
                 <button type="submit" class="btn btn-success">
                     <span class="oi oi-plus"></span>
-                    <?php echo $this->lang->line('TRANSLATIONS_CREATE'); ?>
+                    <?php echo tr('TRANSLATIONS_CREATE'); ?>
                 </button>
             </form>
             <div class="nicdark_space10"></div>
             <small class="text-muted">
-                <?php echo $this->lang->line('TRANSLATIONS_ADD_LANGUAGE_HELP'); ?>
+                <?php echo tr('TRANSLATIONS_ADD_LANGUAGE_HELP'); ?>
             </small>
         </div>
     </div>
@@ -119,7 +119,7 @@ $ctrl = 'Translations_controller';
         <div class="card-header">
             <span class="oi oi-file" aria-hidden="true"></span>
             &nbsp;<?php echo sprintf(
-                $this->lang->line('TRANSLATIONS_FILES_FOR'),
+                tr('TRANSLATIONS_FILES_FOR'),
                 '<strong>'.htmlspecialchars($current_idiom, ENT_QUOTES, 'UTF-8').'</strong>'
             ); ?>
         </div>
@@ -127,28 +127,28 @@ $ctrl = 'Translations_controller';
 
             <?php if (empty($files)) { ?>
                 <p class="text-muted">
-                    <?php echo $this->lang->line('TRANSLATIONS_NO_FILES'); ?>
+                    <?php echo tr('TRANSLATIONS_NO_FILES'); ?>
                 </p>
             <?php } else { ?>
 
                 <table class="table table-striped table-sm">
                     <thead>
                         <tr>
-                            <th><?php echo $this->lang->line('TRANSLATIONS_FILE'); ?></th>
+                            <th><?php echo tr('TRANSLATIONS_FILE'); ?></th>
                             <th class="text-center">
-                                <?php echo $this->lang->line('TRANSLATIONS_COVERAGE'); ?>
+                                <?php echo tr('TRANSLATIONS_COVERAGE'); ?>
                             </th>
                             <th class="text-center">
-                                <?php echo $this->lang->line('TRANSLATIONS_KEYS_REF'); ?>
+                                <?php echo tr('TRANSLATIONS_KEYS_REF'); ?>
                             </th>
                             <th class="text-center">
-                                <?php echo $this->lang->line('TRANSLATIONS_KEYS_PRESENT'); ?>
+                                <?php echo tr('TRANSLATIONS_KEYS_PRESENT'); ?>
                             </th>
                             <th class="text-center">
-                                <?php echo $this->lang->line('TRANSLATIONS_KEYS_MISSING'); ?>
+                                <?php echo tr('TRANSLATIONS_KEYS_MISSING'); ?>
                             </th>
                             <th class="text-center">
-                                <?php echo $this->lang->line('TRANSLATIONS_KEYS_EXTRA'); ?>
+                                <?php echo tr('TRANSLATIONS_KEYS_EXTRA'); ?>
                             </th>
                             <th class="text-right">&nbsp;</th>
                         </tr>
@@ -168,14 +168,14 @@ $ctrl = 'Translations_controller';
                                 <code><?php echo htmlspecialchars($f, ENT_QUOTES, 'UTF-8'); ?>.php</code>
                                 <?php if ($cov && !$cov['exists']) { ?>
                                     <span class="badge badge-warning ml-2">
-                                        <?php echo $this->lang->line('TRANSLATIONS_FILE_MISSING'); ?>
+                                        <?php echo tr('TRANSLATIONS_FILE_MISSING'); ?>
                                     </span>
                                 <?php } ?>
                             </td>
                             <td class="text-center" style="min-width:140px;">
                                 <?php if ($is_ref) { ?>
                                     <span class="badge badge-info">
-                                        <?php echo $this->lang->line('TRANSLATIONS_REFERENCE'); ?>
+                                        <?php echo tr('TRANSLATIONS_REFERENCE'); ?>
                                     </span>
                                 <?php } else { ?>
                                     <div class="progress" style="height:18px;">
@@ -207,7 +207,7 @@ $ctrl = 'Translations_controller';
                                 <a href="<?php echo base_url($ctrl.'/edit/'.urlencode($current_idiom).'/'.urlencode($f)); ?>"
                                    class="btn btn-warning btn-sm">
                                     <span class="oi oi-pencil"></span>
-                                    <?php echo $this->lang->line('TRANSLATIONS_EDIT'); ?>
+                                    <?php echo tr('TRANSLATIONS_EDIT'); ?>
                                 </a>
                             </td>
                         </tr>

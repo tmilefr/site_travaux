@@ -64,8 +64,8 @@ n'ajoute que les colonnes manquantes.
 SET @CY = '2025-2026';
 ```
 
-Cette valeur doit être **strictement identique** à `$config['civil_year']`
-dans `app/Config/legacy/app.php`. Sinon aucune session de test
+Cette valeur doit être **strictement identique** à `civilYear`
+dans `app/Config/Travaux.php` (ou `travaux.civilYear` du `.env`). Sinon aucune session de test
 n'apparaîtra dans l'application.
 
 **2. Le serveur SMTP.** Le jeu place trois messages en file d'attente. Avant
