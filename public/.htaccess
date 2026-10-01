@@ -1,0 +1,28 @@
+# Disable directory browsing
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+	Options +FollowSymlinks
+	RewriteEngine On
+
+	# Si l'application est dans un sous-dossier, decommenter et adapter :
+	# RewriteBase /site_travaux/
+
+	# Redirect "www.example.com -> example.com" desactive : voir doc CI4.
+
+	# Redirige tout ce qui n'est pas un fichier/dossier existant vers index.php
+	RewriteCond %{REQUEST_FILENAME} !-f
+	RewriteCond %{REQUEST_FILENAME} !-d
+	RewriteRule ^([\s\S]*)$ index.php/$1 [L,NC,QSA]
+
+	# Transmet l'en-tete Authorization (API JWT)
+	RewriteCond %{HTTP:Authorization} .
+	RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+</IfModule>
+
+<IfModule !mod_rewrite.c>
+	ErrorDocument 404 index.php
+</IfModule>
+
+# Disable server signature start
+ServerSignature Off
