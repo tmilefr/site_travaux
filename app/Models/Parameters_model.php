@@ -3,14 +3,12 @@
 namespace App\Models;
 class Parameters_model extends Core_model{
 
-	function __construct(){
-		parent::__construct();
+	protected $table = 'parameters';
+	protected $primaryKey = 'id';
+	protected $order = 'name';
+	protected $direction = 'desc';
+	protected $json = 'Parameters.json';
 
-		$this->_set('table'	, 'parameters');
-		$this->_set('key'	, 'id');
-		$this->_set('order'	, 'name');
-		$this->_set('direction'	, 'desc');
-		$this->_set('json'	, 'Parameters.json');
-	}
+
 }
 ?>

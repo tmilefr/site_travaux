@@ -118,27 +118,27 @@ $_fr_days = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
 
         <!-- En-tête -->
         <div class="grid grid_12">
-            <h1 class="subtitle greydark"><?php echo $this->lang->line('cantine_config_title');?></h1>
+            <h1 class="subtitle greydark"><?php echo tr('cantine_config_title');?></h1>
             <div class="nicdark_space20"></div>
-            <h3 class="subtitle grey"><?php echo $this->lang->line('cantine_config_subtitle');?></h3>
+            <h3 class="subtitle grey"><?php echo tr('cantine_config_subtitle');?></h3>
             <div class="nicdark_space20"></div>
             <div class="nicdark_divider left big"><span class="nicdark_bg_blue nicdark_radius"></span></div>
             <div class="nicdark_space20"></div>
 
             <a href="<?php echo base_url('Cantine_controller/register');?>"
                class="nicdark_btn nicdark_bg_grey small nicdark_shadow nicdark_radius grey">
-                &laquo; <?php echo $this->lang->line('cantine_back_to_agenda');?>
+                &laquo; <?php echo tr('cantine_back_to_agenda');?>
             </a>
 
             <span class="nicdark_btn nicdark_bg_green small nicdark_radius white right">
-                <?php echo $nb_upcoming;?> <?php echo $this->lang->line('cantine_nb_upcoming');?>
+                <?php echo $nb_upcoming;?> <?php echo tr('cantine_nb_upcoming');?>
             </span>
             <div class="nicdark_space20"></div>
         </div>
 
         <!-- Sélecteur d'école -->
         <div class="grid grid_12">
-            <h4 class="greydark"><?php echo $this->lang->line('cantine_school');?> :</h4>
+            <h4 class="greydark"><?php echo tr('cantine_school');?> :</h4>
             <div class="nicdark_space10"></div>
             <?php foreach(['M' => 'Mulhouse', 'L' => 'Lutterbach'] AS $code => $label){
                 $active = ($ecole === $code);
@@ -157,10 +157,10 @@ $_fr_days = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
         <div class="grid grid_12">
             <h2 class="greydark">
                 <i class="icon-calendar"></i>
-                <?php echo $this->lang->line('cantine_agenda_title');?>
+                <?php echo tr('cantine_agenda_title');?>
             </h2>
             <div class="nicdark_space10"></div>
-            <p class="grey"><?php echo $this->lang->line('cantine_agenda_hint');?></p>
+            <p class="grey"><?php echo tr('cantine_agenda_hint');?></p>
             <div class="nicdark_space20"></div>
         </div>
 
@@ -171,11 +171,11 @@ $_fr_days = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
                     <h3><?php echo $agenda_label;?></h3>
                     <div class="cantine-agenda-nav">
                         <a href="<?php echo base_url('Cantine_controller/config?ecole='.$ecole.'&ym='.$agenda_prev_ym);?>"
-                           title="<?php echo $this->lang->line('cantine_agenda_prev');?>">&laquo;</a>
+                           title="<?php echo tr('cantine_agenda_prev');?>">&laquo;</a>
                         <a href="<?php echo base_url('Cantine_controller/config?ecole='.$ecole.'&ym='.date('Y-m'));?>"
-                           class="today"><?php echo $this->lang->line('cantine_agenda_today');?></a>
+                           class="today"><?php echo tr('cantine_agenda_today');?></a>
                         <a href="<?php echo base_url('Cantine_controller/config?ecole='.$ecole.'&ym='.$agenda_next_ym);?>"
-                           title="<?php echo $this->lang->line('cantine_agenda_next');?>">&raquo;</a>
+                           title="<?php echo tr('cantine_agenda_next');?>">&raquo;</a>
                     </div>
                 </div>
 
@@ -220,18 +220,18 @@ $_fr_days = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
 
                                     if ($max > 0 && $nb >= $max){
                                         $cls = 'full';
-                                        $title = $this->lang->line('cantine_agenda_full');
+                                        $title = tr('cantine_agenda_full');
                                     } elseif ($nb === 0){
                                         $cls = 'empty-sess';
-                                        $title = $max.' '.$this->lang->line('cantine_agenda_open');
+                                        $title = $max.' '.tr('cantine_agenda_open');
                                     } else {
                                         $cls = 'partial';
-                                        $title = $reste.' '.$this->lang->line('cantine_agenda_open');
+                                        $title = $reste.' '.tr('cantine_agenda_open');
                                     }
                                     $h_deb = substr($s->heure_deb_trav, 0, 5);
                             ?>
                                 <span class="session-pill <?php echo $cls;?>"
-                                      title="<?php echo html_escape($h_deb.' — '.$nb.'/'.$max.' inscrits ('.$title.')');?>">
+                                      title="<?php echo esc($h_deb.' — '.$nb.'/'.$max.' inscrits ('.$title.')');?>">
                                     <span class="h"><?php echo $h_deb;?></span>
                                     <span class="nb"><?php echo $nb;?>/<?php echo $max;?></span>
                                 </span>
@@ -243,14 +243,14 @@ $_fr_days = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
 
                 <?php if (!$has_any){ ?>
                     <div class="cantine-agenda-empty">
-                        <i class="icon-calendar"></i> <?php echo $this->lang->line('cantine_agenda_empty');?>
+                        <i class="icon-calendar"></i> <?php echo tr('cantine_agenda_empty');?>
                     </div>
                 <?php } ?>
 
                 <div class="cantine-agenda-legend">
-                    <span class="lg empty-sess"></span><?php echo $this->lang->line('cantine_agenda_legend_empty');?>
-                    <span class="lg partial"></span><?php echo $this->lang->line('cantine_agenda_legend_partial');?>
-                    <span class="lg full"></span><?php echo $this->lang->line('cantine_agenda_legend_full');?>
+                    <span class="lg empty-sess"></span><?php echo tr('cantine_agenda_legend_empty');?>
+                    <span class="lg partial"></span><?php echo tr('cantine_agenda_legend_partial');?>
+                    <span class="lg full"></span><?php echo tr('cantine_agenda_legend_full');?>
                 </div>
 
             </div>
@@ -263,10 +263,10 @@ $_fr_days = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
         <div class="grid grid_12">
             <h2 class="greydark">
                 <i class="icon-cog"></i>
-                <?php echo $this->lang->line('cantine_admin_title');?>
+                <?php echo tr('cantine_admin_title');?>
             </h2>
             <div class="nicdark_space10"></div>
-            <p class="grey"><?php echo $this->lang->line('cantine_admin_hint');?></p>
+            <p class="grey"><?php echo tr('cantine_admin_hint');?></p>
             <div class="nicdark_space20"></div>
         </div>
 
@@ -279,32 +279,32 @@ $_fr_days = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
                 <div class="cantine-admin-section">
                     <h3>
                         <span class="badge b1">1</span>
-                        <?php echo $this->lang->line('cantine_step1_title');?>
+                        <?php echo tr('cantine_step1_title');?>
                     </h3>
-                    <p class="hint"><?php echo $this->lang->line('cantine_step1_hint');?></p>
+                    <p class="hint"><?php echo tr('cantine_step1_hint');?></p>
 
-                    <?php echo form_open('Cantine_controller/save_config');?>
-                    <input type="hidden" name="ecole" value="<?php echo html_escape($ecole);?>" />
+                    <?php echo open_form('Cantine_controller/save_config');?>
+                    <input type="hidden" name="ecole" value="<?php echo esc($ecole);?>" />
 
                     <table class="cantine-rules-list">
                         <thead>
                             <tr>
-                                <th class="center" style="width:60px;"><?php echo $this->lang->line('cantine_rules_col_active');?></th>
-                                <th style="width:110px;"><?php echo $this->lang->line('cantine_rules_col_day');?></th>
-                                <th class="center" style="width:90px;"><?php echo $this->lang->line('cantine_rules_col_parents');?></th>
-                                <th class="center" style="width:90px;"><?php echo $this->lang->line('cantine_rules_col_units');?></th>
-                                <th class="center" style="width:210px;"><?php echo $this->lang->line('cantine_rules_col_hours');?></th>
-                                <th><?php echo $this->lang->line('cantine_rules_col_referent');?></th>
+                                <th class="center" style="width:60px;"><?php echo tr('cantine_rules_col_active');?></th>
+                                <th style="width:110px;"><?php echo tr('cantine_rules_col_day');?></th>
+                                <th class="center" style="width:90px;"><?php echo tr('cantine_rules_col_parents');?></th>
+                                <th class="center" style="width:90px;"><?php echo tr('cantine_rules_col_units');?></th>
+                                <th class="center" style="width:210px;"><?php echo tr('cantine_rules_col_hours');?></th>
+                                <th><?php echo tr('cantine_rules_col_referent');?></th>
                             </tr>
                         </thead>
                         <tbody>
                         <?php
                         $days_labels = [
-                            1 => $this->lang->line('cantine_day_1'),
-                            2 => $this->lang->line('cantine_day_2'),
-                            3 => $this->lang->line('cantine_day_3'),
-                            4 => $this->lang->line('cantine_day_4'),
-                            5 => $this->lang->line('cantine_day_5'),
+                            1 => tr('cantine_day_1'),
+                            2 => tr('cantine_day_2'),
+                            3 => tr('cantine_day_3'),
+                            4 => tr('cantine_day_4'),
+                            5 => tr('cantine_day_5'),
                         ];
                         foreach($days_labels AS $id_day => $label){
                             $cfg = $config[$id_day];
@@ -312,7 +312,7 @@ $_fr_days = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
                         ?>
                             <tr class="<?php echo $is_active ? 'row-active' : 'row-inactive';?>">
                                 <td class="center">
-                                    <label class="switch" title="<?php echo $this->lang->line('cantine_day_needed');?>">
+                                    <label class="switch" title="<?php echo tr('cantine_day_needed');?>">
                                         <input type="checkbox" name="active_<?php echo $id_day;?>" value="1"
                                                <?php echo $is_active ? 'checked' : '';?> />
                                     </label>
@@ -332,18 +332,18 @@ $_fr_days = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
                                 </td>
                                 <td class="center">
                                     <input type="time" name="heure_deb_<?php echo $id_day;?>"
-                                           value="<?php echo html_escape(!empty($cfg->heure_deb) ? $cfg->heure_deb : '11:45');?>" />
+                                           value="<?php echo esc(!empty($cfg->heure_deb) ? $cfg->heure_deb : '11:45');?>" />
                                     <span class="grey">→</span>
                                     <input type="time" name="heure_fin_<?php echo $id_day;?>"
-                                           value="<?php echo html_escape(!empty($cfg->heure_fin) ? $cfg->heure_fin : '13:30');?>" />
+                                           value="<?php echo esc(!empty($cfg->heure_fin) ? $cfg->heure_fin : '13:30');?>" />
                                 </td>
                                 <td>
                                     <select name="id_referent_<?php echo $id_day;?>">
-                                        <option value=""><?php echo $this->lang->line('cantine_referent_none');?></option>
+                                        <option value=""><?php echo tr('cantine_referent_none');?></option>
                                         <?php foreach($referents AS $rid => $rtitle){ ?>
                                             <option value="<?php echo (int)$rid;?>"
                                                 <?php echo ((int)$cfg->id_referent === (int)$rid) ? 'selected' : '';?>>
-                                                <?php echo html_escape($rtitle);?>
+                                                <?php echo esc($rtitle);?>
                                             </option>
                                         <?php } ?>
                                     </select>
@@ -355,7 +355,7 @@ $_fr_days = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
 
                     <div style="margin-top:14px;">
                         <button type="submit" class="nicdark_press nicdark_btn nicdark_bg_green white nicdark_radius nicdark_shadow small">
-                            <i class="icon-ok"></i> <?php echo $this->lang->line('cantine_save_config');?>
+                            <i class="icon-ok"></i> <?php echo tr('cantine_save_config');?>
                         </button>
                     </div>
 
@@ -368,18 +368,18 @@ $_fr_days = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
                 <div class="cantine-admin-section">
                     <h3>
                         <span class="badge b2">2</span>
-                        <?php echo $this->lang->line('cantine_step2_title');?>
+                        <?php echo tr('cantine_step2_title');?>
                     </h3>
-                    <p class="hint"><?php echo $this->lang->line('cantine_step2_hint');?></p>
+                    <p class="hint"><?php echo tr('cantine_step2_hint');?></p>
 
-                    <?php echo form_open('Cantine_controller/generate');?>
-                    <input type="hidden" name="ecole" value="<?php echo html_escape($ecole);?>" />
+                    <?php echo open_form('Cantine_controller/generate');?>
+                    <input type="hidden" name="ecole" value="<?php echo esc($ecole);?>" />
 
                     <div class="cantine-gen-row">
                         <label>
                             <input type="radio" name="period_mode" value="school_end" checked
                                    onclick="cantineTogglePeriod(false);" />
-                            <b><?php echo $this->lang->line('cantine_period_school_end');?></b>
+                            <b><?php echo tr('cantine_period_school_end');?></b>
                             <span class="grey">
                                 (<?php echo date('d/m/Y', strtotime($default_date_deb));?>
                                 &nbsp;→&nbsp;
@@ -394,19 +394,19 @@ $_fr_days = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
                         <label>
                             <input type="radio" name="period_mode" value="custom"
                                    onclick="cantineTogglePeriod(true);" />
-                            <b><?php echo $this->lang->line('cantine_period_custom');?></b>
+                            <b><?php echo tr('cantine_period_custom');?></b>
                         </label>
 
                         <span id="cantine_custom_dates" style="display:none; gap:14px; align-items:center; flex-wrap:wrap;">
                             <span>
-                                <?php echo $this->lang->line('cantine_date_deb');?>
+                                <?php echo tr('cantine_date_deb');?>
                                 <input type="date" name="date_deb"
-                                       value="<?php echo html_escape($default_date_deb);?>" />
+                                       value="<?php echo esc($default_date_deb);?>" />
                             </span>
                             <span>
-                                <?php echo $this->lang->line('cantine_date_fin');?>
+                                <?php echo tr('cantine_date_fin');?>
                                 <input type="date" name="date_fin"
-                                       value="<?php echo html_escape($default_date_fin);?>" />
+                                       value="<?php echo esc($default_date_fin);?>" />
                             </span>
                         </span>
                     </div>
@@ -414,9 +414,9 @@ $_fr_days = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
                     <div class="cantine-gen-actions">
                         <button type="submit"
                                 class="nicdark_press nicdark_btn nicdark_bg_orange white nicdark_radius nicdark_shadow small"
-                                onclick="return confirm('<?php echo $this->lang->line('cantine_confirm_generate');?>');">
+                                onclick="return confirm('<?php echo tr('cantine_confirm_generate');?>');">
                             <i class="icon-calendar"></i>
-                            <?php echo $this->lang->line('cantine_btn_generate');?>
+                            <?php echo tr('cantine_btn_generate');?>
                         </button>
                     </div>
 
@@ -437,16 +437,16 @@ $_fr_days = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
         <!-- Historique des générations -->
         <?php if (!empty($generations)){ ?>
         <div class="grid grid_12">
-            <h4 class="greydark"><?php echo $this->lang->line('cantine_gen_history');?></h4>
+            <h4 class="greydark"><?php echo tr('cantine_gen_history');?></h4>
             <div class="nicdark_space10"></div>
 
             <table class="nicdark_table nicdark_bg_grey nicdark_radius">
                 <thead class="nicdark_bg_greydark">
                     <tr>
-                        <td><h5 class="white"><?php echo $this->lang->line('cantine_gen_date');?></h5></td>
-                        <td><h5 class="white"><?php echo $this->lang->line('cantine_gen_period');?></h5></td>
-                        <td class="center"><h5 class="white"><?php echo $this->lang->line('cantine_gen_created');?></h5></td>
-                        <td class="center"><h5 class="white"><?php echo $this->lang->line('cantine_gen_skipped');?></h5></td>
+                        <td><h5 class="white"><?php echo tr('cantine_gen_date');?></h5></td>
+                        <td><h5 class="white"><?php echo tr('cantine_gen_period');?></h5></td>
+                        <td class="center"><h5 class="white"><?php echo tr('cantine_gen_created');?></h5></td>
+                        <td class="center"><h5 class="white"><?php echo tr('cantine_gen_skipped');?></h5></td>
                     </tr>
                 </thead>
                 <tbody>
@@ -469,7 +469,7 @@ $_fr_days = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
 
         <div class="grid grid_12">
             <div class="nicdark_space30"></div>
-            <p class="grey"><small><?php echo $this->lang->line('cantine_config_hint');?></small></p>
+            <p class="grey"><small><?php echo tr('cantine_config_hint');?></small></p>
         </div>
 
     </div>

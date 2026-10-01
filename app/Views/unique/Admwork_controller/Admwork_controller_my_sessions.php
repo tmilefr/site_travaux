@@ -56,7 +56,7 @@ ksort($past_by_month);
 $past_by_month = array_reverse($past_by_month, true);
 
 /* Types présents dans MES sessions, pour les chips de filtre */
-$WorkTypeAll = $this->Admwork_model->_get('defs')['type']->_get('values');
+$WorkTypeAll = model('Admwork_model')->_get('defs')['type']->_get('values');
 $present_types = [];
 foreach ($my_works as $w) { $present_types[$w->type] = true; }
 $WorkType = array_intersect_key($WorkTypeAll, $present_types);
@@ -93,9 +93,9 @@ if (!function_exists('_v5_day')) {
 <div class="grid grid_12">
     <div class="aw-page-head">
         <div>
-            <h1 class="subtitle greydark"><?php echo $this->lang->line('REF_MY_SESSIONS_TITLE'); ?></h1>
+            <h1 class="subtitle greydark"><?php echo tr('REF_MY_SESSIONS_TITLE'); ?></h1>
             <div class="nicdark_space10"></div>
-            <h3 class="subtitle grey"><?php echo $this->lang->line('REF_MY_SESSIONS_SUBTITLE'); ?></h3>
+            <h3 class="subtitle grey"><?php echo tr('REF_MY_SESSIONS_SUBTITLE'); ?></h3>
         </div>
         <!-- Toggle vue -->
         <div class="aw-view-toggle">
@@ -118,7 +118,7 @@ if (!function_exists('_v5_day')) {
 
 <?php if (empty($my_works)): ?>
 
-    <p class="aw-empty"><?php echo $this->lang->line('REF_NO_SESSIONS'); ?></p>
+    <p class="aw-empty"><?php echo tr('REF_NO_SESSIONS'); ?></p>
 
 <?php else: ?>
 
@@ -160,7 +160,7 @@ if (!function_exists('_v5_day')) {
     <div id="aw-view-cards">
     <div class="aw-cards-grid">
     <?php foreach ($upcoming as $w):
-        $design  = $this->render_object->GetDesign($w->type);
+        $design  = $render_object->GetDesign($w->type);
         list($cd,$cd_cls) = _v5_countdown($w->date_travaux);
         $bl      = isset($design->title) ? $design->title : $w->type;
         $is_open = (strtotime($w->date_travaux) <= strtotime('today'));  // jour J ou après
@@ -182,11 +182,11 @@ if (!function_exists('_v5_day')) {
                     <p class="aw-card-title"><?php echo htmlspecialchars($w->titre); ?></p>
                     <span class="aw-type-badge <?php echo _v5_badge_cls($w->type); ?>"><?php echo $bl; ?></span>
                     <div class="aw-card-meta">
-                        <div class="aw-meta-row"><i class="icon-pin-outline"></i><?php echo $this->render_object->RenderElement('ecole',$w->ecole); ?></div>
+                        <div class="aw-meta-row"><i class="icon-pin-outline"></i><?php echo $render_object->RenderElement('ecole',$w->ecole); ?></div>
                         <?php if ($w->type_session==1): ?>
                         <div class="aw-meta-row"><i class="icon-clock-1"></i><?php echo $w->heure_deb_trav; ?> – <?php echo $w->heure_fin_trav; ?></div>
                         <?php endif; ?>
-                        <div class="aw-meta-row"><i class="icon-info-outline"></i><?php echo $this->render_object->RenderElement('type_session',$w->type_session); ?></div>
+                        <div class="aw-meta-row"><i class="icon-info-outline"></i><?php echo $render_object->RenderElement('type_session',$w->type_session); ?></div>
                     </div>
                 </div>
                 <div class="aw-card-footer">
@@ -196,11 +196,11 @@ if (!function_exists('_v5_day')) {
                     <div class="aw-footer-actions">
                         <?php if ($is_open): ?>
                             <a href="<?php echo base_url('Admwork_controller/validate_one/'.$w->id); ?>" class="aw-btn validate">
-                                <?php echo $this->lang->line('REF_VALIDATE_ACTION'); ?>
+                                <?php echo tr('REF_VALIDATE_ACTION'); ?>
                             </a>
                         <?php else: ?>
                             <a href="<?php echo base_url('Admwork_controller/validate_one/'.$w->id); ?>" class="aw-btn">
-                                <?php echo $this->lang->line('REF_PREVIEW_ACTION'); ?>
+                                <?php echo tr('REF_PREVIEW_ACTION'); ?>
                             </a>
                         <?php endif; ?>
                     </div>
@@ -220,7 +220,7 @@ if (!function_exists('_v5_day')) {
             <span class="aw-list-sep-count"><?php echo count($mdata['works']); ?> session<?php echo count($mdata['works'])>1?'s':''; ?></span>
         </div>
         <?php foreach ($mdata['works'] as $w):
-            $design  = $this->render_object->GetDesign($w->type);
+            $design  = $render_object->GetDesign($w->type);
             list($cd,$cd_cls) = _v5_countdown($w->date_travaux);
             $bl      = isset($design->title) ? $design->title : $w->type;
             $is_open = (strtotime($w->date_travaux) <= strtotime('today'));
@@ -237,7 +237,7 @@ if (!function_exists('_v5_day')) {
             <div class="aw-list-info">
                 <div class="aw-list-title"><?php echo htmlspecialchars($w->titre); ?></div>
                 <div class="aw-list-meta">
-                    <span><?php echo $this->render_object->RenderElement('ecole',$w->ecole); ?></span>
+                    <span><?php echo $render_object->RenderElement('ecole',$w->ecole); ?></span>
                     <?php if ($w->type_session==1): ?>
                         <span class="aw-list-sep-dot">·</span><span><?php echo $w->heure_deb_trav; ?>–<?php echo $w->heure_fin_trav; ?></span>
                     <?php endif; ?>
@@ -252,11 +252,11 @@ if (!function_exists('_v5_day')) {
             <div class="aw-list-action">
                 <?php if ($is_open): ?>
                     <a href="<?php echo base_url('Admwork_controller/validate_one/'.$w->id); ?>" class="aw-btn validate">
-                        <?php echo $this->lang->line('REF_VALIDATE_ACTION'); ?>
+                        <?php echo tr('REF_VALIDATE_ACTION'); ?>
                     </a>
                 <?php else: ?>
                     <a href="<?php echo base_url('Admwork_controller/validate_one/'.$w->id); ?>" class="aw-btn">
-                        <?php echo $this->lang->line('REF_PREVIEW_ACTION'); ?>
+                        <?php echo tr('REF_PREVIEW_ACTION'); ?>
                     </a>
                 <?php endif; ?>
             </div>
@@ -304,7 +304,7 @@ if (!function_exists('_v5_day')) {
 
         <div class="aw-month-body <?php echo $first?'is-open':''; ?>" id="month-<?php echo $mkey; ?>">
         <?php foreach ($mdata['works'] as $w):
-            $design = $this->render_object->GetDesign($w->type);
+            $design = $render_object->GetDesign($w->type);
             list($cd,$cd_cls) = _v5_countdown($w->date_travaux);
             $bl     = isset($design->title)?$design->title:$w->type;
         ?>
@@ -320,7 +320,7 @@ if (!function_exists('_v5_day')) {
                 <div class="aw-list-info">
                     <div class="aw-list-title"><?php echo htmlspecialchars($w->titre); ?></div>
                     <div class="aw-list-meta">
-                        <span><?php echo $this->render_object->RenderElement('ecole',$w->ecole); ?></span>
+                        <span><?php echo $render_object->RenderElement('ecole',$w->ecole); ?></span>
                         <?php if ($w->type_session==1): ?>
                             <span class="aw-list-sep-dot">·</span><span><?php echo $w->heure_deb_trav; ?>–<?php echo $w->heure_fin_trav; ?></span>
                         <?php endif; ?>
@@ -334,7 +334,7 @@ if (!function_exists('_v5_day')) {
                 <div class="aw-list-cd is-past"><?php echo $cd; ?></div>
                 <div class="aw-list-action">
                     <a href="<?php echo base_url('Admwork_controller/validate_one/'.$w->id); ?>" class="aw-btn validate">
-                        <?php echo $this->lang->line('REF_VALIDATE_ACTION'); ?>
+                        <?php echo tr('REF_VALIDATE_ACTION'); ?>
                     </a>
                 </div>
             </div>

@@ -55,7 +55,7 @@ class element
 		if ($this->disabled)
 			$txt = '<input type="hidden" name="'.$this->GetName().'" value="'.$this->value.'"><input class="form-control" type="text" value="'.$this->Render().'" readonly>';
 		else
-			$txt = $this->RenderTools->input_text( $this->GetName() , ci_lang($this->name) , $this->value, $this->label, $this->datatarget);
+			$txt = $this->RenderTools->input_text( $this->GetName() , tr($this->name) , $this->value, $this->label, $this->datatarget);
 		return $txt;
 	}
 	
@@ -113,12 +113,9 @@ class element
 	 */
 	public function __construct()
 	{
-		/*****
-		/* $this->CI =& get_instance(); //trop de dépendance croisée. TODO : PUSH data in OBJECT instead of GET DATA in OBJECT
-		/* Utilisation d'un singleton Bootstrap_tools $this->RenderTools plutôt que $this->CI->Bootstrap_tools 
-		******/
-		$this->render_object = Render_object::get_instance(); 
-		$this->RenderTools 	 = Bootstrap_tools::get_instance();
+		// Services partagés : Render_object et Bootstrap_tools (voir app/Config/Services.php)
+		$this->render_object = service('renderObject'); 
+		$this->RenderTools 	 = service('bootstrapTools');
 	}
 
 	/**
@@ -132,6 +129,26 @@ class element
 			echo '<pre><code>'.print_r($this , 1).'</code></pre>';
 	}
 	
+	/**
+	 * Modèle lié à l'élément (propriété $model = nom de la classe de modèle).
+	 * @return \App\Models\Core_model
+	 */
+	protected function mdl()
+	{
+		$mdl = model($this->model);
+		if (! $mdl->_get('defs') && $mdl->_get('json')) {
+			$mdl->_init_def(); // définitions de champs chargées à la demande
+		}
+
+		return $mdl;
+	}
+
+	/** Valeur postée (formulaire courant). */
+	protected function post($key)
+	{
+		return service('request')->getPost($key);
+	}
+
 	/**
 	 * Generic set
 	 * @return void

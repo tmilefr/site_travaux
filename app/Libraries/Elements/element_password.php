@@ -20,9 +20,8 @@ class element_password extends element
 	public function __construct()
 	{
 		parent::__construct();
-		$this->CI =& get_instance();
-		if (isset($this->CI) && isset($this->CI->bootstrap_tools)) {
-			$this->CI->bootstrap_tools->_SetHead('assets/js/togglefield.js', 'js');
+		if (isset($this->RenderTools)) {
+			$this->RenderTools->_SetHead('assets/js/togglefield.js', 'js');
 		}
 	}
 
@@ -40,9 +39,9 @@ class element_password extends element
 				. '<input class="form-control" type="text" value="********" readonly>';
 		}
 
-		$txt  = $this->CI->bootstrap_tools->password_text(
+		$txt  = $this->RenderTools->password_text(
 			$this->name,
-			$this->CI->lang->line($this->name),
+			tr($this->name),
 			$this->value,
 			'readonly'
 		);
@@ -54,7 +53,7 @@ class element_password extends element
 					       id="' . $this->name . '_check"
 					       value="change_password">
 					<label class="form-check-label" for="' . $this->name . '_check">
-						' . $this->CI->lang->line($this->name . '_change') . '
+						' . tr($this->name . '_change') . '
 					</label>
 				</div>';
 
@@ -87,11 +86,10 @@ class element_password extends element
 	 */
 	public function PrepareForDBA($value)
 	{
-		$changeFlag = $this->CI->input->post($this->name . '_check');
+		$changeFlag = $this->post($this->name . '_check');
 
 		if ($changeFlag === 'change_password' && !empty($value)) {
-			$this->CI->load->library('PasswordAuthenticator', [], 'passauth');
-			return $this->CI->passauth->hash($value);
+			return service('passwordAuthenticator')->hash($value);
 		}
 
 		return $value;

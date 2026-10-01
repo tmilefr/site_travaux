@@ -6,20 +6,20 @@
 		<div class="nicdark_space30"></div>
 
 		<div class="grid grid_12">
-		<h1 class="subtitle greydark"><?php echo $this->lang->line('Parameters_'.$this->render_object->_get('form_mod'));?></h1>
+		<h1 class="subtitle greydark"><?php echo tr('Parameters_'.$render_object->_get('form_mod'));?></h1>
 		<div class="nicdark_space20"></div>
 		<h3 class="subtitle grey">
-            <?php echo $this->lang->line('Parameters_subtitle');?>
+            <?php echo tr('Parameters_subtitle');?>
 		</h3>
 		<div class="nicdark_space20"></div>
 		<div class="nicdark_divider left big"><span class="nicdark_bg_red nicdark_radius"></span></div>
 		<div class="nicdark_space10"></div>
 	</div>
 	<?php
-	echo form_open( base_url($this->render_object->_getCi('_controller_name').'/list') , array('class' => '', 'id' => 'edit') , array('form_mod'=>'','id'=>'') );
+	echo open_form( base_url($render_object->_getCi('_controller_name').'/list') , array('class' => '', 'id' => 'edit') , array('form_mod'=>'','id'=>'') );
 
 	$bloc = '';
-			foreach($this->Parameters_model->_get('defs') AS $field => $def){
+			foreach(model('Parameters_model')->_get('defs') AS $field => $def){
 			if ($def->bloc != $bloc){
 				if ($bloc != ''){
 					echo '</div></div><br/>';
@@ -32,9 +32,9 @@
 			<div class="form-row">
 				<div class="col">
 					<?php 
-						echo form_error($field , 	'<div class="alert alert-danger">', '</div>');
-						echo $this->render_object->label($field);
-						echo $this->render_object->RenderFormElement($field); 
+						echo field_error($field , 	'<div class="alert alert-danger">', '</div>');
+						echo $render_object->label($field);
+						echo $render_object->RenderFormElement($field); 
 					?>
 				</div>
 			</div>
@@ -42,7 +42,7 @@
 			<br/>
 			<div class="form-row">
 				<div class="modal-footer">
-					<button type="submit" class="btn btn-primary"><?php echo ci_lang('valid');?></button>
+					<button type="submit" class="btn btn-primary"><?php echo tr('valid');?></button>
 				</div>
 			</div>
 		</div>

@@ -15,8 +15,8 @@
  *   - $bulk_actions                     : actions disponibles en lot
  */
 
-$controller_name = $this->render_object->_getCi('_controller_name');
-$action          = $this->render_object->_getCi('_action');
+$controller_name = $render_object->_getCi('_controller_name');
+$action          = $render_object->_getCi('_action');
 $base            = base_url($controller_name . '/' . $action);
 $base_ctrl       = base_url($controller_name);
 
@@ -34,7 +34,7 @@ $is_hideable = function($field) use ($hideable_columns) {
 };
 
 // Récupère les définitions de champs une seule fois
-$defs = $this->{$_model_name}->_get('defs');
+$defs = model($_model_name)->_get('defs');
 
 // Liste des champs visibles dans le tableau (list:true et non masqué)
 $visible_fields = array();
@@ -54,13 +54,13 @@ $has_bulk = is_array($bulk_actions) && count($bulk_actions) > 0;
     <div class="nicdark_space30"></div>
 
     <div class="grid <?php echo (isset($civil_year)) ? "grid_5":"grid_12";?>">
-        <h1 class="subtitle greydark"><?php echo $this->lang->line($controller_name . '_' . $action); ?></h1>
+        <h1 class="subtitle greydark"><?php echo tr($controller_name . '_' . $action); ?></h1>
         <div class="nicdark_space20"></div>
         <h3 class="subtitle grey">
         <?php
-            if ($this->render_object->_get('_ui_rules') AND !$this->render_object->_get('form_mod')){
-                foreach($this->render_object->_get('_ui_rules') AS $rule){
-                    if (in_array($rule->term , $this->render_object->_get('_not_link_list')) AND $rule->autorize ){
+            if ($render_object->_get('_ui_rules') AND !$render_object->_get('form_mod')){
+                foreach($render_object->_get('_ui_rules') AS $rule){
+                    if (in_array($rule->term , $render_object->_get('_not_link_list')) AND $rule->autorize ){
                         echo '<a class="" href="'.$rule->url.'"><span class="'.$rule->icon.' "></span> '.$rule->name.'</a>&nbsp;';
                     }
                 }
@@ -68,7 +68,7 @@ $has_bulk = is_array($bulk_actions) && count($bulk_actions) > 0;
         ?>
         </h3>
         <div class="nicdark_space20"></div>
-        <div class="nicdark_divider left big"><span class="<?php echo $this->render_object->_getCi('_bg_color');?> nicdark_radius"></span></div>
+        <div class="nicdark_divider left big"><span class="<?php echo $render_object->_getCi('_bg_color');?> nicdark_radius"></span></div>
         <div class="nicdark_space10"></div>
     </div>
     <?php if (isset($civil_year)){ ?>
@@ -76,7 +76,7 @@ $has_bulk = is_array($bulk_actions) && count($bulk_actions) > 0;
         <ul class="nav nav-pills">
             <?php 
             foreach($civil_year AS $key=>$value){
-                echo '<li class="nav-item" ><a  class="nav-link '.(($filter_ec == $key) ? 'active':'').'" href="'.base_url($this->render_object->_getCi('_controller_name').'/'.$this->render_object->_getCi('_action')).'/filter/civil_year/filter_value/'.$key.'">'.$value.'</a></li>';
+                echo '<li class="nav-item" ><a  class="nav-link '.(($filter_ec == $key) ? 'active':'').'" href="'.base_url($render_object->_getCi('_controller_name').'/'.$render_object->_getCi('_action')).'/filter/civil_year/filter_value/'.$key.'">'.$value.'</a></li>';
             }
             ?>
         </ul>
@@ -86,12 +86,12 @@ $has_bulk = is_array($bulk_actions) && count($bulk_actions) > 0;
     <?php /* ---------------------------------------------------------------
          FLASH MESSAGES (bulk actions)
        ---------------------------------------------------------------- */ ?>
-    <?php if ($flash = $this->session->flashdata('bulk_success')) { ?>
+    <?php if ($flash = session()->getFlashdata('bulk_success')) { ?>
         <div class="grid grid_12">
             <div class="alert alert-success"><?php echo htmlspecialchars($flash, ENT_QUOTES, 'UTF-8'); ?></div>
         </div>
     <?php } ?>
-    <?php if ($flash = $this->session->flashdata('bulk_error')) { ?>
+    <?php if ($flash = session()->getFlashdata('bulk_error')) { ?>
         <div class="grid grid_12">
             <div class="alert alert-danger"><?php echo htmlspecialchars($flash, ENT_QUOTES, 'UTF-8'); ?></div>
         </div>
@@ -106,11 +106,11 @@ $has_bulk = is_array($bulk_actions) && count($bulk_actions) > 0;
             <?php /* Indicateur de tri courant + bouton reset */ ?>
             <?php if ($has_sort) { ?>
                 <span class="navbar-text">
-                    <strong><?php echo $this->lang->line('LIST_SORTED_BY'); ?> :</strong>
+                    <strong><?php echo tr('LIST_SORTED_BY'); ?> :</strong>
                     <?php
                     foreach ($order_stack as $i => $f) {
                         $arrow = (isset($direction_stack[$i]) && $direction_stack[$i] === 'desc') ? '↓' : '↑';
-                        $label = $this->lang->line($f) ?: $f;
+                        $label = tr($f) ?: $f;
                         echo '<span class="badge badge-info" style="margin-left:0.3em;">'
                             . ($i + 1) . '. ' . $label . ' ' . $arrow
                             . '</span>';
@@ -118,7 +118,7 @@ $has_bulk = is_array($bulk_actions) && count($bulk_actions) > 0;
                     ?>
                 </span>
                 <a href="<?php echo $base; ?>/order_clear/1"
-                   class="btn btn-light btn-sm" title="<?php echo $this->lang->line('LIST_RESET_SORT'); ?>">
+                   class="btn btn-light btn-sm" title="<?php echo tr('LIST_RESET_SORT'); ?>">
                     <span class="oi oi-circle-x"></span>
                 </a>
             <?php } ?>
@@ -134,14 +134,14 @@ $has_bulk = is_array($bulk_actions) && count($bulk_actions) > 0;
                 <div class="dropdown" style="margin-left:auto;">
                     <button class="btn btn-light btn-sm dropdown-toggle"
                             type="button" data-toggle="dropdown" aria-expanded="false">
-                        <span class="oi oi-cog"></span> <?php echo $this->lang->line('LIST_COLUMNS'); ?>
+                        <span class="oi oi-cog"></span> <?php echo tr('LIST_COLUMNS'); ?>
                     </button>
                     <div class="dropdown-menu dropdown-menu-right" style="padding:0.5em 1em;">
                         <?php foreach ($defs as $field => $def) { ?>
                             <?php if ($def->list === true && $is_hideable($field)) { ?>
                                 <?php
                                 $is_visible = !in_array($field, $hidden_columns, true);
-                                $label = $this->lang->line($field) ?: $field;
+                                $label = tr($field) ?: $field;
                                 ?>
                                 <div class="form-check">
                                     <input class="form-check-input"
@@ -165,7 +165,7 @@ $has_bulk = is_array($bulk_actions) && count($bulk_actions) > 0;
                 <a href="<?php echo $base_ctrl; ?>/export_csv"
                    class="btn btn-success btn-sm">
                     <span class="oi oi-data-transfer-download"></span>
-                    <?php echo $this->lang->line('LIST_EXPORT_CSV'); ?>
+                    <?php echo tr('LIST_EXPORT_CSV'); ?>
                 </a>
             <?php } ?>
         </div>
@@ -177,11 +177,11 @@ $has_bulk = is_array($bulk_actions) && count($bulk_actions) > 0;
     <?php if ($has_filters) { ?>
         <div class="grid grid_12">
             <div class="alert alert-info" style="display:flex; flex-wrap:wrap; align-items:center; gap:0.5em;">
-                <strong><?php echo $this->lang->line('LIST_ACTIVE_FILTERS'); ?> :</strong>
+                <strong><?php echo tr('LIST_ACTIVE_FILTERS'); ?> :</strong>
 
                 <?php if (isset($global_search) && $global_search !== '') { ?>
                     <span class="badge badge-secondary" style="font-size:0.95em;">
-                        <?php echo $this->lang->line('LIST_SEARCH'); ?> :
+                        <?php echo tr('LIST_SEARCH'); ?> :
                         &laquo;&nbsp;<?php echo htmlspecialchars($global_search, ENT_QUOTES, 'UTF-8'); ?>&nbsp;&raquo;
                         <a href="<?php echo $base; ?>/search/reset"
                            class="text-white" style="margin-left:0.4em;">
@@ -193,7 +193,7 @@ $has_bulk = is_array($bulk_actions) && count($bulk_actions) > 0;
                 <?php
                 if (is_array($active_filters)) {
                     foreach ($active_filters as $field => $value) {
-                        $field_label = $this->lang->line($field) ?: $field;
+                        $field_label = tr($field) ?: $field;
                         $value_label = $value;
                         if (isset($defs[$field])) {
                             $values = $defs[$field]->_get('values');
@@ -218,7 +218,7 @@ $has_bulk = is_array($bulk_actions) && count($bulk_actions) > 0;
                 <a href="<?php echo $base_ctrl; ?>/clear_filters"
                    class="btn btn-warning btn-sm" style="margin-left:auto;">
                     <span class="oi oi-trash"></span>
-                    <?php echo $this->lang->line('LIST_RESET_ALL'); ?>
+                    <?php echo tr('LIST_RESET_ALL'); ?>
                 </a>
             </div>
         </div>
@@ -235,14 +235,14 @@ $has_bulk = is_array($bulk_actions) && count($bulk_actions) > 0;
             <div class="alert alert-light text-center" style="padding:2em;">
                 <p style="font-size:1.2em; margin-bottom:1em;">
                     <span class="oi oi-info" aria-hidden="true"></span>
-                    <?php echo $this->lang->line(
+                    <?php echo tr(
                         $has_filters ? 'LIST_EMPTY_FILTERED' : 'LIST_EMPTY'
                     ); ?>
                 </p>
                 <?php if ($has_filters) { ?>
                     <a href="<?php echo $base_ctrl; ?>/clear_filters" class="btn btn-warning">
                         <span class="oi oi-trash"></span>
-                        <?php echo $this->lang->line('LIST_RESET_ALL'); ?>
+                        <?php echo tr('LIST_RESET_ALL'); ?>
                     </a>
                 <?php } ?>
             </div>
@@ -266,13 +266,13 @@ $has_bulk = is_array($bulk_actions) && count($bulk_actions) > 0;
                 <?php } ?>
                 <th scope="col">&nbsp;</th>
                 <?php foreach ($visible_fields as $field) { ?>
-                    <th scope="col"><?php echo $this->render_object->render_link($field); ?></th>
+                    <th scope="col"><?php echo $render_object->render_link($field); ?></th>
                 <?php } ?>
             </tr>
         </thead>
         <tbody>
         <?php
-        $key = $this->{$_model_name}->_get('key');
+        $key = model($_model_name)->_get('primaryKey');
         foreach ($datas as $data) {
             $row_id = isset($data->{$key}) ? $data->{$key} : '';
             echo '<tr>';
@@ -285,13 +285,13 @@ $has_bulk = is_array($bulk_actions) && count($bulk_actions) > 0;
             }
 
             echo '<td data-label="" class="actions-col">';
-            echo $this->render_object->render_element_menu($data, ((isset($data->blocked)) ? $data->blocked : null));
+            echo $render_object->render_element_menu($data, ((isset($data->blocked)) ? $data->blocked : null));
             echo '</td>';
 
             foreach ($visible_fields as $field) {
-                $label = $this->lang->line($field) ?: $field;
+                $label = tr($field) ?: $field;
                 echo '<td data-label="' . htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . '">';
-                echo $this->render_object->RenderElement($field, $data->{$field}, $row_id);
+                echo $render_object->RenderElement($field, $data->{$field}, $row_id);
                 echo '</td>';
             }
             echo '</tr>';
@@ -307,14 +307,14 @@ $has_bulk = is_array($bulk_actions) && count($bulk_actions) > 0;
                 <div class="alert alert-light" style="display:flex; align-items:center; gap:0.7em; flex-wrap:wrap;">
                     <strong>
                         <span id="bulkCount">0</span>
-                        <?php echo $this->lang->line('BULK_SELECTED'); ?>
+                        <?php echo tr('BULK_SELECTED'); ?>
                     </strong>
 
                     <?php foreach ($bulk_actions as $action_key => $opts) { ?>
                         <?php
                         $btn_class = isset($opts['class']) ? $opts['class'] : 'btn-secondary';
                         $confirm   = !empty($opts['confirm']);
-                        $label     = $this->lang->line($opts['label_key']) ?: $action_key;
+                        $label     = tr($opts['label_key']) ?: $action_key;
                         ?>
                         <button type="submit"
                                 name="bulk_action"
@@ -323,7 +323,7 @@ $has_bulk = is_array($bulk_actions) && count($bulk_actions) > 0;
                                 <?php if ($confirm) { ?>
                                     onclick="return confirm('<?php
                                         echo addslashes(
-                                            $this->lang->line('BULK_CONFIRM_PREFIX') . ' ' .
+                                            tr('BULK_CONFIRM_PREFIX') . ' ' .
                                             strtolower($label) . ' ?'
                                         );
                                     ?>');"
@@ -345,7 +345,7 @@ $has_bulk = is_array($bulk_actions) && count($bulk_actions) > 0;
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
             <ul class="navbar-nav mr-auto" style="align-items:center; flex-wrap:wrap;">
                 <li class="nav-item">
-                    <?php echo ((isset($this->pagination)) ? $this->pagination->create_links() : ''); ?>
+                    <?php echo ($pagination_links ?? ''); ?>
                 </li>
 
                 <?php if ($total_rows > 0) { ?>
@@ -355,11 +355,11 @@ $has_bulk = is_array($bulk_actions) && count($bulk_actions) > 0;
                             printf(
                                 '%d %s',
                                 $total_rows,
-                                $this->lang->line($total_rows > 1 ? 'LIST_RESULTS' : 'LIST_RESULT')
+                                tr($total_rows > 1 ? 'LIST_RESULTS' : 'LIST_RESULT')
                             );
                             if ($nb_pages > 1) {
                                 echo ' &mdash; ';
-                                printf($this->lang->line('LIST_PAGE_X_OF_Y'), $cur_page, $nb_pages);
+                                printf(tr('LIST_PAGE_X_OF_Y'), $cur_page, $nb_pages);
                             }
                             ?>
                         </span>
@@ -368,7 +368,7 @@ $has_bulk = is_array($bulk_actions) && count($bulk_actions) > 0;
 
                 <li class="nav-item" style="margin-left:1em;">
                     <label for="per_page_select" class="navbar-text" style="margin-right:0.5em;">
-                        <?php echo $this->lang->line('LIST_PER_PAGE'); ?>
+                        <?php echo tr('LIST_PER_PAGE'); ?>
                     </label>
                     <select id="per_page_select"
                             class="form-control form-control-sm"
@@ -426,7 +426,7 @@ $has_bulk = is_array($bulk_actions) && count($bulk_actions) > 0;
 function listBulkSubmit(form){
     var n = form.querySelectorAll('.bulk-row-check:checked').length;
     if (n === 0) {
-        alert('<?php echo addslashes($this->lang->line('BULK_NOTHING_SELECTED')); ?>');
+        alert('<?php echo addslashes(tr('BULK_NOTHING_SELECTED')); ?>');
         return false;
     }
     return true;

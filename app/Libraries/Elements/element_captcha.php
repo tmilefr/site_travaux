@@ -19,7 +19,7 @@ class element_captcha extends element
 	public function RenderFormElement(){
 		$tmp = '';
 		if ($this->captcha == TRUE){
-			$tmp .= '<div class="g-recaptcha" data-sitekey="'.SITE_CAPTCHA_KEY.'"></div>';
+			$tmp .= '<div class="g-recaptcha" data-sitekey="'.config('Travaux')->siteCaptchaKey.'"></div>';
 			$tmp .= '<input type="submit" class="btn btn-primary" value="Submit">';
 		}
 		$tmp .= '<input type="hidden" id="'.$this->name.'" name="'.$this->name.'">';
@@ -34,7 +34,7 @@ class element_captcha extends element
 			$response->success = false;
 			$response->{'error-codes'} = [];
 
-			$url = "https://www.google.com/recaptcha/api/siteverify?secret=".SITE_CAPTCHA_SECRET_KEY."&response={$value}";
+			$url = "https://www.google.com/recaptcha/api/siteverify?secret=".config('Travaux')->siteCaptchaSecretKey."&response={$value}";
 			// On vérifie si curl est installé
 			if(function_exists('curl_version')){
 				$curl = curl_init($url);

@@ -4,31 +4,13 @@ namespace App\Libraries;
 
 use Stdclass;
 #[\AllowDynamicProperties]
-Class Bootstrap_tools{
+class Bootstrap_tools{
 
 	protected $_head = array();
 	protected $_controller_name = '';
 	protected $_asset_img = '/assets/img/';
 	
-	private static $instance;
-
-	/**
-	 * Get the Bootstrap_tools singleton
-	 *
-	 * @static
-	 * @return	object
-	 */
-	public static function &get_instance()
-	{
-		return self::$instance;
-	}
-
-
 	public function __construct(){
-
-		self::$instance =& $this;
-
-		//echo print_r(self::$instance, TRUE).' <br/>';
 
 		$this->_SetHead('assets/js/jquery-3.3.1.min.js','js');
 		$this->_SetHead('assets/js/app.js','js');
@@ -264,7 +246,7 @@ Class Bootstrap_tools{
 		if (count($head)){
 			$table .= '<head><tr>';
 			foreach($head AS $scope=>$name){
-				$table .= '<th scope="'.$scope.'">'.ci_lang($name).'</th>';
+				$table .= '<th scope="'.$scope.'">'.tr($name).'</th>';
 			}
 			$table .= '</tr></head>';
 		}
@@ -310,10 +292,10 @@ Class Bootstrap_tools{
 			<a class="nav-link dropdown-toggle dropdown-toggle-split" href="#" id="navbarDropdownFrom" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></a>
 			<div class="dropdown-menu" aria-labelledby="navbarDropdown">';
 				foreach($values AS $key => $value){
-					$string_render_dropdown .= '<a class="dropdown-item" href="'.$url.'/filter/'.$field.'/filter_value/'.$key.'">'.ci_lang($value).'</a>';
+					$string_render_dropdown .= '<a class="dropdown-item" href="'.$url.'/filter/'.$field.'/filter_value/'.$key.'">'.tr($value).'</a>';
 				}
-				$string_render_dropdown .= '<a class="dropdown-item" href="'.$url.'/filter/'.$field.'/filter_value/all">'.ci_lang('All').'</a>';
-				$string_render_dropdown .= '<a class="dropdown-item" href="'.$url.'/filter/'.$field.'/filter_value/'.$null_value.'">'.ci_lang('N/A').'</a>';
+				$string_render_dropdown .= '<a class="dropdown-item" href="'.$url.'/filter/'.$field.'/filter_value/all">'.tr('All').'</a>';
+				$string_render_dropdown .= '<a class="dropdown-item" href="'.$url.'/filter/'.$field.'/filter_value/'.$null_value.'">'.tr('N/A').'</a>';
 			$string_render_dropdown .= '</div></ul>';
 		}
 		return $string_render_dropdown;
@@ -332,11 +314,11 @@ Class Bootstrap_tools{
 	}
 	
 	public function render_head_link($field, $direction, $url, $add_string ){
-		return '<a class="nav-link " href="'.$url.'/order/'.$field.'/direction/'.(($direction == 'desc') ? 'asc':'desc').'">'.ci_lang($field).' '.$add_string.'</a>';
+		return '<a class="nav-link " href="'.$url.'/order/'.$field.'/direction/'.(($direction == 'desc') ? 'asc':'desc').'">'.tr($field).' '.$add_string.'</a>';
 	}
 
 	public function label($name){
-		return '<label for="input'.$name.'">'.ci_lang($name).'</label>';
+		return '<label for="input'.$name.'">'.tr($name).'</label>';
 	}
 	
 	public function textarea($field, $value, $message = '', $required = false,$rows = 10){

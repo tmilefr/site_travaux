@@ -10,10 +10,10 @@ namespace App\Controllers;
  * @author      Tmile
  * @link        http://www.24bis.com
  */
-class Candidatures_controller extends MY_Controller {
+class Candidatures_controller extends CrudController {
 
-	public function __construct(){
-		parent::__construct();
+	protected function boot(): void
+	{
 
 		$this->_set('_debug', FALSE);
 
@@ -24,7 +24,7 @@ class Candidatures_controller extends MY_Controller {
 		$this->_autorize 		= array('list'=>true,'add'=>true,'edit'=>false,'delete'=>true,'view'=>true);
 		$this->_search 			= false;
 		$this->_bg_color        = 'nicdark_bg_violet';
-		$this->title            .= $this->lang->line('GESTION_'.$this->_controller_name);
+		$this->title            .= tr('GESTION_'.$this->_controller_name);
 
 		$this->init();
 		//pour dire, on affiche pas les boutons ajout et list dans les listes

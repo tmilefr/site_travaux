@@ -11,9 +11,9 @@
                       <a href="#" class="nicdark_displaynone_ipadpotr nicdark_btn_icon nicdark_bg_yellowdark medium nicdark_radius_circle white nicdark_absolute nicdark_shadow"><i class="icon-attach-outline"></i></a>
           
                       <div class="nicdark_activity nicdark_marginleft70 nicdark_disable_marginleft_ipadpotr">
-                      <h4 class="white"><?php echo LANG('TITLE_BOX_REGIO');?></h4>                        
+                      <h4 class="white"><?php echo tr('TITLE_BOX_REGIO');?></h4>                        
                           <div class="nicdark_space20"></div>
-                          <p class="white"><?php echo LANG('TEXT_BOX_REGIO_CONNECTED');?></p>
+                          <p class="white"><?php echo tr('TEXT_BOX_REGIO_CONNECTED');?></p>
                       </div>
                   </div>
               </div>
@@ -21,12 +21,12 @@
           <div class="grid grid_4">
             <div class="nicdark_archive1 hRT2 nicdark_bg_green nicdark_bg_greendark_hover nicdark_transition nicdark_radius nicdark_shadow">
                 <div class="nicdark_margin20 nicdark_relative">  
-                    <a href="<?php echo ci_lang('DELTA_LINK');?>" class="nicdark_displaynone_ipadpotr nicdark_btn_icon nicdark_bg_greendark medium nicdark_radius_circle white nicdark_absolute nicdark_shadow"><i class="icon-attach-outline"></i></a>
+                    <a href="<?php echo tr('DELTA_LINK');?>" class="nicdark_displaynone_ipadpotr nicdark_btn_icon nicdark_bg_greendark medium nicdark_radius_circle white nicdark_absolute nicdark_shadow"><i class="icon-attach-outline"></i></a>
         
                     <div class="nicdark_activity nicdark_marginleft70 nicdark_disable_marginleft_ipadpotr">
-                        <h4 class="white"><?php echo LANG('TITLE_BOX_DELTA');?></h4>                        
+                        <h4 class="white"><?php echo tr('TITLE_BOX_DELTA');?></h4>                        
                         <div class="nicdark_space20"></div>
-                        <p class="white"><?php echo LANG('TEXT_BOX_DELTA');?> <a href="<?php echo ci_lang('DELTA_LINK');?>" target='_new'> <?php echo LANG('TITLE_LINK');?></a></p>
+                        <p class="white"><?php echo tr('TEXT_BOX_DELTA');?> <a href="<?php echo tr('DELTA_LINK');?>" target='_new'> <?php echo tr('TITLE_LINK');?></a></p>
                     </div>
                 </div>
             </div>
@@ -35,12 +35,12 @@
           <div class="grid grid_4">    
             <div class="nicdark_archive1 hRT2 nicdark_bg_blue nicdark_bg_bluedark_hover nicdark_transition nicdark_radius nicdark_shadow">
                 <div class="nicdark_margin20 nicdark_relative">  
-                    <a href="<?php echo ci_lang('ABCM_LINK');?>" class="nicdark_displaynone_ipadpotr nicdark_btn_icon nicdark_bg_bluedark medium nicdark_radius_circle white nicdark_absolute nicdark_shadow"><i class="icon-attach-outline"></i></a></a>
+                    <a href="<?php echo tr('ABCM_LINK');?>" class="nicdark_displaynone_ipadpotr nicdark_btn_icon nicdark_bg_bluedark medium nicdark_radius_circle white nicdark_absolute nicdark_shadow"><i class="icon-attach-outline"></i></a></a>
         
                     <div class="nicdark_activity nicdark_marginleft70 nicdark_disable_marginleft_ipadpotr">
-                        <h4 class="white"><?php echo LANG('TITLE_BOX_ABCM');?></h4>                        
+                        <h4 class="white"><?php echo tr('TITLE_BOX_ABCM');?></h4>                        
                         <div class="nicdark_space20"></div>
-                        <p class="white"><?php echo LANG('TEXT_BOX_ABCM');?> <a href="<?php echo ci_lang('ABCM_LINK');?>" target='_new'><?php echo LANG('TITLE_LINK');?></a></p>
+                        <p class="white"><?php echo tr('TEXT_BOX_ABCM');?> <a href="<?php echo tr('ABCM_LINK');?>" target='_new'><?php echo tr('TITLE_LINK');?></a></p>
                     </div>
                 </div>
             </div>
@@ -56,7 +56,7 @@
     <!--start nicdark_container-->
     <div class="nicdark_container nicdark_clearfix">
         <div class="nicdark_space50"></div>
-        <div class="grid <?php echo (($this->acl->getType() == "sys") ? 'grid_12':'grid_6'); ?>">
+        <div class="grid <?php echo (($acl->getType() == "sys") ? 'grid_12':'grid_6'); ?>">
             <h1 class="subtitle greydark">Bienvenue &agrave; la Regio Schule !</h1>
             <div class="nicdark_space20"></div>
             <h3 class="subtitle grey">
@@ -66,13 +66,13 @@
             <div class="nicdark_divider left big"><span class="nicdark_bg_yellow nicdark_radius"></span></div>
             <div class="nicdark_space10"></div>
         </div>
-        <?php if ($this->acl->getType() != "sys") { ?>
+        <?php if ($acl->getType() != "sys") { ?>
         <div class="grid grid_6">
             <div class="alert alert-info" role="alert">
-                <h4 class="alert-heading"><?php echo $this->lang->line('INFO_HOME_TITLE');?></h4>
-                <p><?php echo $this->lang->line('INFO_HOME');?></p>
+                <h4 class="alert-heading"><?php echo tr('INFO_HOME_TITLE');?></h4>
+                <p><?php echo tr('INFO_HOME');?></p>
                 <hr>
-                <p class="mb-0"><?php echo $this->lang->line('INFO_HOME_FOOTER');?></p>
+                <p class="mb-0"><?php echo tr('INFO_HOME_FOOTER');?></p>
             </div>
         </div> 
         <?php } ?>       

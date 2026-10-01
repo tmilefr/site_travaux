@@ -67,7 +67,7 @@
     <div class="nicdark_space20"></div>
 
 
-    <?php echo ci_lang('CNIL');?>
+    <?php echo tr('CNIL');?>
 
     <div class="nicdark_space50"></div>
 <div class="nicdark_space50"></div>

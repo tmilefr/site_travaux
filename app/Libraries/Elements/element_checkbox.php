@@ -14,7 +14,7 @@ class element_checkbox extends element
 	}
 	
 	public function Render(){
-		return (($this->value) ? LANG($this->name.'_'.$this->value):$this->name.'_NO');
+		return (($this->value) ? tr($this->name.'_'.$this->value):$this->name.'_NO');
 	}
 }
 

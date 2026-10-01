@@ -5,27 +5,27 @@
 		<div class="nicdark_space30"></div>
 		<div class="card">
 			<div class="card-header">
-				<span class="card-title"><?php echo $this->render_object->RenderElement('unites_id_famille')?></span>
+				<span class="card-title"><?php echo $render_object->RenderElement('unites_id_famille')?></span>
 			</div>
 			<div class="card-body">
 				<h5 class="card-title">
 					<?php 
-						echo $this->render_object->RenderElement('unites_valides').' '.$this->render_object->RenderElement('type_session'); 
+						echo $render_object->RenderElement('unites_valides').' '.$render_object->RenderElement('type_session'); 
 					?>
 				</h5>
 				<p class="card-text">
                     <h3 class="subtitle grey">
-                        <i class="icon-calendar"></i> <?php echo $this->render_object->RenderElement('unites_date')?>
-                        <i class="icon-clock-1"></i><?php echo $this->render_object->RenderElement('unites_heure_debut');?> à <?php $this->render_object->RenderElement('unites_heure_fin');?>
+                        <i class="icon-calendar"></i> <?php echo $render_object->RenderElement('unites_date')?>
+                        <i class="icon-clock-1"></i><?php echo $render_object->RenderElement('unites_heure_debut');?> à <?php $render_object->RenderElement('unites_heure_fin');?>
                     </h3>                    
                     <?php 
-						echo $this->render_object->RenderElement('unites_desc');
+						echo $render_object->RenderElement('unites_desc');
                         echo '<br/>';
-                        echo $this->render_object->RenderElement('unites_comm');
+                        echo $render_object->RenderElement('unites_comm');
                     ?>
 				</p>		
 				<?php
-					echo $this->render_object->render_element_menu();
+					echo $render_object->render_element_menu();
 				?>
 			</div>
 		</div>	

@@ -10,10 +10,10 @@
 
         <div class="grid grid_12">
             <div class="alert alert-danger">
-                <h3><i class="icon-attention"></i> <?php echo $this->lang->line('REF_TOKEN_ERROR_TITLE'); ?></h3>
-                <p><?php echo isset($error) ? $error : $this->lang->line('REF_TOKEN_INVALID'); ?></p>
+                <h3><i class="icon-attention"></i> <?php echo tr('REF_TOKEN_ERROR_TITLE'); ?></h3>
+                <p><?php echo isset($error) ? $error : tr('REF_TOKEN_INVALID'); ?></p>
                 <p class="small">
-                    <?php echo $this->lang->line('REF_TOKEN_ERROR_HELP'); ?>
+                    <?php echo tr('REF_TOKEN_ERROR_HELP'); ?>
                 </p>
             </div>
 
@@ -22,7 +22,7 @@
             <a href="<?php echo base_url('Home/login'); ?>"
                class="nicdark_btn nicdark_bg_blue white nicdark_radius medium">
                 <i class="icon-login"></i>
-                <?php echo $this->lang->line('LOGIN_TO_CONTINUE'); ?>
+                <?php echo tr('LOGIN_TO_CONTINUE'); ?>
             </a>
         </div>
     </div>

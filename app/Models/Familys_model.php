@@ -25,21 +25,17 @@ class Familys_model extends Core_model
 	/** @var int  role_id attribué par défaut à une famille sans role_id en base */
 	protected $default_family_role_id = 2;
 
+	protected $table = self::TABLE_NAME;
+	protected $primaryKey = 'id';
+	protected $order = 'login';
+	protected $direction = 'desc';
+	protected $json = 'Familys.json';
+
 	function __construct()
 	{
 		parent::__construct();
-
-		$this->_set('table',     self::TABLE_NAME);
-		$this->_set('key',       'id');
-		$this->_set('order',     'login');
-		$this->_set('direction', 'desc');
-		$this->_set('json',      'Familys.json');
-
-		// Lecture du role famille par défaut depuis la config, avec fallback
-		$configured = $this->config->item('role_famille');
-		if ($configured !== FALSE && $configured !== NULL) {
-			$this->default_family_role_id = (int) $configured;
-		}
+		// Rôle attribué par défaut à une famille sans role_id en base
+		$this->default_family_role_id = config('Travaux')->roleFamille;
 	}
 
 	// -----------------------------------------------------------------------
@@ -54,14 +50,11 @@ class Familys_model extends Core_model
 	 */
 	function GetFamily($id_fam)
 	{
-		$query = $this->db->select('*')
-			->from($this->table)
-			->where('id', $id_fam)
-			->get();
-		$this->_debug_array[] = $this->db->last_query();
+		$query = $this->db->table($this->table)->select('*')->where('id', $id_fam)->get();
+		$this->log();
 
-		if ($query->num_rows() > 0) {
-			return $query->row();
+		if ($query->getNumRows() > 0) {
+			return $query->getRow();
 		}
 		return FALSE;
 	}
@@ -75,14 +68,11 @@ class Familys_model extends Core_model
 	function GetFamilyByLogin($email)
 	{
 		$email = strtolower(str_replace("\r\n", '', $email));
-		$query = $this->db->select('*')
-			->from($this->table)
-			->where('LOWER(e_mail)', $email)
-			->get();
-		$this->_debug_array[] = $this->db->last_query();
+		$query = $this->db->table($this->table)->select('*')->where('LOWER(e_mail)', $email)->get();
+		$this->log();
 
-		if ($query->num_rows() > 0) {
-			return $query->row();
+		if ($query->getNumRows() > 0) {
+			return $query->getRow();
 		}
 		return FALSE;
 	}
@@ -96,9 +86,7 @@ class Familys_model extends Core_model
 	 */
 	function SetCivilYears($id, $civil_year)
 	{
-		$this->db->set('civil_year', $civil_year);
-		$this->db->where('id', $id);
-		$this->db->update($this->table);
+		$this->tb()->set('civil_year', $civil_year)->where('id', $id)->update();
 	}
 
 	// -----------------------------------------------------------------------
@@ -118,10 +106,10 @@ class Familys_model extends Core_model
 
 		// Délégation à la couche partagée. allowMd5 = TRUE pour gérer les
 		// très anciens comptes famille encore stockés en MD5.
-		$this->load->library('PasswordAuthenticator', [], 'passauth');
-		$row = $this->passauth->verify(self::TABLE_NAME, 'login', $login, $password, TRUE);
+		$passauth = service('passwordAuthenticator');
+		$row = $passauth->verify(self::TABLE_NAME, 'login', $login, $password, TRUE);
 
-		foreach ($this->passauth->getDebug() as $msg) {
+		foreach ($passauth->getDebug() as $msg) {
 			$this->_debug_array[] = $msg;
 		}
 
@@ -148,17 +136,14 @@ class Familys_model extends Core_model
 			return $usercheck;
 		}
 
-		$query = $this->db->select('*')
-			->from($this->table)
-			->where('idfamille', $idfamille)
-			->get();
-		$this->_debug_array[] = $this->db->last_query();
+		$query = $this->db->table($this->table)->select('*')->where('idfamille', $idfamille)->get();
+		$this->log();
 
-		if ($query->num_rows() === 0) {
+		if ($query->getNumRows() === 0) {
 			return $usercheck;
 		}
 
-		return $this->_populateUsercheck($query->row_array());
+		return $this->_populateUsercheck($query->getRowArray());
 	}
 
 	/**
@@ -177,22 +162,18 @@ class Familys_model extends Core_model
         if (!isset($work->id)) return [];
         $id_work = (int) $work->id;
 
-        $this->db->select('famille.id, famille.nom, famille.ecole')
-            ->from($this->table)
-            ->where(
-                "famille.id NOT IN (SELECT id_famille FROM infos WHERE id_travaux = ".$id_work.")",
-                null, false
-            );
+        $b = $this->tb()->select('famille.id, famille.nom, famille.ecole')->where("famille.id NOT IN (SELECT id_famille FROM infos WHERE id_travaux = ".$id_work.")",
+                null, false);
 
         if (!empty($work->accespar) && $work->accespar !== 'B') {
-            $this->db->group_start()
+            $b->groupStart()
                 ->where('famille.ecole', $work->accespar)
-                ->or_where('famille.ecole', 'B')
-                ->group_end();
+                ->orWhere('famille.ecole', 'B')
+                ->groupEnd();
         }
 
-        $rows = $this->db->order_by('famille.nom', 'ASC')->get()->result();
-        $this->_debug_array[] = $this->db->last_query();
+        $rows = $b->orderBy('famille.nom', 'ASC')->get()->getResult();
+        $this->log();
         return $rows ?: [];
     }
 

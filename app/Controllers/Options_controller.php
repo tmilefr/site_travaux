@@ -2,10 +2,10 @@
 
 namespace App\Controllers;
 
-class Options_controller extends MY_Controller {
+class Options_controller extends CrudController {
 
-	public function __construct(){
-		parent::__construct();
+	protected function boot(): void
+	{
 		
 		$this->_controller_name = 'Options_controller';  //controller name for routing
 		$this->_model_name 		= 'Options_model';	   //DataModel
@@ -18,7 +18,7 @@ class Options_controller extends MY_Controller {
 
 		$this->_set('_debug', FALSE);
 		
-		$this->title .= $this->lang->line('GESTION_'.$this->_controller_name);
+		$this->title .= tr('GESTION_'.$this->_controller_name);
 
 		$this->init();
 		$this->render_object->_set('_not_link_list', ['add','list']);
