@@ -26,7 +26,51 @@ utilisés par les cas de test du classeur `plan_tests_site_travaux.xlsx`.
 
 ## Chargement
 
-### Sur une base vide (environnement monté de zéro)
+### Le plus simple — import direct (phpMyAdmin, console SQL, mysql)
+
+1. Ouvrir `10_jeu_de_test.sql` et remplacer la valeur en tête :
+
+   ```sql
+   SET @MDP_CLAIR = 'CHANGEZ-MOI';   -- mettez ici le mot de passe des comptes de test
+   ```
+
+2. Importer le fichier. C'est tout.
+
+MySQL calcule lui-même le hash : aucun outil externe n'est nécessaire. Les
+comptes famille sont créés avec un hash MD5, que l'application remplace
+automatiquement par un hash bcrypt à leur première connexion — c'est le
+comportement que vérifie le cas de test T1-10.
+
+Les comptes d'**administration** font exception : ils exigent un hash
+bcrypt, que MySQL ne sait pas produire. Deux possibilités :
+
+- utiliser votre compte administrateur habituel, qui suffit pour toute la
+  recette ;
+- ou coller un hash dans `@HASH_BCRYPT`, en tête du fichier :
+
+  ```bash
+  php -r "echo password_hash('VotreMotDePasse', PASSWORD_BCRYPT);"
+  ```
+
+**Le script affiche un récapitulatif en fin d'exécution** : nombre de
+sessions, commissions et référents créés, et un contrôle explicite de
+l'année civile et des mots de passe. Lisez-le, il explique la plupart des
+cas « je ne vois rien dans l'application ».
+
+Le fichier est **rejouable** : on peut le réimporter autant de fois que
+nécessaire, il purge ses propres lignes avant de recharger.
+
+### Avec le script shell (si vous avez un accès SSH)
+
+```bash
+./charger_jeu_de_test.sh travaux_recette
+```
+
+Il demande le mot de passe, génère les hashes bcrypt et MD5 et charge le
+jeu. Les comptes famille sont alors en bcrypt dès le départ, et le compte
+`legacy@…` reste en MD5 pour le test de migration.
+
+### Sur une base vide : charger d'abord le socle
 
 ```bash
 DB=travaux_recette
@@ -42,19 +86,6 @@ done
 mysql -u root -p "$DB" < jeu_de_test/00_schema_complement.sql
 ./jeu_de_test/charger_jeu_de_test.sh "$DB"
 ```
-
-### Sur une base restaurée depuis la production (anonymisée)
-
-```bash
-cd database/sql
-mysql -u root -p travaux_recette < jeu_de_test/00_schema_complement.sql
-./jeu_de_test/charger_jeu_de_test.sh travaux_recette
-```
-
-`00_schema_complement.sql` ne touche pas aux tables déjà conformes : il
-n'ajoute que les colonnes manquantes.
-
----
 
 ## Avant de charger : deux réglages
 
@@ -78,10 +109,9 @@ c'est une ceinture, pas une bretelle.
 
 ## Comptes créés
 
-Le mot de passe est **choisi au chargement** : `charger_jeu_de_test.sh` le
-demande (ou le lit dans la variable d'environnement `MDP_RECETTE`), génère
-les hashes et les injecte. Il n'est donc écrit dans aucun fichier du dépôt.
-Tous les comptes partagent ce mot de passe.
+Tous les comptes partagent le mot de passe que vous avez indiqué au
+chargement (`@MDP_CLAIR` en tête du fichier, ou la saisie du script shell).
+Aucun mot de passe n'est stocké dans le dépôt.
 
 | Réf. plan | Login | Profil | Particularité |
 |---|---|---|---|
@@ -94,24 +124,13 @@ Tous les comptes partagent ce mot de passe.
 | U-FAM3 | `famille3@recette.local` | Famille | École « les deux », utilisée pour la cantine |
 | U-FAM4 | `famille.import@recette.local` | Famille | Cible de l'import CSV |
 
-Pour changer le mot de passe, relancer simplement le script de chargement :
-le jeu est rejouable et les comptes sont recréés.
+Les deux comptes d'administration ne sont utilisables que si vous avez
+renseigné `@HASH_BCRYPT` : sinon leur mot de passe est volontairement
+invalide, et le récapitulatif de fin de script vous le signale. Ce n'est
+pas gênant, votre compte administrateur habituel couvre toute la recette.
 
-Si vous préférez charger `10_jeu_de_test.sql` à la main, il faut définir
-les deux variables **avant** le fichier, sinon le script s'arrête avec un
-message explicite :
-
-```bash
-MDP='VotreMotDePasse'
-php -r "printf(\"SET @PWD_BCRYPT='%s'; SET @PWD_MD5='%s';\",
-        password_hash(getenv('MDP'), PASSWORD_BCRYPT), md5(getenv('MDP')));" \
-  > /tmp/sets.sql
-cat /tmp/sets.sql 10_jeu_de_test.sql | mysql -u root -p travaux_recette
-rm /tmp/sets.sql
-```
-
-`@PWD_MD5` alimente le compte à hash historique (`legacy@…`), qui sert à
-vérifier la migration automatique vers bcrypt à la première connexion.
+Pour changer le mot de passe, modifier `@MDP_CLAIR` et réimporter : le jeu
+est rejouable, les comptes sont recréés.
 
 ---
 
@@ -183,6 +202,48 @@ Les sessions sont réparties sur deux référents, pour que l'écran
 - **Martin Claire** (famille 9001) : la session 9011 uniquement ;
 - la session 9010 pointe sur la chaîne rompue : aucun référent ne doit
   être retrouvé, et aucun e-mail ne doit partir, sans erreur.
+
+---
+
+### Rattacher un référent à une commission déjà existante
+
+Le jeu crée ses propres commissions. Si vous voulez qu'une famille soit
+proposée comme référente sur **votre** commission de gestion des travaux,
+il faut les trois maillons décrits plus haut. Exemple, à adapter :
+
+```sql
+-- 1. Retrouver l'identifiant de votre commission
+SELECT id, title, short FROM groupes WHERE type = 'com';
+
+-- 2. S'assurer qu'elle porte un libellé court (sinon la liste
+--    déroulante affiche une entrée sans texte)
+UPDATE groupes SET short = 'TRAVAUX' WHERE id = <id_commission>;
+
+-- 3. Retrouver la famille à désigner
+SELECT id, nom, prenom, e_mail FROM famille WHERE e_mail LIKE '%...%';
+
+-- 4. Créer le membre de commission rattaché à cette famille
+INSERT INTO groupes_member (id_fam, name, surname, email, created, updated)
+VALUES (<id_famille>, '<Nom>', '<Prenom>', '<email>', NOW(), NOW());
+SET @id_membre = LAST_INSERT_ID();
+
+-- 5. Le déclarer référent de session dans la commission
+INSERT INTO trombi (id_grp, ref, photo, nom, num_tel, email, ref_travaux,
+                    title, description, color, classif, created, updated)
+VALUES (<id_commission>, @id_membre, '', '<Nom Prenom>', '', '<email>', 1,
+        'Référent de session', '', 'nicdark_bg_blue', 'reftra', NOW(), NOW());
+```
+
+Contrôle : la requête ci-dessous doit faire apparaître la nouvelle ligne,
+avec un libellé non vide.
+
+```sql
+SELECT tr.id, CONCAT_WS(' ', gr.short, gm.name, gm.surname) AS libelle, tr.classif
+  FROM trombi tr
+  LEFT JOIN groupes_member gm ON tr.ref = gm.id
+  LEFT JOIN groupes gr        ON tr.id_grp = gr.id
+ WHERE tr.classif IN ('reftra','RT');
+```
 
 ---
 
@@ -269,8 +330,9 @@ La séquence complète a été rejouée sur une base MariaDB 10.11 vide :
 | Capacité des sessions | Session complète et session à une place restante conformes |
 | Totaux d'unités | 4 unités pour U-FAM2 (1 de session + 3 complémentaires), 0 pour U-FAM1 |
 | Jetons référent | Les trois états attendus : valide, expiré, déjà utilisé |
-| Mots de passe | Générés au chargement puis vérifiés avec `password_verify()` et `md5()` de PHP 8.4 |
-| Garde-fou | Le chargement sans `@PWD_BCRYPT` / `@PWD_MD5` s'arrête avec un message explicite |
+| Import direct sans rien modifier | Le jeu se charge intégralement ; le récapitulatif signale que les mots de passe ne sont pas définis |
+| Import direct avec `@MDP_CLAIR` renseigné | Comptes famille connectables (hash MD5 calculé par MySQL, migré en bcrypt au premier login) |
+| Chargement par `charger_jeu_de_test.sh` | Comptes famille et admin en bcrypt, compte `legacy@…` en MD5 ; vérifié avec `password_verify()` et `md5()` de PHP 8.4 |
 | Fichiers CSV | Analysés avec la logique de `_parse_csv_abcm()` : 4 familles et école « B » calculée sur la fratrie ; le fichier corrompu déclenche bien les trois types d'erreur |
 | Purge | Retire le jeu et laisse intactes les lignes hors plage réservée |
 

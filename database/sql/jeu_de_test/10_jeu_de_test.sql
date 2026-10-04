@@ -34,41 +34,40 @@ SET @CY_PREV = '2024-2025';   -- année précédente (test de cloisonnement)
 --  pour qu'aucun message ne puisse partir vers une vraie boîte.
 SET @MAIL_DOM = 'recette.local';
 
---  MOTS DE PASSE — volontairement ABSENTS de ce fichier.
---  Rien de secret ici : il s'agit de comptes jetables sur un
---  environnement de recette. Mais un mot de passe en clair dans un
---  fichier versionné déclenche la détection de secrets du dépôt, et
---  surtout prend le risque d'être réutilisé ailleurs. Les deux hashes
---  sont donc fournis à l'exécution.
+--  MOTS DE PASSE DES COMPTES DE TEST
+-- ---------------------------------------------------------------------
+--  ⚠️  REMPLACEZ LA VALEUR CI-DESSOUS AVANT D'IMPORTER CE FICHIER.
 --
---  Méthode recommandée — le script de chargement s'en occupe :
---      ./charger_jeu_de_test.sh travaux_recette
---
---  Chargement manuel : générer les deux valeurs puis les passer avant
---  ce fichier.
---      MDP='VotreMotDePasse'
---      php -r "printf(\"SET @PWD_BCRYPT='%s'; SET @PWD_MD5='%s';\",
---              password_hash(getenv('MDP'), PASSWORD_BCRYPT), md5(getenv('MDP')));"
---
---  @PWD_BCRYPT : hash bcrypt, pour les comptes d'administration et les
---                familles.
---  @PWD_MD5    : même mot de passe en MD5, pour le compte à hash
---                historique (cas T1-10 : la migration vers bcrypt doit
---                s'opérer à la première connexion).
+--  Le jeu de données se charge quoi qu'il arrive : si vous laissez la
+--  valeur par défaut, les sessions, commissions et inscriptions seront
+--  bien créées, mais les comptes de test ne pourront pas se connecter.
+--  Le récapitulatif en fin de script vous le dira.
+SET @MDP_CLAIR = 'CHANGEZ-MOI';
 
-DROP PROCEDURE IF EXISTS `_check_pwd_vars`;
-DELIMITER $$
-CREATE PROCEDURE `_check_pwd_vars`()
-BEGIN
-  IF @PWD_BCRYPT IS NULL OR @PWD_BCRYPT = ''
-     OR @PWD_MD5 IS NULL OR @PWD_MD5 = '' THEN
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT =
-      'Jeu de test : @PWD_BCRYPT et @PWD_MD5 doivent etre definis avant ce fichier. Utilisez charger_jeu_de_test.sh.';
-  END IF;
-END$$
-DELIMITER ;
-CALL `_check_pwd_vars`();
-DROP PROCEDURE `_check_pwd_vars`;
+--  Aucun mot de passe n'est stocké dans ce fichier : MySQL calcule
+--  lui-même le hash MD5 à partir de la valeur ci-dessus. L'application
+--  accepte ce format pour les comptes famille et le remplace
+--  automatiquement par un hash bcrypt à la première connexion — c'est
+--  précisément le comportement que vérifie le cas de test T1-10.
+--
+--  Les comptes d'ADMINISTRATION (table acl_users) exigent en revanche un
+--  hash bcrypt, que MySQL ne sait pas produire. Deux possibilités :
+--    • utiliser votre compte administrateur habituel, qui suffit pour
+--      toute la recette ;
+--    • ou coller un hash bcrypt ci-dessous, généré avec :
+--          php -r "echo password_hash('VotreMotDePasse', PASSWORD_BCRYPT);"
+SET @HASH_BCRYPT = '';
+
+--  Les lignes suivantes se débrouillent seules : ne pas les modifier.
+--  Elles respectent les valeurs déjà définies par charger_jeu_de_test.sh.
+SET @PWD_INVALIDE = '*mot-de-passe-non-defini*';
+SET @PWD_MD5    = COALESCE(NULLIF(@PWD_MD5, ''),
+                    IF(@MDP_CLAIR = 'CHANGEZ-MOI' OR @MDP_CLAIR = '' OR @MDP_CLAIR IS NULL,
+                       @PWD_INVALIDE, MD5(@MDP_CLAIR)));
+SET @PWD_BCRYPT = COALESCE(NULLIF(@PWD_BCRYPT, ''), NULLIF(@HASH_BCRYPT, ''), @PWD_INVALIDE);
+--  Mot de passe des comptes famille : bcrypt s'il a été fourni, sinon MD5.
+SET @PWD_FAM    = IF(@PWD_BCRYPT LIKE '$2y$%' OR @PWD_BCRYPT LIKE '$2a$%',
+                     @PWD_BCRYPT, @PWD_MD5);
 
 SET @NOW = NOW();
 --  Lundi de la semaine en cours, pour les créneaux de cantine.
@@ -122,17 +121,17 @@ INSERT INTO `famille`
   `e_mail`,`e_mail_comp`,`nb_enfants`,`ecole`,`capacity`,`alert_types`,`civil_year`,`to_deactivate`,`created`,`updated`)
 VALUES
  -- U-FAM1 : famille de référence du parcours nominal, école Mulhouse, 0 unité
- (9001,'ZZTEST001','ZZTEST001',2,'Martin','Claire', CONCAT('famille1@',@MAIL_DOM), @PWD_BCRYPT,
+ (9001,'ZZTEST001','ZZTEST001',2,'Martin','Claire', CONCAT('famille1@',@MAIL_DOM), @PWD_FAM,
   '68100','Mulhouse','12 rue des Tests', CONCAT('famille1@',@MAIL_DOM), NULL,
   '2','M','pein,elec','WORK_REGISTER',@CY,0,@NOW,@NOW),
 
  -- U-FAM2 : école Lutterbach, possède déjà des unités validées
- (9002,'ZZTEST002','ZZTEST002',2,'Dubois','Marc', CONCAT('famille2@',@MAIL_DOM), @PWD_BCRYPT,
+ (9002,'ZZTEST002','ZZTEST002',2,'Dubois','Marc', CONCAT('famille2@',@MAIL_DOM), @PWD_FAM,
   '68460','Lutterbach','8 avenue de la Recette', CONCAT('famille2@',@MAIL_DOM), NULL,
   '1','L','mac',NULL,@CY,0,@NOW,@NOW),
 
  -- U-REF : famille référente (chaîne trombi → groupes_member → famille)
- (9003,'ZZTEST003','ZZTEST003',2,'Leroy','Sophie', CONCAT('referent@',@MAIL_DOM), @PWD_BCRYPT,
+ (9003,'ZZTEST003','ZZTEST003',2,'Leroy','Sophie', CONCAT('referent@',@MAIL_DOM), @PWD_FAM,
   '68100','Mulhouse','3 place du Référent', CONCAT('referent@',@MAIL_DOM), NULL,
   '2','M','inf','WORK_REGISTER,WORK_UNREGISTER',@CY,0,@NOW,@NOW),
 
@@ -142,12 +141,12 @@ VALUES
   '1','M',NULL,NULL,@CY,0,@NOW,@NOW),
 
  -- U-FAM3 : école « les deux », utilisée pour la cantine et la concurrence
- (9005,'ZZTEST005','ZZTEST005',2,'Petit','Julie', CONCAT('famille3@',@MAIL_DOM), @PWD_BCRYPT,
+ (9005,'ZZTEST005','ZZTEST005',2,'Petit','Julie', CONCAT('famille3@',@MAIL_DOM), @PWD_FAM,
   '68200','Mulhouse','45 rue Partagée', CONCAT('famille3@',@MAIL_DOM), NULL,
   '3','B','chau,san',NULL,@CY,0,@NOW,@NOW),
 
  -- U-FAM4 : cible de l'import CSV (sera modifiée par import_ok.csv)
- (9006,'ZZTEST006','ZZTEST006',2,'Import','Test', CONCAT('famille.import@',@MAIL_DOM), @PWD_BCRYPT,
+ (9006,'ZZTEST006','ZZTEST006',2,'Import','Test', CONCAT('famille.import@',@MAIL_DOM), @PWD_FAM,
   '68100','Mulhouse','Adresse a mettre a jour', CONCAT('famille.import@',@MAIL_DOM), NULL,
   '1','M',NULL,NULL,@CY,0,@NOW,@NOW);
 
@@ -440,12 +439,44 @@ INSERT INTO `sendmail` (`id`,`reference`,`email`,`object`,`message`,`statut`,`cr
 --  RÉCAPITULATIF
 -- =====================================================================
 SELECT '--- Jeu de test chargé ---' AS ``;
-SELECT 'Année civile'      AS `Paramètre`, @CY       AS `Valeur`
-UNION ALL SELECT 'Domaine e-mail',         @MAIL_DOM
-UNION ALL SELECT 'Comptes admin',    CAST((SELECT COUNT(*) FROM acl_users WHERE id BETWEEN 9000 AND 9999) AS CHAR)
-UNION ALL SELECT 'Familles',         CAST((SELECT COUNT(*) FROM famille   WHERE id BETWEEN 9000 AND 9999) AS CHAR)
-UNION ALL SELECT 'Sessions',         CAST((SELECT COUNT(*) FROM travaux   WHERE id BETWEEN 9000 AND 9999) AS CHAR)
-UNION ALL SELECT 'Inscriptions',     CAST((SELECT COUNT(*) FROM infos     WHERE id BETWEEN 9000 AND 9999) AS CHAR)
-UNION ALL SELECT 'Unités complém.',  CAST((SELECT COUNT(*) FROM unites    WHERE id BETWEEN 9000 AND 9999) AS CHAR)
-UNION ALL SELECT 'Jetons référent',  CAST((SELECT COUNT(*) FROM validation_tokens WHERE id BETWEEN 9000 AND 9999) AS CHAR)
-UNION ALL SELECT 'Mails en file',    CAST((SELECT COUNT(*) FROM sendmail  WHERE id BETWEEN 9000 AND 9999) AS CHAR);
+
+SELECT 'Comptes admin'    AS `Objet`, CAST((SELECT COUNT(*) FROM acl_users WHERE id BETWEEN 9000 AND 9999) AS CHAR) AS `Nombre`
+UNION ALL SELECT 'Familles',          CAST((SELECT COUNT(*) FROM famille   WHERE id BETWEEN 9000 AND 9999) AS CHAR)
+UNION ALL SELECT 'Commissions',       CAST((SELECT COUNT(*) FROM groupes   WHERE id BETWEEN 9000 AND 9999) AS CHAR)
+UNION ALL SELECT 'Référents declares',CAST((SELECT COUNT(*) FROM trombi    WHERE id BETWEEN 9000 AND 9999 AND classif IN ('reftra','RT')) AS CHAR)
+UNION ALL SELECT 'Sessions de travail',CAST((SELECT COUNT(*) FROM travaux  WHERE id BETWEEN 9000 AND 9999) AS CHAR)
+UNION ALL SELECT 'Inscriptions',      CAST((SELECT COUNT(*) FROM infos     WHERE id BETWEEN 9000 AND 9999) AS CHAR)
+UNION ALL SELECT 'Unités complém.',   CAST((SELECT COUNT(*) FROM unites    WHERE id BETWEEN 9000 AND 9999) AS CHAR)
+UNION ALL SELECT 'Jetons référent',   CAST((SELECT COUNT(*) FROM validation_tokens WHERE id BETWEEN 9000 AND 9999) AS CHAR)
+UNION ALL SELECT 'Mails en file',     CAST((SELECT COUNT(*) FROM sendmail  WHERE id BETWEEN 9000 AND 9999) AS CHAR);
+
+--  Contrôles à lire attentivement : ils expliquent la plupart des cas
+--  « je ne vois rien dans l'application ».
+SELECT 'Annee civile du jeu' AS `Controle`,
+       @CY AS `Valeur`,
+       CONCAT('Doit etre identique a $config[civil_year]. Sinon aucune session ne s affichera.') AS `Remarque`
+UNION ALL
+SELECT 'Mot de passe des familles',
+       IF(@PWD_FAM = @PWD_INVALIDE, 'NON DEFINI', 'defini'),
+       IF(@PWD_FAM = @PWD_INVALIDE,
+          'ATTENTION : remplacez @MDP_CLAIR en tete de ce fichier puis reimportez-le. Les donnees sont la, mais les comptes famille ne peuvent pas se connecter.',
+          'Les comptes famille peuvent se connecter avec le mot de passe saisi.')
+UNION ALL
+SELECT 'Mot de passe des comptes admin',
+       IF(@PWD_BCRYPT = @PWD_INVALIDE, 'NON DEFINI', 'defini'),
+       IF(@PWD_BCRYPT = @PWD_INVALIDE,
+          'Normal si vous utilisez votre propre compte administrateur. Sinon renseignez @PWD_BCRYPT.',
+          'Les comptes admin de recette peuvent se connecter.')
+UNION ALL
+SELECT 'Sessions visibles cote famille (ecole M)',
+       CAST((SELECT COUNT(*) FROM travaux
+              WHERE id BETWEEN 9000 AND 9999 AND statut = 1 AND COALESCE(archived,0) <> 1
+                AND accespar IN ('B','M') AND type <> 'can'
+                AND (type = 'URG' OR date_travaux >= CURDATE())) AS CHAR),
+       'Si 0, verifier @CY ci-dessus et le filtre ecole de la famille connectee.'
+UNION ALL
+SELECT 'Referents proposables sur une session',
+       CAST((SELECT COUNT(*) FROM trombi tr
+              LEFT JOIN groupes_member gm ON tr.ref = gm.id
+             WHERE tr.classif IN ('reftra','RT') AND gm.id IS NOT NULL) AS CHAR),
+       'Compte TOUS les referents de la base, pas seulement ceux du jeu de test.';
