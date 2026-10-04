@@ -151,9 +151,9 @@ VALUES
   '1','M',NULL,NULL,@CY,0,@NOW,@NOW);
 
 -- E-mails complémentaires de U-FAM1 (table liée, cas T12-03 / FAM-04)
-INSERT INTO `emails` (`id`,`id_fam`,`email`,`name`,`created`,`updated`) VALUES
- (9001,9001, CONCAT('conjoint.famille1@',@MAIL_DOM),'Conjoint',@NOW,@NOW),
- (9002,9001, CONCAT('secours.famille1@',@MAIL_DOM),'Contact de secours',@NOW,@NOW);
+INSERT INTO `emails` (`id`,`id_fam`,`email`,`created`,`updated`) VALUES
+ (9001,9001, CONCAT('conjoint.famille1@',@MAIL_DOM),@NOW,@NOW),
+ (9002,9001, CONCAT('secours.famille1@',@MAIL_DOM),@NOW,@NOW);
 
 -- Préférences d'alerte : U-FAM1 abonnée, U-FAM2 volontairement non abonnée
 -- (cas T9-07 : une famille désabonnée ne doit recevoir aucun message).
@@ -196,9 +196,9 @@ INSERT INTO `members` (`id`,`id_fam`,`code_membre_abcm`,`type`,`nom`,`prenom`,`c
 --      trombi.ref               = groupes_member.id
 --      groupes_member.id_fam    = famille.id
 -- =====================================================================
-INSERT INTO `groupes` (`id`,`title`,`short`,`color`,`type`,`acteurs`,`member`,`created`,`updated`) VALUES
- (9001,'[RECETTE] Commission Travaux','TRAVAUX','nicdark_bg_blue','com','','',@NOW,@NOW),
- (9002,'[RECETTE] Bureau','BUREAU','nicdark_bg_green','org','','',@NOW,@NOW);
+INSERT INTO `groupes` (`id`,`title`,`short`,`color`,`type`,`created`,`updated`) VALUES
+ (9001,'[RECETTE] Commission Travaux','TRAVAUX','nicdark_bg_blue','com',@NOW,@NOW),
+ (9002,'[RECETTE] Bureau','BUREAU','nicdark_bg_green','org',@NOW,@NOW);
 
 INSERT INTO `groupes_member` (`id`,`id_fam`,`name`,`surname`,`email`,`phone`,`created`,`updated`) VALUES
  (9001,'9003','Leroy','Sophie', CONCAT('referent@',@MAIL_DOM),'0300000001',@NOW,@NOW),
@@ -213,29 +213,27 @@ INSERT INTO `groupes_member` (`id`,`id_fam`,`name`,`surname`,`email`,`phone`,`cr
 --  classif : 'reftra' = Référent de session, 'RT' = Responsable de
 --  commission, 'ME' = Membre simple, 'TR' = Trésorier.
 --  Seuls 'reftra' et 'RT' alimentent la liste déroulante des sessions.
-INSERT INTO `trombi`
- (`id`,`id_grp`,`ref`,`photo`,`nom`,`num_tel`,`email`,`ref_travaux`,`title`,`description`,`color`,`classif`,`order`,`created`,`updated`)
-VALUES
+--
+--  Colonnes : strictement celles du modèle Trombi.json. Les anciens dumps
+--  du dépôt comportent des colonnes supplémentaires (photo, nom, num_tel,
+--  email, title, description, color, ref_travaux) qui n'existent plus en
+--  production ; les lister ici ferait échouer l'import.
+INSERT INTO `trombi` (`id`,`id_grp`,`ref`,`classif`,`order`,`created`,`updated`) VALUES
  -- Référente principale : c'est elle qui est désignée sur les sessions
- (9001,9001,'9001','','Leroy Sophie','0300000001', CONCAT('referent@',@MAIL_DOM),1,
-  'Référente de session','Référente de recette, chaîne complète et valide','nicdark_bg_blue','reftra',1,@NOW,@NOW),
+ (9001,9001,'9001','reftra',1,@NOW,@NOW),
 
  -- Référente dont la chaîne est rompue : proposée dans la liste, mais
  -- aucune famille ne peut être retrouvée derrière.
- (9002,9001,'9003','','Chaine Rompue','0300000003', CONCAT('chaine.rompue@',@MAIL_DOM),1,
-  'Référent injoignable','Chaîne volontairement rompue','nicdark_bg_red','reftra',2,@NOW,@NOW),
+ (9002,9001,'9003','reftra',2,@NOW,@NOW),
 
  -- Second référent, pour que la liste déroulante offre un vrai choix
- (9003,9001,'9002','','Martin Claire','0300000002', CONCAT('famille1@',@MAIL_DOM),1,
-  'Référente de session','Second référent de recette','nicdark_bg_violet','reftra',3,@NOW,@NOW),
+ (9003,9001,'9002','reftra',3,@NOW,@NOW),
 
  -- Responsable de commission : apparaît aussi dans la liste (classif 'RT')
- (9004,9002,'9004','','Petit Julie','0300000004', CONCAT('famille3@',@MAIL_DOM),1,
-  'Responsable du bureau','Responsable de commission','nicdark_bg_green','RT',1,@NOW,@NOW),
+ (9004,9002,'9004','RT',1,@NOW,@NOW),
 
  -- Membre simple : ne doit PAS apparaître dans la liste des référents
- (9005,9001,'9004','','Petit Julie','0300000004', CONCAT('famille3@',@MAIL_DOM),0,
-  'Membre','Membre de commission, non référent','nicdark_bg_grey','ME',4,@NOW,@NOW);
+ (9005,9001,'9004','ME',4,@NOW,@NOW);
 
 -- Candidature en attente de traitement (cas T14-07 / T14-08)
 INSERT INTO `candidatures` (`id`,`id_fam`,`id_grp`,`name`,`surname`,`email`,`phone`,`memo`,`created`,`updated`) VALUES

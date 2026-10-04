@@ -330,11 +330,33 @@ La séquence complète a été rejouée sur une base MariaDB 10.11 vide :
 | Capacité des sessions | Session complète et session à une place restante conformes |
 | Totaux d'unités | 4 unités pour U-FAM2 (1 de session + 3 complémentaires), 0 pour U-FAM1 |
 | Jetons référent | Les trois états attendus : valide, expiré, déjà utilisé |
+| Import sur un schéma « production » (colonnes héritées absentes de `trombi`, `groupes`, `emails`) | Chargement identique, sans erreur |
 | Import direct sans rien modifier | Le jeu se charge intégralement ; le récapitulatif signale que les mots de passe ne sont pas définis |
 | Import direct avec `@MDP_CLAIR` renseigné | Comptes famille connectables (hash MD5 calculé par MySQL, migré en bcrypt au premier login) |
 | Chargement par `charger_jeu_de_test.sh` | Comptes famille et admin en bcrypt, compte `legacy@…` en MD5 ; vérifié avec `password_verify()` et `md5()` de PHP 8.4 |
 | Fichiers CSV | Analysés avec la logique de `_parse_csv_abcm()` : 4 familles et école « B » calculée sur la fratrie ; le fichier corrompu déclenche bien les trois types d'erreur |
 | Purge | Retire le jeu et laisse intactes les lignes hors plage réservée |
+
+---
+
+## Colonnes utilisées par le jeu de test
+
+Les `INSERT` de ce jeu n'écrivent **que les colonnes déclarées dans les
+schémas JSON de l'application** (`app/Models/json/*.json`), qui font foi
+pour le code.
+
+C'est volontaire : les dumps SQL du dépôt décrivent un état plus ancien de
+la base et comportent des colonnes qui n'existent plus en production —
+`trombi.photo`, `trombi.nom`, `trombi.title`, `groupes.member`,
+`emails.name`… Les lister dans un `INSERT` fait échouer l'import avec une
+erreur du type :
+
+```
+#1054 - Champ 'photo' inconnu dans INSERT INTO
+```
+
+Si vous ajoutez des lignes au jeu de test, vérifiez vos colonnes contre le
+schéma JSON du modèle correspondant, pas contre le dump du dépôt.
 
 ---
 
