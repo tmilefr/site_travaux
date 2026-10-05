@@ -51,7 +51,8 @@ class Acl
 		'admwork_controller/validate_by_token',
 		'cron/send_ref_validation_mails',  // ← accès par lien email
 		'cron/send_new_session_alerts',
-		'translations_controller/switch_lang' 
+		'translations_controller/switch_lang',
+		'cron/sendmail'
 	];
 
 	/**

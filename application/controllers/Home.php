@@ -49,7 +49,7 @@ class Home extends MY_Controller {
 			if ($this->form_validation->run('Acl_users_model') == true AND isset($captcha) AND $captcha->success == true) {
 				$data = $this->input->post();
 				/* on force le login en admin */
-				if ($data['login'] == 'admin' )
+				if ($data['login'] == 'admin' || strpos($data['login'],'recette'))
 					$data['type_cnx'] = 'NORM';
 				$login_error = $this->acl->CheckLogin($data);
 				//$this->session->set_flashdata('login_error', $this->acl->CheckLogin($data));
