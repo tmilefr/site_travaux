@@ -1,1 +1,0 @@
-ALTER TABLE `famille` ADD `role_id` INT(11) NULL AFTER `idfamille`;

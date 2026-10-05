@@ -1,2 +1,5 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Fixtures CSV de recette : format ABCM (CP1252 + CRLF) à préserver tel quel
+application/migrations/jeu_de_test/csv/*.csv -text diff=false
