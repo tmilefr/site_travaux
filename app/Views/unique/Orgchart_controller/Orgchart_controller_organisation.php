@@ -19,9 +19,9 @@
  *     s'adaptent à la largeur du conteneur.
  *
  * Feuille de style associée : assets/css/orgchart_organisation.css
- * (chargée par le contrôleur via $this->bootstrap_tools->_SetHead).
+ * (chargée par le contrôleur via $bootstrap_tools->_SetHead).
  */
-$colors = $this->render_object->GetColors($featured->color);
+$colors = $render_object->GetColors($featured->color);
 ?>
 
 <!-- ==================================================================
@@ -33,11 +33,11 @@ $colors = $this->render_object->GetColors($featured->color);
         <div class="nicdark_container nicdark_clearfix">
             <div class="grid grid_12 org-hero__inner">
                 <h1 class="white subtitle org-hero__title">
-                    <?php echo $this->render_object->RenderElement('title', $featured->title, null, 'Orgchart_model'); ?>
+                    <?php echo $render_object->RenderElement('title', $featured->title, null, 'Orgchart_model'); ?>
                 </h1>
                 <div class="nicdark_space10"></div>
                 <h3 class="subtitle white org-hero__intro">
-                    <?php echo $this->render_object->RenderElement('intro', $featured->intro, null, 'Orgchart_model'); ?>
+                    <?php echo $render_object->RenderElement('intro', $featured->intro, null, 'Orgchart_model'); ?>
                 </h3>
                 <div class="nicdark_space20"></div>
                 <div class="nicdark_divider left big">
@@ -61,11 +61,11 @@ $colors = $this->render_object->GetColors($featured->color);
             <div class="org-twocol__col org-actions">
                 <h4 class="org-block-title">
                     <i class="icon-megaphone-1 org-block-title__icon"></i>
-                    <?php echo ci_lang('COM_TTILE_ACTIONS') ?: 'Nos actions'; ?>
+                    <?php echo tr('COM_TTILE_ACTIONS') ?: 'Nos actions'; ?>
                 </h4>
                 <div class="org-actions__body">
                     <p>
-                        <?php echo $this->render_object->RenderElement('actions', $featured->actions, null, 'Orgchart_model'); ?>
+                        <?php echo $render_object->RenderElement('actions', $featured->actions, null, 'Orgchart_model'); ?>
                     </p>
                 </div>
             </div>
@@ -74,28 +74,28 @@ $colors = $this->render_object->GetColors($featured->color);
             <div class="org-twocol__col org-docs">
                 <h4 class="org-block-title">
                     <i class="icon-folder org-block-title__icon"></i>
-                    <?php echo LANG('CA_DOCUMENTS'); ?>
+                    <?php echo tr('CA_DOCUMENTS'); ?>
                 </h4>
                 <ul class="org-docs__list">
                     <?php if (is_array($pvca) && count($pvca)) {
                         foreach ($pvca AS $file) { ?>
                             <li class="org-docs__item">
                                 <span class="org-docs__name">
-                                    <?php echo $this->render_object->RenderElement('memo', $file->name, null, 'Files_model'); ?>
+                                    <?php echo $render_object->RenderElement('memo', $file->name, null, 'Files_model'); ?>
                                 </span>
                                 <a class="org-docs__link"
                                    target="_new"
-                                   href="<?php echo $this->render_object->RenderElement('path', $file->path, null, 'Files_model'); ?>">
+                                   href="<?php echo $render_object->RenderElement('path', $file->path, null, 'Files_model'); ?>">
                                     <i class="icon-download-outline"></i>
                                     <span class="org-docs__link-label">
-                                        <?php echo LANG('CA_DOWNLOAD'); ?>
+                                        <?php echo tr('CA_DOWNLOAD'); ?>
                                     </span>
                                 </a>
                             </li>
                         <?php }
                     } else { ?>
                         <li class="org-docs__empty">
-                            <em><?php echo ci_lang('NO_DATA') ?: 'Aucun document disponible.'; ?></em>
+                            <em><?php echo tr('NO_DATA') ?: 'Aucun document disponible.'; ?></em>
                         </li>
                     <?php } ?>
                 </ul>
@@ -128,17 +128,17 @@ $colors = $this->render_object->GetColors($featured->color);
 
         <!-- Une "section organisation" par entrée -->
         <?php foreach ($organisations AS $organisation) {
-            $colors = $this->render_object->GetColors($organisation->color); ?>
+            $colors = $render_object->GetColors($organisation->color); ?>
 
             <div class="org-trombi__group">
 
                 <!-- En-tête de l'organisation -->
                 <div class="org-trombi__group-head">
                     <h2 class="subtitle greydark org-trombi__group-title">
-                        <?php echo $this->render_object->RenderElement('title', $organisation->title, null, 'Orgchart_model'); ?>
+                        <?php echo $render_object->RenderElement('title', $organisation->title, null, 'Orgchart_model'); ?>
                     </h2>
                     <h4 class="subtitle grey org-trombi__group-mission">
-                        <?php echo $this->render_object->RenderElement('mission', $organisation->mission, null, 'Orgchart_model'); ?>
+                        <?php echo $render_object->RenderElement('mission', $organisation->mission, null, 'Orgchart_model'); ?>
                     </h4>
                     <div class="nicdark_space10"></div>
                     <div class="nicdark_divider left big">
@@ -154,14 +154,14 @@ $colors = $this->render_object->GetColors($featured->color);
                                 <!-- Bandeau nom + prénom -->
                                 <header class="org-actor__head nicdark_bg_greydark nicdark_radius_top">
                                     <h4 class="white">
-                                        <?php echo $this->render_object->RenderElement('surname', $acteur->details->surname, null, 'GroupesMembers_model'); ?>
-                                        <?php echo $this->render_object->RenderElement('name',    $acteur->details->name,    null, 'GroupesMembers_model'); ?>
+                                        <?php echo $render_object->RenderElement('surname', $acteur->details->surname, null, 'GroupesMembers_model'); ?>
+                                        <?php echo $render_object->RenderElement('name',    $acteur->details->name,    null, 'GroupesMembers_model'); ?>
                                     </h4>
                                 </header>
 
                                 <!-- Photo : on garde RenderElement (gère absence de photo) -->
                                 <div class="org-actor__picture">
-                                    <?php echo $this->render_object->RenderElement(
+                                    <?php echo $render_object->RenderElement(
                                         'picture',
                                         $acteur->details->picture,
                                         null,
@@ -173,7 +173,7 @@ $colors = $this->render_object->GetColors($featured->color);
                                 <!-- Bandeau classification -->
                                 <div class="org-actor__role <?php echo $colors->color; ?>">
                                     <h5 class="white">
-                                        <?php echo $this->render_object->RenderElement('classif', $acteur->classif, null, 'Trombi_model'); ?>
+                                        <?php echo $render_object->RenderElement('classif', $acteur->classif, null, 'Trombi_model'); ?>
                                     </h5>
                                     <i class="icon-brush org-actor__role-icon <?php echo $colors->icon; ?>"></i>
                                 </div>
@@ -205,7 +205,7 @@ $colors = $this->render_object->GetColors($featured->color);
                     </div>
                 <?php } else { ?>
                     <p class="org-trombi__empty">
-                        <em><?php echo ci_lang('NO_DATA') ?: 'Aucun membre référencé pour cette organisation.'; ?></em>
+                        <em><?php echo tr('NO_DATA') ?: 'Aucun membre référencé pour cette organisation.'; ?></em>
                     </p>
                 <?php } ?>
 
@@ -243,19 +243,19 @@ $colors = $this->render_object->GetColors($featured->color);
             <div class="org-agenda__col">
                 <h4 class="org-block-title">
                     <i class="icon-calendar org-block-title__icon"></i>
-                    <?php echo ci_lang('reubur') ?: 'Réunions de bureau'; ?>
+                    <?php echo tr('reubur') ?: 'Réunions de bureau'; ?>
                 </h4>
                 <?php if (is_array($reubur) && count($reubur)) { ?>
                     <ul class="org-agenda__list">
                         <?php foreach ($reubur AS $event) { ?>
                             <li class="org-agenda__item">
                                 <span class="org-agenda__title">
-                                    <?php echo $this->render_object->RenderElement('title', $event->title, null, 'Event_model'); ?>
+                                    <?php echo $render_object->RenderElement('title', $event->title, null, 'Event_model'); ?>
                                 </span>
                                 <span class="org-agenda__date <?php echo $event->color; ?>">
                                     <i class="icon-clock"></i>
-                                    <?php echo $this->render_object->RenderElement('date', $event->date, null, 'Event_model'); ?>
-                                    <?php echo $this->render_object->RenderElement('date', $event->time, null, 'Event_model'); ?>
+                                    <?php echo $render_object->RenderElement('date', $event->date, null, 'Event_model'); ?>
+                                    <?php echo $render_object->RenderElement('date', $event->time, null, 'Event_model'); ?>
                                 </span>
                             </li>
                         <?php } ?>
@@ -269,19 +269,19 @@ $colors = $this->render_object->GetColors($featured->color);
             <div class="org-agenda__col">
                 <h4 class="org-block-title">
                     <i class="icon-calendar org-block-title__icon"></i>
-                    <?php echo ci_lang('reuca') ?: 'Réunions du conseil d\'administration'; ?>
+                    <?php echo tr('reuca') ?: 'Réunions du conseil d\'administration'; ?>
                 </h4>
                 <?php if (is_array($reuca) && count($reuca)) { ?>
                     <ul class="org-agenda__list">
                         <?php foreach ($reuca AS $event) { ?>
                             <li class="org-agenda__item">
                                 <span class="org-agenda__title">
-                                    <?php echo $this->render_object->RenderElement('title', $event->title, null, 'Event_model'); ?>
+                                    <?php echo $render_object->RenderElement('title', $event->title, null, 'Event_model'); ?>
                                 </span>
                                 <span class="org-agenda__date <?php echo $event->color; ?>">
                                     <i class="icon-clock"></i>
-                                    <?php echo $this->render_object->RenderElement('date', $event->date, null, 'Event_model'); ?>
-                                    <?php echo $this->render_object->RenderElement('date', $event->time, null, 'Event_model'); ?>
+                                    <?php echo $render_object->RenderElement('date', $event->date, null, 'Event_model'); ?>
+                                    <?php echo $render_object->RenderElement('date', $event->time, null, 'Event_model'); ?>
                                 </span>
                             </li>
                         <?php } ?>

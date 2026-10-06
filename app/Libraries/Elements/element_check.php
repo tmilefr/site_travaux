@@ -23,17 +23,17 @@ class element_check extends element
 		}
 		return '<div class="input-group mb-3">
 		<div class="input-group-prepend">
-			<span class="input-group-text" id="basic-addon1">'.$this->CI->lang->line($name).'</span>
+			<span class="input-group-text" id="basic-addon1">'.tr($name).'</span>
 		</div>
-		'.$this->CI->bootstrap_tools->input_select($this->name.'_'.$name, $this->values, $val).'
+		'.$this->RenderTools->input_select($this->name.'_'.$name, $this->values, $val).'
 		</div>';
 	}
 
 	public function PrepareForDBA($value){
 		$obj = new \stdClass();
-		$obj->encaisse = $this->CI->input->post($this->name.'_encaisse');
-		$obj->todo = $this->CI->input->post($this->name.'_todo');
-		$obj->have = $this->CI->input->post($this->name.'_have');
+		$obj->encaisse = $this->post($this->name.'_encaisse');
+		$obj->todo = $this->post($this->name.'_todo');
+		$obj->have = $this->post($this->name.'_have');
 
 		return json_encode($obj);
 	}
@@ -60,7 +60,6 @@ class element_check extends element
 	 */
 	public function __construct()
 	{
-		$this->CI =& get_instance();
 	}
 
 	/**
@@ -69,7 +68,6 @@ class element_check extends element
 	 */
 	public function __destruct()
 	{
-		unset($this->CI);
 		//echo '<pre><code>'.print_r($this , 1).'</code></pre>';
 	}
 	

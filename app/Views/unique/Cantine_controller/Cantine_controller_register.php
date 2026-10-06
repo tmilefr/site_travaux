@@ -126,14 +126,14 @@
         <div class="grid grid_12">
             <div class="cantine-head">
                 <div class="titles">
-                    <h1 class="subtitle greydark"><?php echo $this->lang->line('cantine_title');?></h1>
+                    <h1 class="subtitle greydark"><?php echo tr('cantine_title');?></h1>
                     <div class="nicdark_space10"></div>
-                    <h3 class="subtitle grey"><?php echo $this->lang->line('cantine_subtitle');?></h3>
+                    <h3 class="subtitle grey"><?php echo tr('cantine_subtitle');?></h3>
                     <div class="nicdark_space10"></div>
                     <div class="nicdark_divider left big"><span class="nicdark_bg_green nicdark_radius"></span></div>
                 </div>
                 <div class="schools">
-                    <span class="lbl"><?php echo $this->lang->line('cantine_school');?> :</span>
+                    <span class="lbl"><?php echo tr('cantine_school');?> :</span>
                     <?php foreach(['M' => 'Mulhouse', 'L' => 'Lutterbach'] AS $code => $label){
                         $cls = ($ecole === $code) ? 'on' : 'off';
                     ?>
@@ -148,14 +148,14 @@
         <div class="grid grid_12">
             <div class="cantine-weekbar">
                 <div class="nav">
-                    <a href="<?php echo base_url('Cantine_controller/register/'.($week_offset - 1));?>" class="btn">&laquo; <?php echo $this->lang->line('cantine_prev_week');?></a>
-                    <a href="<?php echo base_url('Cantine_controller/register/0');?>" class="btn"><?php echo $this->lang->line('cantine_this_week');?></a>
-                    <a href="<?php echo base_url('Cantine_controller/register/'.($week_offset + 1));?>" class="btn"><?php echo $this->lang->line('cantine_next_week');?> &raquo;</a>
+                    <a href="<?php echo base_url('Cantine_controller/register/'.($week_offset - 1));?>" class="btn">&laquo; <?php echo tr('cantine_prev_week');?></a>
+                    <a href="<?php echo base_url('Cantine_controller/register/0');?>" class="btn"><?php echo tr('cantine_this_week');?></a>
+                    <a href="<?php echo base_url('Cantine_controller/register/'.($week_offset + 1));?>" class="btn"><?php echo tr('cantine_next_week');?> &raquo;</a>
                 </div>
                 <div class="spacer"></div>
                 <?php if ($is_admin){ ?>
                     <a href="<?php echo base_url('Cantine_controller/config?ecole='.$ecole);?>" class="btn btn-cfg">
-                        <i class="icon-cog"></i> <?php echo $this->lang->line('cantine_config_link');?>
+                        <i class="icon-cog"></i> <?php echo tr('cantine_config_link');?>
                     </a>
                 <?php } ?>
             </div>
@@ -166,15 +166,15 @@
         <div class="grid grid_12">
             <div class="cantine-stats">
                 <div class="stat s-grey">
-                    <span class="lbl"><?php echo $this->lang->line('cantine_stat_days');?></span>
+                    <span class="lbl"><?php echo tr('cantine_stat_days');?></span>
                     <span class="val"><?php echo $stats->active_days;?></span>
                 </div>
                 <div class="stat s-green">
-                    <span class="lbl"><?php echo $this->lang->line('cantine_stat_mine');?></span>
+                    <span class="lbl"><?php echo tr('cantine_stat_mine');?></span>
                     <span class="val"><?php echo $stats->mine;?></span>
                 </div>
                 <div class="stat s-orng">
-                    <span class="lbl"><?php echo $this->lang->line('cantine_stat_open');?></span>
+                    <span class="lbl"><?php echo tr('cantine_stat_open');?></span>
                     <span class="val"><?php echo $stats->open;?></span>
                 </div>
             </div>
@@ -202,7 +202,7 @@
                         <span class="day"><?php echo $day->day_label;?></span>
                         <span class="right">
                             <?php if ($is_passed && $has_session){ ?>
-                                <span class="past"><?php echo $this->lang->line('cantine_passed');?></span>
+                                <span class="past"><?php echo tr('cantine_passed');?></span>
                             <?php } ?>
                             <span class="date"><?php echo $day->day_num.' '.$day->month_fr;?></span>
                         </span>
@@ -212,7 +212,7 @@
 
                         <!-- Pas de garde ce jour -->
                         <div class="empty">
-                            <span><i class="icon-minus-circled"></i><?php echo $this->lang->line('cantine_day_inactive');?></span>
+                            <span><i class="icon-minus-circled"></i><?php echo tr('cantine_day_inactive');?></span>
                         </div>
 
                     <?php } else {
@@ -230,7 +230,7 @@
                                 <span class="ratio"><?php echo $day->nb_inscrits.'/'.$day->nb_slots;?></span>
                             </div>
 
-                            <div class="seclbl"><i class="icon-users"></i><?php echo $this->lang->line('cantine_registered');?></div>
+                            <div class="seclbl"><i class="icon-users"></i><?php echo tr('cantine_registered');?></div>
 
                             <!-- Liste des places (slots) -->
                             <ul class="slots">
@@ -243,8 +243,8 @@
                                 ?>
                                     <li class="<?php echo $is_me ? 'me' : '';?>">
                                         <i class="icon-user"></i>
-                                        <span><?php echo html_escape($name);?><?php if ($is_me) echo ' ('.$this->lang->line('cantine_you').')';?></span>
-                                        <?php if ($validated){ ?><i class="icon-ok ok" title="<?php echo $this->lang->line('cantine_validated');?>"></i><?php } ?>
+                                        <span><?php echo esc($name);?><?php if ($is_me) echo ' ('.tr('cantine_you').')';?></span>
+                                        <?php if ($validated){ ?><i class="icon-ok ok" title="<?php echo tr('cantine_validated');?>"></i><?php } ?>
                                     </li>
                                 <?php } else {
                                     // Place libre : cliquable si la famille peut prendre le créneau
@@ -252,11 +252,11 @@
                                 ?>
                                     <li class="free">
                                         <?php if ($can_click){ ?>
-                                            <a href="<?php echo base_url('Cantine_controller/register_one/'.$day->session->id);?>" title="<?php echo $this->lang->line('cantine_btn_register');?>">
-                                                <i class="icon-plus-circled"></i><?php echo $this->lang->line('cantine_slot_free');?>
+                                            <a href="<?php echo base_url('Cantine_controller/register_one/'.$day->session->id);?>" title="<?php echo tr('cantine_btn_register');?>">
+                                                <i class="icon-plus-circled"></i><?php echo tr('cantine_slot_free');?>
                                             </a>
                                         <?php } else { ?>
-                                            <span class="nolink"><i class="icon-plus-circled"></i><?php echo $this->lang->line('cantine_slot_free');?></span>
+                                            <span class="nolink"><i class="icon-plus-circled"></i><?php echo tr('cantine_slot_free');?></span>
                                         <?php } ?>
                                     </li>
                                 <?php }
@@ -266,19 +266,19 @@
                             <!-- Action en bas (poussée par margin-top:auto) -->
                             <div class="action">
                                 <?php if (!empty($day->my_validated)){ ?>
-                                    <span class="badge"><i class="icon-ok"></i><?php echo $this->lang->line('cantine_validated');?></span>
+                                    <span class="badge"><i class="icon-ok"></i><?php echo tr('cantine_validated');?></span>
                                 <?php } elseif (!empty($day->mine)){ ?>
                                     <?php if ($can_register && !$is_passed){ ?>
                                         <a href="<?php echo base_url('Cantine_controller/unregister_one/'.$day->session->id);?>"
-                                           onclick="return confirm('<?php echo $this->lang->line('cantine_confirm_cancel');?>');"
+                                           onclick="return confirm('<?php echo tr('cantine_confirm_cancel');?>');"
                                            class="btn-unreg">
-                                            <i class="icon-cancel"></i><?php echo $this->lang->line('cantine_btn_cancel');?>
+                                            <i class="icon-cancel"></i><?php echo tr('cantine_btn_cancel');?>
                                         </a>
                                     <?php } else { ?>
-                                        <span class="badge"><i class="icon-ok"></i><?php echo $this->lang->line('cantine_you');?></span>
+                                        <span class="badge"><i class="icon-ok"></i><?php echo tr('cantine_you');?></span>
                                     <?php } ?>
                                 <?php } elseif (!empty($day->full)){ ?>
-                                    <span class="badge"><?php echo $this->lang->line('cantine_full');?></span>
+                                    <span class="badge"><?php echo tr('cantine_full');?></span>
                                 <?php } ?>
                             </div>
 
@@ -290,7 +290,7 @@
                 <?php } ?>
 
             </div>
-            <p class="cantine-hint"><small><?php echo $this->lang->line('cantine_register_hint');?></small></p>
+            <p class="cantine-hint"><small><?php echo tr('cantine_register_hint');?></small></p>
         </div>
 
         <div class="grid grid_12"><div class="nicdark_space30"></div></div>

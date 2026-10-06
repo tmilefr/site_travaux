@@ -123,7 +123,7 @@
 
 - [ ] Base de recette **restaurée à partir d'un dump anonymisé de production** (ou du jeu de données du [§ 4](#4-jeux-de-données-et-comptes-de-test)).
 - [ ] Toutes les migrations SQL en attente exécutées (`database/sql/`, dont `validation_tokens`, `travaux.ref_mail_sent_at`, `mig_cantine.sql`).
-- [ ] `app/Config/legacy/secured.php` présent et renseigné (`API_KEY`, `PASSWORD_SALT`, SMTP).
+- [ ] `.env` présent et renseigné (`travaux.apiKey`, `travaux.passwordSalt`, SMTP `email.*`).
 - [ ] `.env` (database.default.*) pointant sur la base de **recette** et jamais sur la production.
 - [ ] Droits d'écriture sur `writable/`, `public/files/`, `app/Language/`.
 - [ ] `$config['civil_year']` cohérent avec les données de test (par défaut `2025-2026`).
@@ -430,7 +430,7 @@ SELECT SUM(nb_unites_valides_effectif) FROM infos
 
 ### 6.13 BOF — Back‑office générique (CRUD)
 
-Ces cas s'appliquent à **chaque** contrôleur reposant sur `MY_Controller` (`Familys_controller`, `Admwork_controller`, `Options_controller`, `Templates_controller`, `Files_controller`, `Event_controller`, `Sendmail_controller`, `Parameters`, `Acl_*`).
+Ces cas s'appliquent à **chaque** contrôleur reposant sur `CrudController` (`Familys_controller`, `Admwork_controller`, `Options_controller`, `Templates_controller`, `Files_controller`, `Event_controller`, `Sendmail_controller`, `Parameters`, `Acl_*`).
 
 | ID | P | Objectif | Étapes | Résultat attendu |
 |---|---|---|---|---|
@@ -476,7 +476,7 @@ Ces cas s'appliquent à **chaque** contrôleur reposant sur `MY_Controller` (`Fa
 | SEC-06 | P1 | Élévation de privilège | En session `fam`, poster vers `Acl_roles_controller/set_rules` et `Familys_controller/edit` d'une autre famille | Refus |
 | SEC-07 | P1 | Fixation de session | Comparer l'identifiant de session avant/après connexion | Identifiant régénéré à la connexion |
 | SEC-08 | P1 | Cookies | Inspecter le cookie de session en HTTPS | `HttpOnly` et `Secure` positionnés ; `SameSite` défini |
-| SEC-09 | P1 | Accès direct aux fichiers | `/app/Config/legacy/secured.php`, `/.env`, `/writable/logs/`, `/php_errors.log` | `403`/`404` — **aucun** contenu servi |
+| SEC-09 | P1 | Accès direct aux fichiers | `/app/Config/Travaux.php`, `/.env`, `/writable/logs/`, `/php_errors.log` | `403`/`404` — **aucun** contenu servi |
 | SEC-10 | P1 | Fuite d'erreurs | Provoquer une erreur SQL en production | Page d'erreur générique, aucune trace ni requête affichée (`debug_app = none`) |
 | SEC-11 | P1 | Upload | Téléverser `.php`, `.phtml`, `.svg` avec script, et un fichier de très grande taille | Rejet ou stockage non exécutable ; vérifier qu'aucun script n'est atteignable via son URL |
 | SEC-12 | P1 | Force brute | 20 tentatives de connexion échouées | Limitation ou temporisation en place — sinon ouvrir une anomalie et documenter le risque |
@@ -521,7 +521,7 @@ Ces cas s'appliquent à **chaque** contrôleur reposant sur `MY_Controller` (`Fa
 **Préparation**
 
 - [ ] `.env` (database.default.*) à jour sur le serveur
-- [ ] `app/Config/legacy/secured.php` à jour sur le serveur
+- [ ] `.env` à jour sur le serveur
 - [ ] Migrations SQL en attente exécutées (voir `DOCUMENTATION.md` § 13.2)
 - [ ] Droits d'écriture vérifiés sur `writable/`, `public/files/`
 - [ ] `civil_year` correcte pour la campagne en cours
@@ -541,7 +541,7 @@ Ces cas s'appliquent à **chaque** contrôleur reposant sur `MY_Controller` (`Fa
 
 **Sécurité**
 
-- [ ] `/.env` et `/app/Config/legacy/secured.php` inaccessibles via le navigateur
+- [ ] `/.env` et `/app/` inaccessibles via le navigateur (seul `public/` est exposé)
 - [ ] Aucun secret ajouté au dépôt sur ce cycle (`git diff` sur les fichiers de configuration)
 
 ---
@@ -635,7 +635,7 @@ Un workflow GitHub Actions sur `develop` et `main` :
 
 1. `php -l` récursif sur `app/` + `php tools/check_classes.php` (détecte les erreurs de syntaxe avant déploiement) ;
 2. PHPUnit ;
-3. contrôle qu'aucun secret (`secured.php`, `.env`, `production/*`) n'entre dans le dépôt.
+3. contrôle qu'aucun secret (`.env`) n'entre dans le dépôt.
 
 ---
 

@@ -9,7 +9,8 @@ use Exception;
 #[\AllowDynamicProperties]
 class Libpdf {
 	
-	var $CI;
+	/** @var Dompdf */
+	protected $dompdf;
 	var $pdf_path = '';
 	var $filename = '';
 	
@@ -18,7 +19,6 @@ class Libpdf {
 	 * @return void
 	 */	
 	public function __construct() {
-		$this->CI = & get_instance();
 		$this->_init();
 		$this->pdf_path = rtrim(ROOTPATH,'/\\').'/public/data/pdf/';
 		$this->img_path = rtrim(ROOTPATH,'/\\').'/public/assets/img/'; //base_url().'assets/img/';
@@ -36,12 +36,11 @@ class Libpdf {
 
 		$pdf->setPaper('A4', 'portrait');
 
-		$this->CI->dompdf = $pdf;
+		$this->dompdf = $pdf;
 	}
 	
 	public function reset(){
-		if (isset($this->CI->dompdf))
-			unset($this->CI->dompdf);
+		$this->dompdf = null;
 		$this->_init();
 	}
 
@@ -54,14 +53,16 @@ class Libpdf {
 	/**
 	 * @brief Pdf Create with $pdf data and view view
 	 * @param $invoice 
-	 * @returns void()
+	 * @return \CodeIgniter\HTTP\ResponseInterface|null
 	 * 
 	 * 
 	 */
 	function DoPdf($datas,$view_pdf,$filename, $stream = false){
 		$data_view['datas'] = $datas;
+		$data_view['render_object'] = service('renderObject');
+		$data_view['bootstrap_tools'] = service('bootstrapTools');
 		$data_view['logo'] =  $this->ImgBase64('regio.png');
-		$html = $this->CI->load->view($view_pdf, $data_view, true);
+		$html = view($view_pdf, $data_view);
 
 		//echo debug($html);
 
@@ -69,9 +70,14 @@ class Libpdf {
 		$this->makePdf($html);
 
 		if ($stream){
-			// Output the generated PDF to Browser
-			$this->CI->dompdf->stream($filename);
+			// Le PDF est renvoyé au navigateur par la réponse HTTP du contrôleur
+			return service('response')
+				->setContentType('application/pdf')
+				->setHeader('Content-Disposition', 'attachment; filename="' . $filename . '"')
+				->setBody($this->dompdf->output());
 		}
+
+		return null;
 	}
 	
 	/**
@@ -84,9 +90,9 @@ class Libpdf {
 	function makePdf($html){
 		try{
 			$this->reset();
-			$this->CI->dompdf->load_html($html);        
-			$this->CI->dompdf->render();
-			file_put_contents($this->pdf_path.$this->filename, $this->CI->dompdf->output()); 
+			$this->dompdf->loadHtml($html);        
+			$this->dompdf->render();
+			file_put_contents($this->pdf_path.$this->filename, $this->dompdf->output()); 
 		} catch (Exception $e) {
 			echo 'Exception reçue : ',  $e->getMessage(), "\n";
 		}

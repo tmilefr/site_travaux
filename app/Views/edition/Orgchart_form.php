@@ -4,33 +4,33 @@
     <div class="nicdark_container nicdark_clearfix">
 		<div class="nicdark_space30"></div>
 			<div class="grid grid_12">
-			<h1 class="subtitle greydark"><?php echo $this->lang->line($this->render_object->_getCi('_controller_name').'_'.$this->render_object->_get('form_mod'));?></h1>
+			<h1 class="subtitle greydark"><?php echo tr($render_object->_getCi('_controller_name').'_'.$render_object->_get('form_mod'));?></h1>
 			<div class="nicdark_space20"></div>
 			<h3 class="subtitle grey">
-				<?php echo $this->lang->line($this->render_object->_getCi('_controller_name').'_subtitle');?>
+				<?php echo tr($render_object->_getCi('_controller_name').'_subtitle');?>
 			</h3>
 			<div class="nicdark_space20"></div>
-			<div class="nicdark_divider left big"><span class="<?php echo $this->render_object->_getCi('_bg_color');?> nicdark_radius"></span></div>
+			<div class="nicdark_divider left big"><span class="<?php echo $render_object->_getCi('_bg_color');?> nicdark_radius"></span></div>
 			<div class="nicdark_space10"></div>
 		</div>
 		<?php
-			echo form_open_multipart(base_url($this->render_object->_getCi('_controller_name').'/'.$this->render_object->_get('form_mod')), array('class' => '', 'id' => 'edit') , array('form_mod'=>$this->render_object->_get('form_mod'),'id'=>$id,'hit'=>$this->render_object->RenderElement('hit')) );
+			echo open_form_multipart(base_url($render_object->_getCi('_controller_name').'/'.$render_object->_get('form_mod')), array('class' => '', 'id' => 'edit') , array('form_mod'=>$render_object->_get('form_mod'),'id'=>$id,'hit'=>$render_object->RenderElement('hit')) );
 		?>
-		<?php //echo $this->lang->line($this->render_object->_getCi('_controller_name').'_header_'.$this->render_object->_get('form_mod'));?>
+		<?php //echo tr($render_object->_getCi('_controller_name').'_header_'.$render_object->_get('form_mod'));?>
 		<?php
 		//champ obligatoire
 		foreach($required_field AS $name){
-			echo form_error($name, 	'<div class="alert alert-danger">', '</div>');
+			echo field_error($name, 	'<div class="alert alert-danger">', '</div>');
 		}
 		?>	
 		<div class="card">
 			<div class="">
 				<ul class="nav nav-tabs" id="myTab" role="tablist">
 					<li class="nav-item" role="presentation">
-						<button class="nav-link active" id="profile-tab" data-toggle="tab" data-target="#groupinfo" type="button" role="tab" aria-controls="profile" aria-selected="false"><?php echo $this->lang->line('GROUP_INFO');?></button>
+						<button class="nav-link active" id="profile-tab" data-toggle="tab" data-target="#groupinfo" type="button" role="tab" aria-controls="profile" aria-selected="false"><?php echo tr('GROUP_INFO');?></button>
 					</li>				
 					<li class="nav-item" role="presentation">
-						<button class="nav-link" id="home-tab" data-toggle="tab" data-target="#member" type="button" role="tab" aria-controls="home" aria-selected="true"><?php echo $this->lang->line('GROUP_MEMBER');?></button>
+						<button class="nav-link" id="home-tab" data-toggle="tab" data-target="#member" type="button" role="tab" aria-controls="home" aria-selected="true"><?php echo tr('GROUP_MEMBER');?></button>
 					</li>
 				</ul>
 			</div>
@@ -39,76 +39,76 @@
 					<div class="form-row">
 						<div class="form-group col-md-2">
 							<?php 
-								echo $this->render_object->label('short');
-								echo $this->render_object->RenderFormElement('short');
+								echo $render_object->label('short');
+								echo $render_object->RenderFormElement('short');
 							?>
 						</div>
 						<div class="form-group col-md-4">
 							<?php 
-								echo $this->render_object->label('title');
-								echo $this->render_object->RenderFormElement('title');
+								echo $render_object->label('title');
+								echo $render_object->RenderFormElement('title');
 							?>
 						</div>
 						<div class="form-group col-md-2">
 							<?php 
-								echo $this->render_object->label('type');
-								echo $this->render_object->RenderFormElement('type');
+								echo $render_object->label('type');
+								echo $render_object->RenderFormElement('type');
 							?>
 						</div>					
 						<div class="form-group col-md-2">
 							<?php 
-								echo $this->render_object->label('color');
-								echo $this->render_object->RenderFormElement('color');
+								echo $render_object->label('color');
+								echo $render_object->RenderFormElement('color');
 							?>
 						</div>					
 						<div class="form-group col-md-2">
 							<?php 
-								echo $this->render_object->label('listorder');
-								echo $this->render_object->RenderFormElement('listorder');
+								echo $render_object->label('listorder');
+								echo $render_object->RenderFormElement('listorder');
 							?>
 						</div>						
 					</div>
 					<div class="form-row">
 						<div class="form-group col-md-12">
 							<?php 
-								echo $this->render_object->label('intro');
-								echo $this->render_object->RenderFormElement('intro'); 
+								echo $render_object->label('intro');
+								echo $render_object->RenderFormElement('intro'); 
 							?>
 						</div>	
 						<div class="form-group col-md-12">
 							<?php 
-								echo $this->render_object->label('mission');
-								echo $this->render_object->RenderFormElement('mission'); 
+								echo $render_object->label('mission');
+								echo $render_object->RenderFormElement('mission'); 
 							?>
 						</div>						
 						<div class="form-group col-md-12">
 							<?php 
-								echo $this->render_object->label('actions');
-								echo $this->render_object->RenderFormElement('actions'); 
+								echo $render_object->label('actions');
+								echo $render_object->RenderFormElement('actions'); 
 							?>
 						</div>
 						<div class="form-group col-md-12">
 							<?php 
-								echo $this->render_object->label('role');
-								echo $this->render_object->RenderFormElement('role'); 
+								echo $render_object->label('role');
+								echo $render_object->RenderFormElement('role'); 
 							?>
 						</div>
 						<div class="form-group col-md-12">
 							<?php 
-								echo $this->render_object->label('needs');
-								echo $this->render_object->RenderFormElement('needs'); 
+								echo $render_object->label('needs');
+								echo $render_object->RenderFormElement('needs'); 
 							?>
 						</div>	
 						<div class="form-group col-md-12">
 							<?php 
-								echo $this->render_object->label('search');
-								echo $this->render_object->RenderFormElement('search'); 
+								echo $render_object->label('search');
+								echo $render_object->RenderFormElement('search'); 
 							?>
 						</div>						
 						<div class="form-group col-md-12">
 							<?php 
-								echo $this->render_object->label('related');
-								echo $this->render_object->RenderFormElement('related'); 
+								echo $render_object->label('related');
+								echo $render_object->RenderFormElement('related'); 
 							?>
 						</div>																		
 					</div>					
@@ -117,8 +117,8 @@
 					<div class="form-row">
 						<div class="form-group col-md-12">
 							<?php 
-								echo $this->render_object->label('acteursOrgchart');
-								echo $this->render_object->RenderFormElement('acteurs');
+								echo $render_object->label('acteursOrgchart');
+								echo $render_object->RenderFormElement('acteurs');
 							?>
 						</div>								
 					</div>				
@@ -126,11 +126,11 @@
 			</div>
 		</div>
 		<div class="modal-footer">
-			<button type="submit" class="btn btn-primary"><?php echo $this->render_object->_get('_ui_rules')[$this->render_object->_get('form_mod')]->name;?></button>
+			<button type="submit" class="btn btn-primary"><?php echo $render_object->_get('_ui_rules')[$render_object->_get('form_mod')]->name;?></button>
 		</div>
 		<?php
-		echo $this->render_object->RenderFormElement('created'); 
-		echo $this->render_object->RenderFormElement('updated'); 
+		echo $render_object->RenderFormElement('created'); 
+		echo $render_object->RenderFormElement('updated'); 
 
 		echo form_close();
 		?>

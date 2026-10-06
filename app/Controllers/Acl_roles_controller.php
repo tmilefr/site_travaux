@@ -12,7 +12,7 @@ use StdClass;
  * @author      Tmile
  * @link        http://www.24bis.com
  */
-class Acl_roles_controller extends MY_Controller {
+class Acl_roles_controller extends CrudController {
 
 	/* Model in use */
 	public $Acl_controllers_model = null;
@@ -21,8 +21,8 @@ class Acl_roles_controller extends MY_Controller {
 	public $Acl_roles_model = null;
 
 
-	public function __construct(){
-		parent::__construct();
+	protected function boot(): void
+	{
 
 		$this->_controller_name = 'Acl_roles_controller';  //controller name for routing
 		$this->_model_name 		= 'Acl_roles_model';	   //DataModel
@@ -31,14 +31,14 @@ class Acl_roles_controller extends MY_Controller {
 		$this->_autorize 		= array('add'=>true,'edit'=>true,'list'=>true,'delete'=>true,'view'=>false,'set_rules'=>true);
 
 
-		$this->title 			= $this->lang->line('GESTION_'.$this->_controller_name);
+		$this->title 			= tr('GESTION_'.$this->_controller_name);
 		$this->_bg_color 		= 'nicdark_bg_red';
 		$this->_set('_debug', FALSE);
 		$this->init();
 
-		$this->load->model('Acl_controllers_model');
-		$this->load->model('Acl_roles_controllers_model');
-		$this->load->model('Acl_actions_model');
+		$this->Acl_controllers_model = model('Acl_controllers_model');
+		$this->Acl_roles_controllers_model = model('Acl_roles_controllers_model');
+		$this->Acl_actions_model = model('Acl_actions_model');
 	}
 
 	/**
@@ -153,12 +153,12 @@ class Acl_roles_controller extends MY_Controller {
 		$this->{$this->_model_name}->_set('key_value',$id);
 		$dba_data = $this->{$this->_model_name}->get_one();
 
-		$this->data_view['title'] = $this->lang->line($this->_controller_name).' : '.$dba_data->role_name;
+		$this->data_view['title'] = tr($this->_controller_name).' : '.$dba_data->role_name;
 
-		if ($this->input->post('form_mod') == 'roles'){
-			if ($this->input->post('rules')){
+		if ($this->request->getPost('form_mod') == 'roles'){
+			if ($this->request->getPost('rules')){
 				$this->Acl_roles_controllers_model->DelRole($id);
-				foreach($this->input->post('rules') AS $rule){
+				foreach($this->request->getPost('rules') AS $rule){
 					list($id_ctrl,$id_act) = explode('_', $rule);
 					$acl_rca = new \stdClass();
 					$acl_rca->id_role = $id;

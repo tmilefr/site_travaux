@@ -57,17 +57,6 @@ Events::on('pre_system', static function (): void {
 });
 
 /*
- * Controle d'acces (ACL) : equivalent du hook CI3 "post_controller_constructor"
- * (ancien Loginchecker). Execute une fois le controleur instancie.
- */
-Events::on('post_controller_constructor', static function (): void {
-    $ci = \App\Libraries\Compat\Ci3::get();
-    if ($ci !== null && isset($ci->acl)) {
-        $ci->acl->Route();
-    }
-});
-
-/*
  * Tolerance aux avertissements PHP (E_WARNING, E_NOTICE ...).
  *
  * L'application CI3 tournait avec error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED ...)

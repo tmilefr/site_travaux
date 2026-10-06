@@ -21,15 +21,15 @@ class Acl_users_model extends Core_model
 	/** @var string */
 	const TABLE_NAME = 'acl_users';
 
+	protected $table = self::TABLE_NAME;
+	protected $primaryKey = 'id';
+	protected $order = 'name';
+	protected $direction = 'desc';
+	protected $json = 'Acl_users.json';
+
 	function __construct()
 	{
 		parent::__construct();
-
-		$this->_set('table',     self::TABLE_NAME);
-		$this->_set('key',       'id');
-		$this->_set('order',     'name');
-		$this->_set('direction', 'desc');
-		$this->_set('json',      'Acl_users.json');
 		$this->_init_def();
 	}
 
@@ -43,14 +43,11 @@ class Acl_users_model extends Core_model
 	 */
 	public function getUserRoleId($userId = 0)
 	{
-		$query = $this->db->select('role_id')
-			->from(self::TABLE_NAME . ' u')
-			->where('id', $userId)
-			->get();
-		$this->_debug_array[] = $this->db->last_query();
+		$query = $this->db->table(self::TABLE_NAME . ' u')->select('role_id')->where('id', $userId)->get();
+		$this->log();
 
-		if ($query->num_rows() > 0) {
-			$row = $query->row_array();
+		if ($query->getNumRows() > 0) {
+			$row = $query->getRowArray();
 			return (int) $row['role_id'];
 		}
 		return 0;
@@ -77,11 +74,11 @@ class Acl_users_model extends Core_model
 		$usercheck->role_id   = 0;
 
 		// Délégation à la couche de sécurité partagée
-		$this->load->library('PasswordAuthenticator', [], 'passauth');
-		$row = $this->passauth->verify(self::TABLE_NAME, 'login', $login, $password, FALSE);
+		$passauth = service('passwordAuthenticator');
+		$row = $passauth->verify(self::TABLE_NAME, 'login', $login, $password, FALSE);
 
 		// Remontée des logs SQL pour les consommateurs qui lisent _debug_array
-		foreach ($this->passauth->getDebug() as $msg) {
+		foreach ($passauth->getDebug() as $msg) {
 			$this->_debug_array[] = $msg;
 		}
 
@@ -110,8 +107,8 @@ class Acl_users_model extends Core_model
 	 */
 	public function hashPassword($plainPassword)
 	{
-		$this->load->library('PasswordAuthenticator', [], 'passauth');
-		return $this->passauth->hash($plainPassword);
+		$passauth = service('passwordAuthenticator');
+		return $passauth->hash($plainPassword);
 	}
 }
 

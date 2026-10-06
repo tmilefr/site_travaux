@@ -3,15 +3,13 @@
 namespace App\Models;
 class Event_model extends Core_model{
 
-	function __construct(){
-		parent::__construct();
-		
-		$this->_set('table'	, 'events');
-		$this->_set('key'	, 'id');
-		$this->_set('order'	, 'title');
-		$this->_set('direction'	, 'desc');
-		$this->_set('json'	, 'Events.json');
-	}
+	protected $table = 'events';
+	protected $primaryKey = 'id';
+	protected $order = 'title';
+	protected $direction = 'desc';
+	protected $json = 'Events.json';
+
+
 	
 	/**
 	 * Method GetFilesByType
@@ -22,16 +20,11 @@ class Event_model extends Core_model{
 	 * @return void
 	 */
 	function GetEventByType($type = null, $statut = 'P', $limit = 5){
-		$data=$this->db->select('*')
-		->from('events')
-		->where('events.type = "'.$type.'" AND statut ="'.$statut.'"' )
-		->order_by('`events`.`id` DESC')
-		->limit($limit)
-		->get();				
+		$data=$this->db->table('events')->select('*')->where('events.type = "'.$type.'" AND statut ="'.$statut.'"')->orderBy('`events`.`id` DESC')->limit($limit)->get();				
 		//echo 	 $this->db->last_query();
-		if ($data->num_rows()){
+		if ($data->getNumRows()){
 
-			return $data->result();
+			return $data->getResult();
 		}
 		return false;
 	}

@@ -2,17 +2,18 @@
 
 namespace App\Libraries;
 #[\AllowDynamicProperties]
-Class Render_menu{
+class Render_menu{
 
-	protected $CI 		= NULL; //Controller instance 
+	/** @var Acl */
+	protected $acl;
 	protected $json_path= APPPATH.'Models/json/';
 	protected $json 	= 'Menus.json';
 	protected $def_menus= [];
 	protected $_debug = false;
 
-	public function __construct()
+	public function __construct(Acl $acl)
 	{
-		$this->CI =& get_instance();
+		$this->acl = $acl;
 	}
 	
 	public function _set($field,$value)
@@ -45,9 +46,9 @@ Class Render_menu{
 				case 'li':
 					foreach($def_menu->items AS $element){
 						$menu .= '<li class="'.$element->color.'">';
-						if ($this->CI->acl->hasAccess(strtolower($element->url)) OR $element->noright){
+						if ($this->acl->hasAccess(strtolower($element->url)) OR $element->noright){
 							$have_right = true; 
-							$menu .= '<a class="dropdown-item" href="'.(($element->noright) ? $element->url:base_url($element->url)).'">'.ci_lang($element->name.(($element->opt) ? '_'.$this->CI->acl->getType():'')).'</a>';
+							$menu .= '<a class="dropdown-item" href="'.(($element->noright) ? $element->url:base_url($element->url)).'">'.tr($element->name.(($element->opt) ? '_'.$this->acl->getType():'')).'</a>';
 						}
 						//sous menu
 						$submenu = '<ul class="sub-menu">';
@@ -55,8 +56,8 @@ Class Render_menu{
 						foreach($element->items AS $sub_element){
 							switch($sub_element->type){
 								case "link":
-									if ($this->CI->acl->hasAccess(strtolower($sub_element->url))){
-										$submenu .= '<li><a class="dropdown-item" href="'.base_url($sub_element->url).'">'.ci_lang($sub_element->name).'</a></li>';
+									if ($this->acl->hasAccess(strtolower($sub_element->url))){
+										$submenu .= '<li><a class="dropdown-item" href="'.base_url($sub_element->url).'">'.tr($sub_element->name).'</a></li>';
 										$have_subright = true; 
 									}
 								break;
@@ -78,17 +79,16 @@ Class Render_menu{
 					foreach($def_menu->items AS $element){
 						switch($element->type){
 							case "link":
-								if ($this->CI->acl->hasAccess(strtolower($element->url))){
+								if ($this->acl->hasAccess(strtolower($element->url))){
 									$have_right = true; 
 									$menu .= '<li class="nav-item">
 									<a class="nav-link" href="'.base_url($element->url).'">
 									<div class="d-flex w-100 justify-content-start align-items-center">
 									<span class="oi '.$element->icon.'"></span> 
-									<span class="collapse-text menu-collapsed">'.ci_lang($element->name).'</span>
+									<span class="collapse-text menu-collapsed">'.tr($element->name).'</span>
 									</div></a>
 									</li>';
 								} else {
-									$this->CI->_debug(strtolower($element->url.':FALSE'));
 								}
 							break;
 							case "divider":
@@ -106,11 +106,10 @@ Class Render_menu{
 						foreach($def_menu->items AS $element){
 							switch($element->type){
 								case "link":
-									if ($this->CI->acl->hasAccess(strtolower($element->url))){ 
+									if ($this->acl->hasAccess(strtolower($element->url))){ 
 										$have_right = true;
-										$menu .= '<a class="dropdown-item" href="'.base_url($element->url).'">'.ci_lang($element->name).'</a>';
+										$menu .= '<a class="dropdown-item" href="'.base_url($element->url).'">'.tr($element->name).'</a>';
 									} else {
-										$this->CI->_debug(strtolower($element->url.':FALSE'));
 									}
 								break;
 								case "divider":
@@ -132,7 +131,6 @@ Class Render_menu{
 
 	function __destruct(){
 		if ($this->_debug){
-			unset($this->CI);
 			echo debug($this, __file__);
 		}
 	}

@@ -1,0 +1,33 @@
+<?php
+
+// Messages de validation (CodeIgniter 4). Placeholders : {field}, {param}.
+return [
+    'required' => 'Le champ {field} est requis.',
+    'isset' => 'Le champ {field} doit avoir une valeur.',
+    'valid_email' => 'Le champ {field} doit contenir une adresse email valide.',
+    'valid_emails' => 'Le champ {field} ne peut contenir que des adresses email valides.',
+    'valid_url' => 'Le champ {field} doit contenir une URL valide.',
+    'valid_ip' => 'Le champ {field} doit contenir une IP valide.',
+    'min_length' => 'Le champ {field} doit contenir au moins {param} caractères.',
+    'max_length' => 'Le champ {field} ne peut contenir plus de {param} caractères.',
+    'exact_length' => 'Le champ {field} doit contenir exactement {param} caractères.',
+    'alpha' => 'Le champ {field} ne peut contenir que des caractères alphabétiques.',
+    'alpha_numeric' => 'Le champ {field} ne peut contenir que des caractères alphanumériques.',
+    'alpha_numeric_spaces' => 'Le champ {field} ne peut contenir que des caractères alphanumériques et des espaces.',
+    'alpha_dash' => "Le champ {field} ne peut contenir que des caractères alphanumériques, des caractères de soulignement et des traits d'union.",
+    'numeric' => 'Le champ {field} doit contenir un nombre (caractères numériques).',
+    'is_numeric' => 'Le champ {field} ne peut contenir que de signes du type nombre.',
+    'integer' => 'Le champ {field} doit contenir un nombre entier.',
+    'regex_match' => "Le champ {field} n'utilise pas le bon format.",
+    'matches' => 'Le champ {field} doit correspondre au champ {param}.',
+    'differs' => 'Le champ {field} doit être différent du champ {param}.',
+    'is_unique' => 'Le champ {field} doit contenir une valeur unique.',
+    'is_natural' => 'Le champ {field} ne peut contenir que des nombres positifs.',
+    'is_natural_no_zero' => 'Le champ {field} ne peut contenir que des nombres plus grands que zéro.',
+    'decimal' => 'Le champ {field} doit contenir un nombre décimal.',
+    'less_than' => 'Le champ {field} doit contenir un nombre inférieur à {param}.',
+    'less_than_equal_to' => 'Le champ {field} doit contenir un nombre inférieur ou égal à {param}.',
+    'greater_than' => 'Le champ {field} doit contenir un nombre supérieur à {param}.',
+    'greater_than_equal_to' => 'Le champ {field} doit contenir un nombre supérieur ou égal à {param}.',
+    'in_list' => 'Le champ {field} doit avoir une de ces valeurs : {param}.',
+];

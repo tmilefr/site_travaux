@@ -2,6 +2,9 @@
 
 namespace App\Libraries;
 
+use CodeIgniter\Database\BaseConnection;
+use Config\Database;
+
 /**
  * PasswordAuthenticator
  *
@@ -24,11 +27,10 @@ namespace App\Libraries;
  * @subpackage  Libraries
  * @category    Security
  */
-#[\AllowDynamicProperties]
 class PasswordAuthenticator
 {
-	/** @var CI_Controller */
-	protected $CI;
+	/** @var BaseConnection */
+	protected $db;
 
 	/** @var bool */
 	protected $_debug = FALSE;
@@ -41,10 +43,9 @@ class PasswordAuthenticator
 	 *
 	 * @param array $config  ignoré, présent pour la compatibilité CI
 	 */
-	public function __construct($config = [])
+	public function __construct(?BaseConnection $db = null)
 	{
-		$this->CI = &get_instance();
-		$this->CI->load->database();
+		$this->db = $db ?? Database::connect();
 	}
 
 	// -----------------------------------------------------------------------
@@ -80,21 +81,20 @@ class PasswordAuthenticator
 			return FALSE;
 		}
 
-		$query = $this->CI->db->select('*')
-			->from($table)
+		$query = $this->db->table($table)
 			->where($loginField, $loginValue)
 			->limit(1)
 			->get();
 
-		$this->_debug_array[] = $this->CI->db->last_query();
+		$this->_debug_array[] = (string) $this->db->getLastQuery();
 
-		if ($query->num_rows() === 0) {
+		if ($query->getNumRows() === 0) {
 			// Protection contre les attaques par timing d'énumération
 			password_hash($password, PASSWORD_BCRYPT);
 			return FALSE;
 		}
 
-		$row    = $query->row_array();
+		$row    = $query->getRowArray();
 		$stored = isset($row['password']) ? (string) $row['password'] : '';
 
 		if ($stored === '') {
@@ -113,7 +113,8 @@ class PasswordAuthenticator
 			}
 		} else {
 			// Legacy crypt() avec sel fixe
-			if (defined('PASSWORD_SALT') && hash_equals($stored, crypt($password, PASSWORD_SALT))) {
+			$salt = config('Travaux')->passwordSalt;
+			if ($salt !== '' && hash_equals($stored, crypt($password, $salt))) {
 				$passwordOk = TRUE;
 				$this->_updatePasswordHash($table, $row['id'], $password);
 				$row['password'] = $this->hash($password);
@@ -205,9 +206,8 @@ class PasswordAuthenticator
 	private function _updatePasswordHash($table, $userId, $plainPassword)
 	{
 		$newHash = $this->hash($plainPassword);
-		$this->CI->db->where('id', $userId)
-			->update($table, ['password' => $newHash]);
-		$this->_debug_array[] = $this->CI->db->last_query();
+		$this->db->table($table)->where('id', $userId)->update(['password' => $newHash]);
+		$this->_debug_array[] = (string) $this->db->getLastQuery();
 	}
 
 	// -----------------------------------------------------------------------
@@ -228,4 +228,4 @@ class PasswordAuthenticator
 }
 
 /* End of file PasswordAuthenticator.php */
-/* Location: ./application/libraries/PasswordAuthenticator.php */
+

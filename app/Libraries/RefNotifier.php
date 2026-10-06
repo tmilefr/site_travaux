@@ -2,6 +2,13 @@
 
 namespace App\Libraries;
 
+use App\Models\Admwork_model;
+use App\Models\Familys_model;
+use App\Models\Orgchart_model;
+use App\Models\Sendmail_model;
+use App\Models\Sendmail_statut_model;
+use App\Models\Trombi_model;
+
 /**
  * RefNotifier
  *
@@ -20,7 +27,7 @@ namespace App\Libraries;
  * que sa donnée référent est incomplète.
  *
  * Usage type :
- *   $this->load->library('RefNotifier');
+ *   $notifier = service('refNotifier');
  *   $this->refnotifier->notifyWorkRegistration($id_work, $id_fam, 'register');
  *   $this->refnotifier->notifyCommissionRegistration($id_grp, $id_fam, 'register');
  *
@@ -29,28 +36,29 @@ namespace App\Libraries;
 #[\AllowDynamicProperties]
 class RefNotifier
 {
-    /** @var CI_Controller */
-    protected $CI;
+    /** @var \CodeIgniter\Database\BaseConnection */
+    protected $db;
+
+    protected $Sendmail_model;
+    protected $Sendmail_statut_model;
+    protected $Admwork_model;
+    protected $Familys_model;
+    protected $Trombi_model;
+    protected $Orgchart_model;
 
     /** @var array  cache simple sur la durée de la requête */
     protected $_familyCache = [];
 
     public function __construct()
     {
-        $this->CI = &get_instance();
+        $this->db = \Config\Database::connect();
 
-        // Modèles utilisés (chargement défensif via le LoadModel maison
-        // s'il existe — sinon load->model standard).
-        $models = ['Sendmail_model', 'Sendmail_statut_model',
-                   'Admwork_model',  'Familys_model',
-                   'Trombi_model',   'Orgchart_model'];
-        foreach ($models as $m) {
-            if (method_exists($this->CI, 'LoadModel')) {
-                $this->CI->LoadModel($m);
-            } else {
-                $this->CI->load->model($m);
-            }
-        }
+        $this->Sendmail_model        = model(Sendmail_model::class);
+        $this->Sendmail_statut_model = model(Sendmail_statut_model::class);
+        $this->Admwork_model         = model(Admwork_model::class);
+        $this->Familys_model         = model(Familys_model::class);
+        $this->Trombi_model          = model(Trombi_model::class);
+        $this->Orgchart_model        = model(Orgchart_model::class);
     }
 
     // ===================================================================
@@ -67,11 +75,10 @@ class RefNotifier
      */
     public function notifyWorkRegistration($id_work, $id_fam, $action)
     {
-        $work = $this->CI->db->from('travaux')
-            ->where('id', (int) $id_work)->get()->row();
+        $work = $this->db->table('travaux')->where('id', (int) $id_work)->get()->getRow();
         if (!$work) { return; }
 
-        $refFamily = $this->CI->Admwork_model->GetReferentFamily((int) $id_work);
+        $refFamily = $this->Admwork_model->GetReferentFamily((int) $id_work);
         $refEmail  = $refFamily ? $refFamily->e_mail : null;
         $refName   = $refFamily ? $refFamily->nom    : null;
 
@@ -96,12 +103,10 @@ class RefNotifier
      */
     public function notifyCantineRegistration($id_work, $id_fam, $action)
     {
-        $work = $this->CI->db->from('travaux')
-            ->where('id', (int) $id_work)
-            ->where('type', 'can')->get()->row();
+        $work = $this->db->table('travaux')->where('id', (int) $id_work)->where('type', 'can')->get()->getRow();
         if (!$work) { return; }
 
-        $refFamily = $this->CI->Admwork_model->GetReferentFamily((int) $id_work);
+        $refFamily = $this->Admwork_model->GetReferentFamily((int) $id_work);
         $refEmail  = $refFamily ? $refFamily->e_mail : null;
         $refName   = $refFamily ? $refFamily->nom    : null;
 
@@ -127,12 +132,11 @@ class RefNotifier
      */
     public function notifyCommissionCandidature($id_grp, $id_fam, $action)
     {
-        $commission = $this->CI->db->from('trombi')
-            ->where('id', (int) $id_grp)->get()->row();
+        $commission = $this->db->table('trombi')->where('id', (int) $id_grp)->get()->getRow();
         if (!$commission) { return; }
 
         // RT de la commission : trombi.classif = 'RT'
-        $rt        = $this->CI->Trombi_model->GetMemberFromClassif((int) $id_grp, 'RT');
+        $rt        = $this->Trombi_model->GetMemberFromClassif((int) $id_grp, 'RT');
         $refEmail  = ($rt && !empty($rt->email)) ? $rt->email : null;
         $refName   = $rt ? trim(($rt->name ?? '') . ' ' . ($rt->surname ?? '')) : null;
 
@@ -273,10 +277,10 @@ class RefNotifier
             'message'   => $message,
             'created'   => date('Y-m-d H:i:s'),
         ];
-        $id = $this->CI->Sendmail_model->post($row);
+        $id = $this->Sendmail_model->post($row);
 
         if ($id) {
-            $this->CI->Sendmail_statut_model->post([
+            $this->Sendmail_statut_model->post([
                 'id_sen'     => $id,
                 'date'       => date('Y-m-d H:i:s'),
                 'sendstatut' => 0,
@@ -300,7 +304,7 @@ class RefNotifier
              . 'context=' . json_encode($context);
         log_message('error', $msg);
 
-        $adminEmail = $this->CI->config->item('mail_from_email');
+        $adminEmail = config('Travaux')->mailFromEmail;
         if (empty($adminEmail) || !filter_var($adminEmail, FILTER_VALIDATE_EMAIL)) {
             // On ne peut rien faire de plus : pas d'admin configuré.
             log_message('error', '[RefNotifier] mail_from_email absent : alerte admin non envoyée.');
@@ -332,11 +336,11 @@ class RefNotifier
         if (isset($this->_familyCache[$id_fam])) {
             return $this->_familyCache[$id_fam];
         }
-        $fam = $this->CI->Familys_model->GetFamily($id_fam);
+        $fam = $this->Familys_model->GetFamily($id_fam);
         $this->_familyCache[$id_fam] = $fam ?: null;
         return $this->_familyCache[$id_fam];
     }
 }
 
-/* End of file RefNotifier.php */
-/* Location: ./application/libraries/RefNotifier.php */
+
+

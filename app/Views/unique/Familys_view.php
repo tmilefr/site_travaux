@@ -5,21 +5,21 @@
 		<div class="nicdark_space30"></div>
 		<div class="card">
 			<div class="card-header">
-				<span class="card-title"><?php echo $this->render_object->RenderElement('login')?></span>
+				<span class="card-title"><?php echo $render_object->RenderElement('login')?></span>
 			</div>
 			<div class="card-body">
 				<h5 class="card-title">
 					<?php 
-						echo $this->render_object->RenderElement('nom').' '.$this->render_object->RenderElement('members'); 
+						echo $render_object->RenderElement('nom').' '.$render_object->RenderElement('members'); 
 					?>
 				</h5>
 				<p class="card-text">
 					<?php
-						echo $this->render_object->RenderElement('capacity');
+						echo $render_object->RenderElement('capacity');
 					?>
 				</p>		
 				<?php
-					echo $this->render_object->render_element_menu();
+					echo $render_object->render_element_menu();
 				?>
 			</div>
 		</div>	

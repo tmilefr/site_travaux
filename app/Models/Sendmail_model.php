@@ -3,26 +3,20 @@
 namespace App\Models;
 class Sendmail_model extends Core_model{
 	
-	function __construct(){
-		parent::__construct();
-		
-		$this->_set('table'	, 'sendmail');
-		$this->_set('key'	, 'id');
-		$this->_set('order'	, 'created');
-		$this->_set('direction'	, 'desc');
-		$this->_set('json'	, 'Sendmail.json');
-	}
+	protected $table = 'sendmail';
+	protected $primaryKey = 'id';
+	protected $order = 'created';
+	protected $direction = 'desc';
+	protected $json = 'Sendmail.json';
+
+
 
 	function get4send($size = 10 ){
-		$datas = $this->db->select('*')
-						->limit($size)
-					   ->order_by($this->order, $this->direction )
-					   ->where('statut !=', 1)
-					   ->get($this->table)
+		$datas = $this->db->table($this->table)->select('*')->limit((int) $size)->orderBy($this->order, $this->direction)->where('statut !=', 1)->get()
 					   ;
 
-		$this->_debug_array[] = $this->db->last_query();
-		return $datas->result();	
+		$this->log();
+		return $datas->getResult();	
 	}
 
 }

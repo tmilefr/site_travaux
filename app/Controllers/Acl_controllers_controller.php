@@ -14,15 +14,15 @@ use StdClass;
  * @author      Tmile
  * @link        http://www.24bis.com
  */
-class Acl_controllers_controller extends MY_Controller {
+class Acl_controllers_controller extends CrudController {
 
 	/**
 	 * Method __construct
 	 *
 	 * @return void
 	 */
-	public function __construct(){
-		parent::__construct();
+	protected function boot(): void
+	{
 
 		$this->_controller_name = 'Acl_controllers_controller';  //controller name for routing
 		$this->_model_name 		= 'Acl_controllers_model';	   //DataModel
@@ -31,7 +31,7 @@ class Acl_controllers_controller extends MY_Controller {
 		$this->_autorize 		= array('add'=>true,'edit'=>true,'list'=>true,'delete'=>true,'view'=>false,'scan'=>true);
 
 
-		$this->title 			= $this->lang->line('GESTION_'.$this->_controller_name);
+		$this->title 			= tr('GESTION_'.$this->_controller_name);
 		$this->_bg_color = 'nicdark_bg_red';
 		$this->_set('_debug', FALSE);
 		$this->init();
@@ -46,8 +46,8 @@ class Acl_controllers_controller extends MY_Controller {
 	 *
 	 * Le rendu reste celui de list_view.php (vue générique). Pour insérer
 	 * le bandeau au-dessus, on s'appuie sur le mécanisme déjà câblé dans
-	 * MY_Controller::render_view() : si une vue existe dans
-	 *   application/views/unique/{ControllerName}/list_view.php
+	 * CrudController::render_view() : si une vue existe dans
+	 *   app/Views/unique/{ControllerName}/list_view.php
 	 * elle prime sur la vue générique. Cette vue spécifique inclut la
 	 * vue générique tout en ajoutant le bandeau au-dessus.
 	 */
@@ -64,7 +64,7 @@ class Acl_controllers_controller extends MY_Controller {
 	}
 
 	/**
-	 * @brief Scanne le dossier application/controllers/ et synchronise la
+	 * @brief Scanne le dossier app/Controllers/ et synchronise la
 	 *        base ACL avec le code réel.
 	 *
 	 *  GET  /Acl_controllers_controller/scan
@@ -110,26 +110,26 @@ class Acl_controllers_controller extends MY_Controller {
 		$diff = $this->_diff_acl($scanned, $db_ctrls, $db_actions_by_ctrl);
 
 		// 4) Confirmation -> insertions ciblées par l'utilisateur
-		$confirm = (int) $this->input->post('confirm') === 1;
+		$confirm = (int) $this->request->getPost('confirm') === 1;
 		if ($confirm) {
-			$picks_ctrls   = (array) $this->input->post('add_ctrl');   // [ 'NomController', ... ]
-			$picks_actions = (array) $this->input->post('add_action'); // [ 'NomController::action', ... ]
+			$picks_ctrls   = (array) $this->request->getPost('add_ctrl');   // [ 'NomController', ... ]
+			$picks_actions = (array) $this->request->getPost('add_action'); // [ 'NomController::action', ... ]
 			$report = $this->_apply_scan($scanned, $db_ctrls, $picks_ctrls, $picks_actions);
 
 			$msg = sprintf(
-				$this->lang->line('Acl_scan_done')
+				tr('Acl_scan_done')
 					?: 'Scan ACL terminé : %d contrôleur(s) ajouté(s), %d action(s) ajoutée(s).',
 				$report['ctrls_added'],
 				$report['actions_added']
 			);
-			$this->session->set_flashdata('bulk_success', $msg);
-			ci_redirect($this->_controller_name . '/scan');
+			$this->session->setFlashdata('bulk_success', $msg);
+			$this->goTo($this->_controller_name . '/scan');
 			return;
 		}
 
 		// 5) Affichage de la prévisualisation
-		$this->data_view['title'] = $this->lang->line('GESTION_' . $this->_controller_name)
-			. ' : ' . ($this->lang->line('Acl_scan_title') ?: 'Synchronisation depuis le code');
+		$this->data_view['title'] = tr('GESTION_' . $this->_controller_name)
+			. ' : ' . (tr('Acl_scan_title') ?: 'Synchronisation depuis le code');
 		$this->data_view['scan_diff'] = $diff;
 		$this->data_view['scan_summary'] = array(
 			'files_scanned'   => count($scanned),
@@ -143,7 +143,7 @@ class Acl_controllers_controller extends MY_Controller {
 	}
 
 	/**
-	 * Scanne application/controllers/ et retourne un tableau
+	 * Scanne app/Controllers/ et retourne un tableau
 	 *   [ 'NomController' => [ 'method1', 'method2', ... ], ... ]
 	 *
 	 * Utilise token_get_all (pas d'instanciation = pas d'effet de bord
@@ -277,7 +277,7 @@ class Acl_controllers_controller extends MY_Controller {
 	/**
 	 * Retourne les actions héritées qui s'appliquent à un contrôleur donné.
 	 *
-	 * Les contrôleurs métier héritent de MY_Controller, qui fournit list/add/
+	 * Les contrôleurs métier héritent de CrudController, qui fournit list/add/
 	 * edit/delete/view/clear_filters/bulk. Mais toutes ne sont pertinentes
 	 * que si le contrôleur les autorise via $_autorize. On lit donc cette
 	 * propriété protégée par Reflection.
@@ -386,9 +386,9 @@ class Acl_controllers_controller extends MY_Controller {
 	}
 
 	/**
-	 * Whitelist des méthodes publiques de MY_Controller qui sont des actions
+	 * Whitelist des méthodes publiques de CrudController qui sont des actions
 	 * URL légitimes (= candidates à figurer dans acl_actions). Les autres
-	 * méthodes publiques de MY_Controller (set_ref_field, render_view, init,
+	 * méthodes publiques de CrudController (set_ref_field, render_view, init,
 	 * LoadModel, _set, _get…) sont des helpers techniques, pas des actions.
 	 *
 	 * @return array
@@ -415,6 +415,9 @@ class Acl_controllers_controller extends MY_Controller {
 			'Login',
 			// Eventuels helpers de routage
 			'Welcome',
+			// Classes de base (non routables)
+			'BaseController',
+			'CrudController',
 		);
 	}
 
@@ -577,7 +580,7 @@ class Acl_controllers_controller extends MY_Controller {
 	/**
 	 * Réinitialise un modèle avant un get_all() de KPI.
 	 *
-	 * MY_Controller::list() a posé sur le modèle un état (order en TABLEAU
+	 * CrudController::list() a posé sur le modèle un état (order en TABLEAU
 	 * pour la pile de tris vague 2, filter, pagination, global_search…)
 	 * qui ferait planter ou fausserait les comptages. On force ici un état
 	 * neutre : pas de filtre, pas de pagination, tri simple sur l'id.
@@ -717,7 +720,7 @@ class Acl_controllers_controller extends MY_Controller {
 			$warnings[] = (object) array(
 				'type'     => 'orphan_actions',
 				'severity' => 'danger',
-				'message'  => $this->lang->line('ACL_WARN_NO_ACTION')
+				'message'  => tr('ACL_WARN_NO_ACTION')
 					?: 'Contrôleur(s) sans aucune action déclarée :',
 				'items'    => $orphans,
 			);
@@ -726,7 +729,7 @@ class Acl_controllers_controller extends MY_Controller {
 			$warnings[] = (object) array(
 				'type'     => 'no_role',
 				'severity' => 'warning',
-				'message'  => $this->lang->line('ACL_WARN_NO_ROLE')
+				'message'  => tr('ACL_WARN_NO_ROLE')
 					?: 'Contrôleur(s) non utilisé(s) par un rôle :',
 				'items'    => $no_role,
 			);
@@ -735,7 +738,7 @@ class Acl_controllers_controller extends MY_Controller {
 			$warnings[] = (object) array(
 				'type'     => 'missing_file',
 				'severity' => 'warning',
-				'message'  => $this->lang->line('ACL_WARN_MISSING_FILE')
+				'message'  => tr('ACL_WARN_MISSING_FILE')
 					?: 'Contrôleur(s) déclaré(s) en base mais sans fichier PHP correspondant :',
 				'items'    => $missing_file,
 			);
@@ -755,8 +758,8 @@ class Acl_controllers_controller extends MY_Controller {
 	{
 		$this->_set('view_inprogress', 'edition/Acl_bulk_add_action_view');
 
-		$action_name = trim((string) $this->input->post('action_name'));
-		$confirm     = (int) $this->input->post('confirm') === 1;
+		$action_name = trim((string) $this->request->getPost('action_name'));
+		$confirm     = (int) $this->request->getPost('confirm') === 1;
 
 		// Récupération de tous les contrôleurs
 		$ctrls = $this->{$this->_model_name}->get_all();
@@ -770,11 +773,11 @@ class Acl_controllers_controller extends MY_Controller {
 		if ($action_name !== '') {
 			// Validation simple : alphanumérique + underscore (cohérent avec le style CI)
 			if (!preg_match('/^[A-Za-z][A-Za-z0-9_]{0,254}$/', $action_name)) {
-				$this->session->set_flashdata(
+				$this->session->setFlashdata(
 					'bulk_error',
-					$this->lang->line('Acl_controllers_controller_bulk_invalid')
+					tr('Acl_controllers_controller_bulk_invalid')
 				);
-				ci_redirect($this->_controller_name . '/bulk_add_action');
+				$this->goTo($this->_controller_name . '/bulk_add_action');
 				return;
 			}
 
@@ -810,22 +813,22 @@ class Acl_controllers_controller extends MY_Controller {
 					$inserted++;
 				}
 
-				$this->session->set_flashdata(
+				$this->session->setFlashdata(
 					'bulk_success',
 					sprintf(
-						$this->lang->line('Acl_controllers_controller_bulk_added_x'),
+						tr('Acl_controllers_controller_bulk_added_x'),
 						$inserted,
 						htmlspecialchars($action_name, ENT_QUOTES, 'UTF-8')
 					)
 				);
-				ci_redirect($this->_controller_name . '/list');
+				$this->goTo($this->_controller_name . '/list');
 				return;
 			}
 		}
 
-		$this->data_view['title']       = $this->lang->line($this->_controller_name)
+		$this->data_view['title']       = tr($this->_controller_name)
 		                                . ' : '
-		                                . $this->lang->line('Acl_controllers_controller_bulk_add_action');
+		                                . tr('Acl_controllers_controller_bulk_add_action');
 		$this->data_view['action_name'] = $action_name;
 		$this->data_view['preview']     = $preview;
 
