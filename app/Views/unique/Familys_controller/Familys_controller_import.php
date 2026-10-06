@@ -19,11 +19,11 @@ $has_preview = !empty($preview);
 
         <div class="grid grid_12">
             <h1 class="subtitle greydark">
-                <?php echo $this->lang->line($this->render_object->_getCi('_controller_name').'_'.$this->render_object->_getCi('_action'));?>
+                <?php echo tr($render_object->_getCi('_controller_name').'_'.$render_object->_getCi('_action'));?>
             </h1>
             <div class="nicdark_space20"></div>
             <h3 class="subtitle grey">
-                <?php echo $this->lang->line($this->render_object->_getCi('_controller_name').'_'.$this->render_object->_getCi('_action').'_subtitle');?>
+                <?php echo tr($render_object->_getCi('_controller_name').'_'.$render_object->_getCi('_action').'_subtitle');?>
             </h3>
             <div class="nicdark_space20"></div>
             <div class="nicdark_divider left big"><span class="nicdark_bg_orange nicdark_radius"></span></div>
@@ -41,20 +41,20 @@ $has_preview = !empty($preview);
             <div class="grid grid_12">
                 <div class="card">
                     <div class="card-body">
-                        <h5 class="card-title"><?php echo $this->lang->line('IMPORT_UPLOAD_TITLE'); ?></h5>
-                        <p class="card-text"><?php echo $this->lang->line('IMPORT_UPLOAD_HELP'); ?></p>
+                        <h5 class="card-title"><?php echo tr('IMPORT_UPLOAD_TITLE'); ?></h5>
+                        <p class="card-text"><?php echo tr('IMPORT_UPLOAD_HELP'); ?></p>
 
-                        <?php echo form_open_multipart(base_url($this->render_object->_getCi('_controller_name').'/import')); ?>
+                        <?php echo open_form_multipart(base_url($render_object->_getCi('_controller_name').'/import')); ?>
                             <div class="form-row">
                                 <div class="form-group col-md-8">
-                                    <label for="csv_file"><?php echo $this->lang->line('IMPORT_FILE_LABEL'); ?></label>
+                                    <label for="csv_file"><?php echo tr('IMPORT_FILE_LABEL'); ?></label>
                                     <input type="file" name="csv_file" id="csv_file" class="form-control-file" accept=".csv,text/csv" required>
-                                    <small class="form-text text-muted"><?php echo $this->lang->line('IMPORT_FILE_HELP'); ?></small>
+                                    <small class="form-text text-muted"><?php echo tr('IMPORT_FILE_HELP'); ?></small>
                                 </div>
                             </div>
                             <button type="submit" class="btn btn-primary">
                                 <i class="oi oi-data-transfer-upload"></i>
-                                <?php echo $this->lang->line('IMPORT_UPLOAD_BTN'); ?>
+                                <?php echo tr('IMPORT_UPLOAD_BTN'); ?>
                             </button>
                         <?php echo form_close(); ?>
                     </div>
@@ -76,34 +76,34 @@ $has_preview = !empty($preview);
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title">
-                            <?php echo $this->lang->line('IMPORT_PREVIEW_TITLE'); ?>
+                            <?php echo tr('IMPORT_PREVIEW_TITLE'); ?>
                             <small class="text-muted"> &mdash; <?php echo htmlspecialchars($orig_name, ENT_QUOTES, 'UTF-8'); ?></small>
                         </h5>
                         <p>
-                            <?php echo sprintf($this->lang->line('IMPORT_PREVIEW_STATS'),
+                            <?php echo sprintf(tr('IMPORT_PREVIEW_STATS'),
                                 $parse_stats['nb_lines'], $parse_stats['nb_families']); ?>
                         </p>
 
                         <div class="row">
                             <div class="col-md-2 text-center">
                                 <span class="badge badge-success" style="font-size:1.5em; padding:0.5em 1em;"><?php echo $nb_create; ?></span>
-                                <div><small><?php echo $this->lang->line('IMPORT_TO_CREATE'); ?></small></div>
+                                <div><small><?php echo tr('IMPORT_TO_CREATE'); ?></small></div>
                             </div>
                             <div class="col-md-2 text-center">
                                 <span class="badge badge-primary" style="font-size:1.5em; padding:0.5em 1em;"><?php echo $nb_update; ?></span>
-                                <div><small><?php echo $this->lang->line('IMPORT_TO_UPDATE'); ?></small></div>
+                                <div><small><?php echo tr('IMPORT_TO_UPDATE'); ?></small></div>
                             </div>
                             <div class="col-md-2 text-center">
                                 <span class="badge badge-info" style="font-size:1.5em; padding:0.5em 1em;"><?php echo $nb_reactivate; ?></span>
-                                <div><small><?php echo $this->lang->line('IMPORT_TO_REACTIVATE'); ?></small></div>
+                                <div><small><?php echo tr('IMPORT_TO_REACTIVATE'); ?></small></div>
                             </div>
                             <div class="col-md-2 text-center">
                                 <span class="badge badge-warning" style="font-size:1.5em; padding:0.5em 1em;"><?php echo $nb_mark; ?></span>
-                                <div><small><?php echo $this->lang->line('IMPORT_TO_MARK'); ?></small></div>
+                                <div><small><?php echo tr('IMPORT_TO_MARK'); ?></small></div>
                             </div>
                             <div class="col-md-2 text-center">
                                 <span class="badge badge-danger" style="font-size:1.5em; padding:0.5em 1em;"><?php echo $nb_errors; ?></span>
-                                <div><small><?php echo $this->lang->line('IMPORT_ERRORS'); ?></small></div>
+                                <div><small><?php echo tr('IMPORT_ERRORS'); ?></small></div>
                             </div>
                         </div>
                     </div>
@@ -123,7 +123,7 @@ $has_preview = !empty($preview);
                             <h5 class="mb-0">
                                 <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseCreate">
                                     <span class="badge badge-success"><?php echo $nb_create; ?></span>
-                                    <?php echo $this->lang->line('IMPORT_TO_CREATE_TITLE'); ?>
+                                    <?php echo tr('IMPORT_TO_CREATE_TITLE'); ?>
                                 </button>
                             </h5>
                         </div>
@@ -132,12 +132,12 @@ $has_preview = !empty($preview);
                                 <table class="table table-sm table-striped">
                                     <thead>
                                         <tr>
-                                            <th><?php echo $this->lang->line('code_famille_abcm') ?: 'Code famille ABCM'; ?></th>
-                                            <th><?php echo $this->lang->line('nom') ?: 'Nom'; ?></th>
-                                            <th><?php echo $this->lang->line('e_mail') ?: 'E-mail'; ?></th>
-                                            <th><?php echo $this->lang->line('ville') ?: 'Ville'; ?></th>
-                                            <th><?php echo $this->lang->line('ecole') ?: 'École'; ?></th>
-                                            <th><?php echo $this->lang->line('nb_enfants') ?: 'Enfants'; ?></th>
+                                            <th><?php echo tr('code_famille_abcm') ?: 'Code famille ABCM'; ?></th>
+                                            <th><?php echo tr('nom') ?: 'Nom'; ?></th>
+                                            <th><?php echo tr('e_mail') ?: 'E-mail'; ?></th>
+                                            <th><?php echo tr('ville') ?: 'Ville'; ?></th>
+                                            <th><?php echo tr('ecole') ?: 'École'; ?></th>
+                                            <th><?php echo tr('nb_enfants') ?: 'Enfants'; ?></th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -167,7 +167,7 @@ $has_preview = !empty($preview);
                             <h5 class="mb-0">
                                 <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseUpdate">
                                     <span class="badge badge-primary"><?php echo $nb_update; ?></span>
-                                    <?php echo $this->lang->line('IMPORT_TO_UPDATE_TITLE'); ?>
+                                    <?php echo tr('IMPORT_TO_UPDATE_TITLE'); ?>
                                 </button>
                             </h5>
                         </div>
@@ -187,7 +187,7 @@ $has_preview = !empty($preview);
                                         <ul class="mb-1 mt-1">
                                         <?php foreach($entry->fields_diff AS $field => $vv): ?>
                                             <li>
-                                                <strong><?php $lbl = $this->lang->line($field); echo htmlspecialchars($lbl ?: $field, ENT_QUOTES, 'UTF-8'); ?></strong> :
+                                                <strong><?php $lbl = tr($field); echo htmlspecialchars($lbl ?: $field, ENT_QUOTES, 'UTF-8'); ?></strong> :
                                                 <span class="text-danger" style="text-decoration:line-through"><?php echo htmlspecialchars($vv['old'], ENT_QUOTES, 'UTF-8') ?: '<em>(vide)</em>'; ?></span>
                                                 &rarr;
                                                 <span class="text-success"><?php echo htmlspecialchars($vv['new'], ENT_QUOTES, 'UTF-8') ?: '<em>(vide)</em>'; ?></span>
@@ -198,7 +198,7 @@ $has_preview = !empty($preview);
                                     <?php if (!empty($entry->members_diff['to_create'])): ?>
                                         <div><small class="text-success">
                                             <i class="oi oi-plus"></i>
-                                            <?php echo sprintf($this->lang->line('IMPORT_X_NEW_CHILDREN'), count($entry->members_diff['to_create'])); ?> :
+                                            <?php echo sprintf(tr('IMPORT_X_NEW_CHILDREN'), count($entry->members_diff['to_create'])); ?> :
                                             <?php
                                                 $names = [];
                                                 foreach($entry->members_diff['to_create'] AS $cm){
@@ -211,7 +211,7 @@ $has_preview = !empty($preview);
                                     <?php if (!empty($entry->members_diff['to_update'])): ?>
                                         <div><small class="text-primary">
                                             <i class="oi oi-pencil"></i>
-                                            <?php echo sprintf($this->lang->line('IMPORT_X_UPDATED_CHILDREN'), count($entry->members_diff['to_update'])); ?>
+                                            <?php echo sprintf(tr('IMPORT_X_UPDATED_CHILDREN'), count($entry->members_diff['to_update'])); ?>
                                         </small></div>
                                     <?php endif; ?>
                                 </div>
@@ -228,13 +228,13 @@ $has_preview = !empty($preview);
                             <h5 class="mb-0">
                                 <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseReactivate">
                                     <span class="badge badge-info"><?php echo $nb_reactivate; ?></span>
-                                    <?php echo $this->lang->line('IMPORT_TO_REACTIVATE_TITLE'); ?>
+                                    <?php echo tr('IMPORT_TO_REACTIVATE_TITLE'); ?>
                                 </button>
                             </h5>
                         </div>
                         <div id="collapseReactivate" class="collapse" data-parent="#importAccordion">
                             <div class="card-body">
-                                <p class="text-muted small"><?php echo $this->lang->line('IMPORT_TO_REACTIVATE_HELP'); ?></p>
+                                <p class="text-muted small"><?php echo tr('IMPORT_TO_REACTIVATE_HELP'); ?></p>
                                 <ul>
                                 <?php foreach($preview['to_reactivate'] AS $entry): ?>
                                     <li>
@@ -258,20 +258,20 @@ $has_preview = !empty($preview);
                             <h5 class="mb-0">
                                 <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseMark">
                                     <span class="badge badge-warning"><?php echo $nb_mark; ?></span>
-                                    <?php echo $this->lang->line('IMPORT_TO_MARK_TITLE'); ?>
+                                    <?php echo tr('IMPORT_TO_MARK_TITLE'); ?>
                                 </button>
                             </h5>
                         </div>
                         <div id="collapseMark" class="collapse" data-parent="#importAccordion">
                             <div class="card-body">
-                                <p class="text-muted small"><?php echo $this->lang->line('IMPORT_TO_MARK_HELP'); ?></p>
+                                <p class="text-muted small"><?php echo tr('IMPORT_TO_MARK_HELP'); ?></p>
                                 <table class="table table-sm table-striped">
                                     <thead>
                                         <tr>
-                                            <th><?php echo $this->lang->line('code_famille_abcm') ?: 'Code famille ABCM'; ?></th>
-                                            <th><?php echo $this->lang->line('nom') ?: 'Nom'; ?></th>
-                                            <th><?php echo $this->lang->line('e_mail') ?: 'E-mail'; ?></th>
-                                            <th><?php echo $this->lang->line('ecole') ?: 'École'; ?></th>
+                                            <th><?php echo tr('code_famille_abcm') ?: 'Code famille ABCM'; ?></th>
+                                            <th><?php echo tr('nom') ?: 'Nom'; ?></th>
+                                            <th><?php echo tr('e_mail') ?: 'E-mail'; ?></th>
+                                            <th><?php echo tr('ecole') ?: 'École'; ?></th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -299,7 +299,7 @@ $has_preview = !empty($preview);
                             <h5 class="mb-0">
                                 <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseErrors">
                                     <span class="badge badge-danger"><?php echo $nb_errors; ?></span>
-                                    <?php echo $this->lang->line('IMPORT_ERRORS_TITLE'); ?>
+                                    <?php echo tr('IMPORT_ERRORS_TITLE'); ?>
                                 </button>
                             </h5>
                         </div>
@@ -338,22 +338,22 @@ $has_preview = !empty($preview);
                 <div class="card">
                     <div class="card-body">
                         <?php if ($nb_total_actions > 0): ?>
-                            <p><strong><?php echo sprintf($this->lang->line('IMPORT_CONFIRM_QUESTION'), $nb_total_actions); ?></strong></p>
-                            <?php echo form_open(base_url($this->render_object->_getCi('_controller_name').'/import_apply')); ?>
+                            <p><strong><?php echo sprintf(tr('IMPORT_CONFIRM_QUESTION'), $nb_total_actions); ?></strong></p>
+                            <?php echo open_form(base_url($render_object->_getCi('_controller_name').'/import_apply')); ?>
                                 <input type="hidden" name="stored_path" value="<?php echo htmlspecialchars($stored_path, ENT_QUOTES, 'UTF-8'); ?>">
                                 <button type="submit" class="btn btn-primary"
-                                        onclick="return confirm('<?php echo $this->lang->line('IMPORT_CONFIRM_JS'); ?>');">
+                                        onclick="return confirm('<?php echo tr('IMPORT_CONFIRM_JS'); ?>');">
                                     <i class="oi oi-check"></i>
-                                    <?php echo $this->lang->line('IMPORT_CONFIRM_BTN'); ?>
+                                    <?php echo tr('IMPORT_CONFIRM_BTN'); ?>
                                 </button>
-                                <a href="<?php echo base_url($this->render_object->_getCi('_controller_name').'/import'); ?>" class="btn btn-secondary">
-                                    <?php echo $this->lang->line('IMPORT_CANCEL_BTN'); ?>
+                                <a href="<?php echo base_url($render_object->_getCi('_controller_name').'/import'); ?>" class="btn btn-secondary">
+                                    <?php echo tr('IMPORT_CANCEL_BTN'); ?>
                                 </a>
                             <?php echo form_close(); ?>
                         <?php else: ?>
-                            <p class="text-muted"><?php echo $this->lang->line('IMPORT_NOTHING_TO_DO'); ?></p>
-                            <a href="<?php echo base_url($this->render_object->_getCi('_controller_name').'/import'); ?>" class="btn btn-secondary">
-                                <?php echo $this->lang->line('IMPORT_BACK_BTN'); ?>
+                            <p class="text-muted"><?php echo tr('IMPORT_NOTHING_TO_DO'); ?></p>
+                            <a href="<?php echo base_url($render_object->_getCi('_controller_name').'/import'); ?>" class="btn btn-secondary">
+                                <?php echo tr('IMPORT_BACK_BTN'); ?>
                             </a>
                         <?php endif; ?>
                     </div>

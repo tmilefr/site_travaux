@@ -38,7 +38,7 @@ $has_changes = (
                 <div>
                     <span class="badge badge-info acl-scan__mode">
                         <span class="oi oi-magnifying-glass" aria-hidden="true"></span>
-                        <?php echo $this->lang->line('Acl_scan_label') ?: 'Scan ACL'; ?>
+                        <?php echo tr('Acl_scan_label') ?: 'Scan ACL'; ?>
                     </span>
                     <h1 class="subtitle greydark">
                         <span class="oi oi-loop-circular" aria-hidden="true"></span>
@@ -47,7 +47,7 @@ $has_changes = (
                 </div>
                 <a href="<?php echo $base_list; ?>" class="btn btn-light">
                     <span class="oi oi-arrow-left" aria-hidden="true"></span>
-                    <?php echo $this->lang->line('LIST') ?: 'Retour à la liste'; ?>
+                    <?php echo tr('LIST') ?: 'Retour à la liste'; ?>
                 </a>
             </div>
             <div class="nicdark_divider left big">
@@ -58,7 +58,7 @@ $has_changes = (
         <?php /* ============================================================
                 FLASH MESSAGES (succès après application)
            ============================================================ */ ?>
-        <?php if ($flash = $this->session->flashdata('bulk_success')) { ?>
+        <?php if ($flash = session()->getFlashdata('bulk_success')) { ?>
             <div class="grid grid_12">
                 <div class="alert alert-success">
                     <span class="oi oi-check" aria-hidden="true"></span>
@@ -74,22 +74,22 @@ $has_changes = (
             <div class="acl-summary-pill">
                 <span class="oi oi-file" aria-hidden="true"></span>
                 <strong><?php echo (int) $summary['files_scanned']; ?></strong>
-                <?php echo $this->lang->line('Acl_scan_files') ?: 'fichier(s) analysé(s)'; ?>
+                <?php echo tr('Acl_scan_files') ?: 'fichier(s) analysé(s)'; ?>
             </div>
             <div class="acl-summary-pill acl-summary-pill--success">
                 <span class="oi oi-plus" aria-hidden="true"></span>
                 <strong><?php echo (int) $summary['new_ctrls']; ?></strong>
-                <?php echo $this->lang->line('Acl_scan_new_ctrls') ?: 'nouveau(x) contrôleur(s)'; ?>
+                <?php echo tr('Acl_scan_new_ctrls') ?: 'nouveau(x) contrôleur(s)'; ?>
             </div>
             <div class="acl-summary-pill acl-summary-pill--info">
                 <span class="oi oi-bolt" aria-hidden="true"></span>
                 <strong><?php echo (int) $summary['new_actions']; ?></strong>
-                <?php echo $this->lang->line('Acl_scan_new_actions') ?: 'nouvelle(s) action(s)'; ?>
+                <?php echo tr('Acl_scan_new_actions') ?: 'nouvelle(s) action(s)'; ?>
             </div>
             <div class="acl-summary-pill acl-summary-pill--warning">
                 <span class="oi oi-warning" aria-hidden="true"></span>
                 <strong><?php echo (int) ($summary['obsolete_ctrls'] + $summary['obsolete_acts']); ?></strong>
-                <?php echo $this->lang->line('Acl_scan_obsolete') ?: 'élément(s) obsolète(s)'; ?>
+                <?php echo tr('Acl_scan_obsolete') ?: 'élément(s) obsolète(s)'; ?>
             </div>
         </div>
 
@@ -100,7 +100,7 @@ $has_changes = (
             <div class="grid grid_12">
                 <div class="alert alert-success acl-scan__ok">
                     <span class="oi oi-check" aria-hidden="true"></span>
-                    <strong><?php echo $this->lang->line('Acl_scan_in_sync') ?: 'La base ACL est synchronisée avec le code.'; ?></strong>
+                    <strong><?php echo tr('Acl_scan_in_sync') ?: 'La base ACL est synchronisée avec le code.'; ?></strong>
                 </div>
             </div>
         <?php } ?>
@@ -111,7 +111,7 @@ $has_changes = (
            ============================================================ */ ?>
         <?php if ($has_changes) { ?>
 
-            <?php echo form_open($ctrl_route . '/scan', array('id' => 'acl-scan-form')); ?>
+            <?php echo open_form($ctrl_route . '/scan', array('id' => 'acl-scan-form')); ?>
             <input type="hidden" name="confirm" value="1"/>
 
             <?php /* ---- Nouveaux contrôleurs ------------------------------ */ ?>
@@ -120,7 +120,7 @@ $has_changes = (
                     <div class="card shadow-sm acl-scan__card acl-scan__card--new-ctrls">
                         <div class="card-header acl-scan__card-header">
                             <span class="oi oi-plus" aria-hidden="true"></span>
-                            <?php echo $this->lang->line('Acl_scan_new_ctrls_title')
+                            <?php echo tr('Acl_scan_new_ctrls_title')
                                 ?: 'Contrôleurs absents de la base'; ?>
                             <span class="badge badge-success ml-2">
                                 <?php echo count($diff['new_ctrls']); ?>
@@ -128,7 +128,7 @@ $has_changes = (
                             <button type="button"
                                     class="btn btn-sm btn-link acl-scan__select-all"
                                     data-target="new-ctrls">
-                                <?php echo $this->lang->line('Acl_scan_select_all') ?: 'Tout cocher'; ?>
+                                <?php echo tr('Acl_scan_select_all') ?: 'Tout cocher'; ?>
                             </button>
                         </div>
                         <ul class="list-group list-group-flush">
@@ -148,7 +148,7 @@ $has_changes = (
                                         </span>
                                         <span class="acl-scan__row-meta text-muted">
                                             <?php echo count($methods); ?>
-                                            <?php echo $this->lang->line('Acl_scan_actions_short') ?: 'action(s)'; ?>
+                                            <?php echo tr('Acl_scan_actions_short') ?: 'action(s)'; ?>
                                         </span>
                                     </label>
 
@@ -181,7 +181,7 @@ $has_changes = (
                     <div class="card shadow-sm acl-scan__card acl-scan__card--new-actions">
                         <div class="card-header acl-scan__card-header">
                             <span class="oi oi-bolt" aria-hidden="true"></span>
-                            <?php echo $this->lang->line('Acl_scan_new_actions_title')
+                            <?php echo tr('Acl_scan_new_actions_title')
                                 ?: 'Actions manquantes sur des contrôleurs existants'; ?>
                             <span class="badge badge-info ml-2">
                                 <?php echo array_sum(array_map(function($x){ return count($x['actions']); }, $diff['new_actions'])); ?>
@@ -189,7 +189,7 @@ $has_changes = (
                             <button type="button"
                                     class="btn btn-sm btn-link acl-scan__select-all"
                                     data-target="new-actions">
-                                <?php echo $this->lang->line('Acl_scan_select_all') ?: 'Tout cocher'; ?>
+                                <?php echo tr('Acl_scan_select_all') ?: 'Tout cocher'; ?>
                             </button>
                         </div>
                         <ul class="list-group list-group-flush">
@@ -228,10 +228,10 @@ $has_changes = (
                 <div class="acl-scan__actions">
                     <button type="submit" class="btn btn-primary">
                         <span class="oi oi-check" aria-hidden="true"></span>
-                        <?php echo $this->lang->line('Acl_scan_apply') ?: 'Appliquer la sélection'; ?>
+                        <?php echo tr('Acl_scan_apply') ?: 'Appliquer la sélection'; ?>
                     </button>
                     <a href="<?php echo $base_list; ?>" class="btn btn-link text-muted">
-                        <?php echo $this->lang->line('CANCEL') ?: 'Annuler'; ?>
+                        <?php echo tr('CANCEL') ?: 'Annuler'; ?>
                     </a>
                 </div>
             </div>
@@ -248,10 +248,10 @@ $has_changes = (
                 <div class="card shadow-sm acl-scan__card acl-scan__card--obsolete">
                     <div class="card-header acl-scan__card-header acl-scan__card-header--warn">
                         <span class="oi oi-warning" aria-hidden="true"></span>
-                        <?php echo $this->lang->line('Acl_scan_obsolete_title')
+                        <?php echo tr('Acl_scan_obsolete_title')
                             ?: 'Éléments en base sans équivalent dans le code'; ?>
                         <small class="text-muted ml-2">
-                            <?php echo $this->lang->line('Acl_scan_obsolete_note')
+                            <?php echo tr('Acl_scan_obsolete_note')
                                 ?: '(suppression manuelle pour ne casser aucune règle ACL)'; ?>
                         </small>
                     </div>
@@ -262,12 +262,12 @@ $has_changes = (
                                 <strong><?php echo htmlspecialchars($class, ENT_QUOTES, 'UTF-8'); ?></strong>
                                 <small class="text-muted">
                                     (id <?php echo (int) $row->id; ?> —
-                                    <?php echo $this->lang->line('Acl_scan_no_php_file') ?: 'aucun fichier PHP correspondant'; ?>)
+                                    <?php echo tr('Acl_scan_no_php_file') ?: 'aucun fichier PHP correspondant'; ?>)
                                 </small>
                                 <a href="<?php echo base_url($ctrl_route . '/edit/' . (int) $row->id); ?>"
                                    class="btn btn-link btn-sm">
                                     <span class="oi oi-pencil"></span>
-                                    <?php echo $this->lang->line('edit') ?: 'éditer'; ?>
+                                    <?php echo tr('edit') ?: 'éditer'; ?>
                                 </a>
                             </li>
                         <?php } ?>
@@ -276,7 +276,7 @@ $has_changes = (
                                 <span class="oi oi-layers text-muted" aria-hidden="true"></span>
                                 <strong><?php echo htmlspecialchars($class, ENT_QUOTES, 'UTF-8'); ?></strong>
                                 <small class="text-muted">
-                                    — <?php echo $this->lang->line('Acl_scan_obsolete_methods') ?: 'méthodes absentes du code :'; ?>
+                                    — <?php echo tr('Acl_scan_obsolete_methods') ?: 'méthodes absentes du code :'; ?>
                                 </small>
                                 <div class="acl-scan__methods">
                                     <?php foreach ($info['actions'] as $m) { ?>

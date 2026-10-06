@@ -28,9 +28,6 @@ process.loc
 *.csv
 *.pdf
 
-# Configuration locale / sensible (non versionnee)
-app/Config/legacy/secured.php
-
 /public/files/img/team
 php_errors.log
 

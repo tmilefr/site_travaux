@@ -10,16 +10,13 @@ namespace App\Models;
  */
 class FamilyImport_model extends Core_model
 {
-	function __construct()
-	{
-		parent::__construct();
+	protected $table = 'family_import';
+	protected $primaryKey = 'id';
+	protected $order = 'created';
+	protected $direction = 'desc';
+	protected $json = 'FamilyImport.json';
 
-		$this->_set('table',     'family_import');
-		$this->_set('key',       'id');
-		$this->_set('order',     'created');
-		$this->_set('direction', 'desc');
-		$this->_set('json',      'FamilyImport.json');
-	}
+
 
 	/**
 	 * Liste des derniers imports, plus récent en premier.
@@ -29,13 +26,9 @@ class FamilyImport_model extends Core_model
 	 */
 	function GetLastImports($limit = 20)
 	{
-		$query = $this->db->select('*')
-			->from($this->table)
-			->order_by('created', 'DESC')
-			->limit($limit)
-			->get();
-		$this->_debug_array[] = $this->db->last_query();
+		$query = $this->db->table($this->table)->select('*')->orderBy('created', 'DESC')->limit($limit)->get();
+		$this->log();
 
-		return ($query->num_rows() > 0) ? $query->result() : [];
+		return ($query->getNumRows() > 0) ? $query->getResult() : [];
 	}
 }

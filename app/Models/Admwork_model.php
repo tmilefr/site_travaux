@@ -3,22 +3,17 @@
 namespace App\Models;
 class Admwork_model extends Core_model{
 	
-	function __construct(){
-		parent::__construct();
-		
-		$this->_set('table'	, 'travaux');
-		$this->_set('key'	, 'id');
-		$this->_set('order'	, 'name');
-		$this->_set('direction'	, 'desc');
-		$this->_set('json'	, 'Travaux.json');
-	}
+	protected $table = 'travaux';
+	protected $primaryKey = 'id';
+	protected $order = 'name';
+	protected $direction = 'desc';
+	protected $json = 'Travaux.json';
+
+
 
 
 	function DraftPublication($civil_year){
-		$this->db->set('statut', 1);
-		$this->db->where('statut', 0);
-		$this->db->where("civil_year", $civil_year );
-		$this->db->update($this->table);
+		$this->tb()->set('statut', 1)->where('statut', 0)->where('civil_year', $civil_year)->update();
 	}
 
 /**
@@ -32,40 +27,33 @@ class Admwork_model extends Core_model{
 	 * @return array|false
 	 */
 	function GetFiltered($civil_year, $schools, $exclude_types = []){ //'can'
-		$this->db->order_by('date_travaux','DESC');
-		$this->db->select('*')
-			->from($this->table)
+		$b = $this->tb()->select('*')
 			->where("civil_year IN ('".$civil_year."','2025-2026')")
-			->where("statut", 1 )
-			->where_in('accespar', $schools);
+			->where('statut', 1)
+			->whereIn('accespar', $schools)
+			->orderBy('date_travaux', 'DESC');
 		if (!empty($exclude_types)){
-			$this->db->where_not_in('type', $exclude_types);
+			$b->whereNotIn('type', $exclude_types);
 		}
-		$query = $this->db->get();
-		$this->_debug_array[] = $this->db->last_query();
-		if ($query->num_rows() > 0)
+		$query = $b->get();
+		$this->log();
+		if ($query->getNumRows() > 0)
 		{
-			return $query->result();
+			return $query->getResult();
 		}
 		return false;
 	}
 
 	function GetMax($id_travaux){
 		//nb_inscrits_max
-		$data=$this->db->select('nb_inscrits_max')
-				->from($this->table)
-				->where('id',$id_travaux)
-				->get();
-		$this->_debug_array[] = $this->db->last_query();
-		return (($data->num_rows()) ? $data->result()[0]:FALSE);				
+		$data=$this->db->table($this->table)->select('nb_inscrits_max')->where('id',$id_travaux)->get();
+		$this->log();
+		return (($data->getNumRows()) ? $data->getResult()[0]:FALSE);				
 	}
 
 	function stats(){
-		$datas = $this->db->select("count(*) AS nb,type")
-		->group_by("type")
-		->get($this->table)
-		->result();
-		$this->_debug_array[] = $this->db->last_query();
+		$datas = $this->db->table($this->table)->select("count(*) AS nb,type")->groupBy("type")->get()->getResult();
+		$this->log();
 		return $datas;
 	}
 
@@ -85,15 +73,8 @@ class Admwork_model extends Core_model{
 	 */
 	public function GetReferentFamily($id_travaux)
 	{
-		$row = $this->db->select('famille.*, groupes_member.name AS gm_name, groupes_member.surname AS gm_surname, groupes_member.email AS gm_email')
-			->from('travaux')
-			->join('trombi',         'trombi.id = travaux.referent_travaux', 'inner')
-			->join('groupes_member', 'groupes_member.id = trombi.ref',       'inner')
-			->join('famille',        'famille.id = groupes_member.id_fam',   'inner')
-			->where('travaux.id', (int) $id_travaux)
-			->get()
-			->row();
-		$this->_debug_array[] = $this->db->last_query();
+		$row = $this->db->table('travaux')->select('famille.*, groupes_member.name AS gm_name, groupes_member.surname AS gm_surname, groupes_member.email AS gm_email')->join('trombi',         'trombi.id = travaux.referent_travaux', 'inner')->join('groupes_member', 'groupes_member.id = trombi.ref',       'inner')->join('famille',        'famille.id = groupes_member.id_fam',   'inner')->where('travaux.id', (int) $id_travaux)->get()->getRow();
+		$this->log();
 
 		return $row ?: null;
 	}
@@ -106,17 +87,10 @@ class Admwork_model extends Core_model{
 	 */
 	public function GetWorksAsReferent($id_fam)
 	{
-		$data = $this->db->select('travaux.*')
-			->from('travaux')
-			->join('trombi',         'trombi.id = travaux.referent_travaux', 'inner')
-			->join('groupes_member', 'groupes_member.id = trombi.ref',       'inner')
-			->where('groupes_member.id_fam', (int) $id_fam)
-			->where('travaux.archived !=', 1)
-			->order_by('travaux.date_travaux', 'DESC')
-			->get();
-		$this->_debug_array[] = $this->db->last_query();
+		$data = $this->db->table('travaux')->select('travaux.*')->join('trombi',         'trombi.id = travaux.referent_travaux', 'inner')->join('groupes_member', 'groupes_member.id = trombi.ref',       'inner')->where('groupes_member.id_fam', (int) $id_fam)->where('travaux.archived !=', 1)->orderBy('travaux.date_travaux', 'DESC')->get();
+		$this->log();
 
-		return ($data->num_rows()) ? $data->result() : [];
+		return ($data->getNumRows()) ? $data->getResult() : [];
 	}
 
 	/**
@@ -132,14 +106,9 @@ class Admwork_model extends Core_model{
 	 */
 	function ArchiveOldWorks($grace_days = 30){
 		$cutoff = date('Y-m-d', strtotime('-'.(int)$grace_days.' days'));
-		$this->db->set('archived', 1)
-			->set('updated', date('Y-m-d H:i:s'))
-			->where('archived !=', 1)
-			->where('type !=', 'URG')
-			->where('date_travaux <', $cutoff)
-			->update($this->table);
-		$this->_debug_array[] = $this->db->last_query();
-		return $this->db->affected_rows();
+		$this->db->table($this->table)->set('archived', 1)->set('updated', date('Y-m-d H:i:s'))->where('archived !=', 1)->where('type !=', 'URG')->where('date_travaux <', $cutoff)->update();
+		$this->log();
+		return $this->db->affectedRows();
 	}
 
 	/**
@@ -156,20 +125,10 @@ class Admwork_model extends Core_model{
 		$target_date = date('Y-m-d', strtotime('+' . (int) $days_before . ' days'));
 		$today       = date('Y-m-d');
 
-		$data = $this->db->select('travaux.*')
-			->from('travaux')
-			->where('travaux.archived !=', 1)
-			->where('travaux.ref_mail_sent_at IS NULL', null, false)
-			->where('travaux.date_travaux >=', $today)
-			->where('travaux.date_travaux <=', $target_date)
-			->where_in('travaux.type', ['MEN', 'TRA'])
-			->where('travaux.referent_travaux !=', 0)
-			->where('travaux.referent_travaux IS NOT NULL', null, false)
-			->order_by('travaux.date_travaux', 'ASC')
-			->get();
-		$this->_debug_array[] = $this->db->last_query();
+		$data = $this->db->table('travaux')->select('travaux.*')->where('travaux.archived !=', 1)->where('travaux.ref_mail_sent_at IS NULL', null, false)->where('travaux.date_travaux >=', $today)->where('travaux.date_travaux <=', $target_date)->whereIn('travaux.type', ['MEN', 'TRA'])->where('travaux.referent_travaux !=', 0)->where('travaux.referent_travaux IS NOT NULL', null, false)->orderBy('travaux.date_travaux', 'ASC')->get();
+		$this->log();
 
-		return ($data->num_rows()) ? $data->result() : [];
+		return ($data->getNumRows()) ? $data->getResult() : [];
 	}
 
 	/**
@@ -180,9 +139,8 @@ class Admwork_model extends Core_model{
 	 */
 	public function MarkRefMailSent($id_travaux)
 	{
-		$this->db->where('id', (int) $id_travaux)
-			->update('travaux', ['ref_mail_sent_at' => date('Y-m-d H:i:s')]);
-		$this->_debug_array[] = $this->db->last_query();
+		$this->db->table('travaux')->where('id', (int) $id_travaux)->update(['ref_mail_sent_at' => date('Y-m-d H:i:s')]);
+		$this->log();
 	}
 
 	/**
@@ -194,9 +152,8 @@ class Admwork_model extends Core_model{
 	 */
 	public function MarkAlertSent($id_travaux)
 	{
-		$this->db->where('id', (int) $id_travaux)
-			->update('travaux', ['alert_sent_at' => date('Y-m-d H:i:s')]);
-		$this->_debug_array[] = $this->db->last_query();
+		$this->db->table('travaux')->where('id', (int) $id_travaux)->update(['alert_sent_at' => date('Y-m-d H:i:s')]);
+		$this->log();
 	}
 
 
@@ -211,12 +168,12 @@ class Admwork_model extends Core_model{
      * @return stdClass|null
      */
     public function GetWorkById($id_work, $expected_type = null){
-        $this->db->from($this->table)->where($this->key, (int) $id_work);
+        $b = $this->tb()->where($this->primaryKey, (int) $id_work);
         if ($expected_type !== null){
-            $this->db->where('type', $expected_type);
+            $b->where('type', $expected_type);
         }
-        $row = $this->db->get()->row();
-        $this->_debug_array[] = $this->db->last_query();
+        $row = $b->get()->getRow();
+        $this->log();
         return $row ?: null;
     }
 }

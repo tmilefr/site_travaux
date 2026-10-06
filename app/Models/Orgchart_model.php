@@ -3,51 +3,37 @@
 namespace App\Models;
 class Orgchart_model extends Core_model{
 	
-	function __construct(){
-		parent::__construct();
-		
-		$this->_set('table'	, 'groupes');
-		$this->_set('key'	, 'id');
-		$this->_set('order'	, 'title');
-		$this->_set('direction'	, 'desc');
-		$this->_set('json'	, 'Groupes.json');
-	}
+	protected $table = 'groupes';
+	protected $primaryKey = 'id';
+	protected $order = 'title';
+	protected $direction = 'desc';
+	protected $json = 'Groupes.json';
+
+
 
 	function UpdateHit($id){
 		$this->db->query('UPDATE groupes SET hit = 0');
-		$this->_debug_array[] = $this->db->last_query();
+		$this->log();
 		$this->db->query('UPDATE groupes SET hit = 1 WHERE id = '.$id);
-		$this->_debug_array[] = $this->db->last_query();
+		$this->log();
 	}
 
 	function GetHit(){
-		$this->db->select('*')
-		->from($this->table)
-		->where('hit', '1');
-		$datas = $this->db->get()->row();
-		$this->_debug_array[] = $this->db->last_query();
+		$datas = $this->tb()->where('hit', '1')->get()->getRow();
+		$this->log();
 		return $datas;	
 	}
 
 	function GetMembers($id_grp, $classif = false ){
 		$members = [];
-		$data=$this->db->select('*')
-		->from('trombi')
-		->where('trombi.id_grp', $id_grp)
-		->order_by('`trombi`.`id` ASC')
-		->get();
-		if ($data->num_rows()){
+		$data=$this->db->table('trombi')->select('*')->where('trombi.id_grp', $id_grp)->orderBy('`trombi`.`id` ASC')->get();
+		if ($data->getNumRows()){
 			//SELECT `famille`.`nom`,CONCAT_WS(\"_\",`members`.`id`,`famille`.`id`) AS id_fam,  CONCAT_WS(\" \",`members`.`nom`, `members`.`prenom`) AS nom_prenom FROM `famille` LEFT JOIN `members` ON `members`.`id_fam`= `famille`.`id` ORDER BY `nom_prenom` DESC
-			foreach($data->result() AS $member){
+			foreach($data->getResult() AS $member){
 				if ($member->nom){
-					$family = $this->db->select('CONCAT_WS("_",`members`.`id`,`members`.`id_fam`) AS reference, `famille`.`nom`, CONCAT_WS(" ",`members`.`nom`, `members`.`prenom`) AS nom_prenom')
-					->from('famille')
-					->join('members','`members`.`id_fam`= `famille`.`id`','left')
-					->where('CONCAT_WS("_",`members`.`id`,`members`.`id_fam`) = "'.$member->nom.'" OR `famille`.`id` = "'.$member->nom.'"' )
-					->order_by('`members`.`id` ASC')
-					->get();				
+					$family = $this->db->table('famille')->select('CONCAT_WS("_",`members`.`id`,`members`.`id_fam`) AS reference, `famille`.`nom`, CONCAT_WS(" ",`members`.`nom`, `members`.`prenom`) AS nom_prenom')->join('members','`members`.`id_fam`= `famille`.`id`','left')->where('CONCAT_WS("_",`members`.`id`,`members`.`id_fam`) = "'.$member->nom.'" OR `famille`.`id` = "'.$member->nom.'"')->orderBy('`members`.`id` ASC')->get();				
 					//TODO : si plus de 1 réponse => nok !	
-					$member->family = $family->row();
+					$member->family = $family->getRow();
 				}
 				if ($classif)
 					$members[$member->classif][] = $member;

@@ -23,23 +23,21 @@ class element_checkboxdb extends element
 
 	public function __construct(){
 		parent::__construct();
-        $this->CI =& get_instance();
         $this->_loadModel();
 	}
 
     public function __destruct()
     {
-        unset($this->CI);
     }
 
     function _getInBase(){
         $this->_loadModel();
         $values = [];
-        $id = $this->CI->render_object->_get('id');
+        $id = $this->render_object->_get('id');
         if ($id){
-			$this->CI->{$this->model}->_set('filter', [$this->foreignkey => $id ]);
-			$this->CI->{$this->model}->_set('order', $this->foreignkey);
-			$dba_data = $this->CI->{$this->model}->get_all();
+			$this->mdl()->_set('filter', [$this->foreignkey => $id ]);
+			$this->mdl()->_set('order', $this->foreignkey);
+			$dba_data = $this->mdl()->get_all();
             foreach($dba_data AS $key=>$obj){
                 $values[] = $obj->{$this->ref};
             }
@@ -59,28 +57,27 @@ class element_checkboxdb extends element
                                 '.$value.'
                                 </label>
                             </div>';
-                //$this->CI->bootstrap_tools->input_checkbox($this->name, $value);
+                //$this->RenderTools->input_checkbox($this->name, $value);
             }
         }
 		return $element;
 	}
 
     private function _loadModel(){
-        if (!isset($this->CI->{$this->model}))
-            $this->CI->load->model($this->model);
+        // Le modèle est instancié à la demande par mdl()
     }
 	
 	public function PrepareForDBA($value){
         $this->_loadModel();
         $src_post = json_encode($value);
-        $id = $this->CI->render_object->_get('id');
-        $this->CI->{$this->model}->DeleteLink($this->foreignkey, $id);
+        $id = $this->render_object->_get('id');
+        $this->mdl()->DeleteLink($this->foreignkey, $id);
         foreach($value AS $key=>$value){
             $obj = new \stdClass();
             $obj->{$this->foreignkey} = $id;
             $obj->{$this->ref} = $value;
             $obj->created = date('Y-m-d H:i:s');
-            $this->CI->{$this->model}->post($obj);
+            $this->mdl()->post($obj);
         }
 		return $src_post;
 	}
@@ -98,8 +95,8 @@ class element_checkboxdb extends element
 
     public function AfterExec($datas){
         $this->_loadModel();
-        if ($this->CI->render_object->_get('form_mod') != 'edit')
-		    $this->CI->{$this->model}->SetLink($this->foreignkey, $datas['id']);
+        if ($this->render_object->_get('form_mod') != 'edit')
+		    $this->mdl()->SetLink($this->foreignkey, $datas['id']);
 	}
 
 }

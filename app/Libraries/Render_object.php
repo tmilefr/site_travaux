@@ -7,9 +7,10 @@ use App\Models\Core_model;
 
 
 #[\AllowDynamicProperties]
-Class Render_object{
+class Render_object{
 
-	protected $CI 		= NULL; //Controller instance 
+	/** Contrôleur courant (pour _getCi) */
+	protected $controller = NULL;
 	protected $datamodel= NULL; //Name of datamodel
 	protected $id 		= NULL; //id of active element
 	protected $dba_data = NULL; //Data from DATABASE from id element
@@ -27,32 +28,14 @@ Class Render_object{
 
 	protected $_options = []; //herite from WV_Controller, all option in progress
 	
-	private static $instance;
-
-	/**
-	 * Get the Bootstrap_tools singleton
-	 *
-	 * @static
-	 * @return	object
-	 */
-	public static function &get_instance()
+	public function __construct(Bootstrap_tools $tools)
 	{
-		return self::$instance;
-	}
-
-	public function __construct()
-	{
-		//$this->CI =& get_instance();
-		self::$instance =& $this;
-		//$this->CI =& get_instance();
-		$this->RenderTools = new Bootstrap_tools();
-
+		$this->RenderTools = $tools;
 	}
 	
 	public function SetOption($_options){
 		$this->_options['filter'] 		= $_options['filter']; //$this->CI->session->userdata($this->CI->set_ref_field('filter'));
 		$this->_options['direction'] 	= $_options['direction']; //$this->CI->session->userdata($this->CI->set_ref_field('direction'));
-		$this->_options['config'] 		= $_options['config'];//$this->CI->config
 	}
 
 	public function _set($field,$value)
@@ -76,7 +59,7 @@ Class Render_object{
 	}	
 
 	public function In_maintenance(){
-		if ($this->_options['config']->item('maintenance'))
+		if (config('Travaux')->maintenance)
 			return true;
 		else
 			return false;
@@ -90,10 +73,10 @@ Class Render_object{
 		$key_value ='';
 		$element_menu = '';
 		if ($data){	
-			$key_value = $data->{$this->_model[$this->datamodel]->_get('key')};
+			$key_value = $data->{$this->_model[$this->datamodel]->_get('primaryKey')};
 		} else {
 			if (isset($this->dba_data)){ // try to check database
-				$key_value = $this->dba_data->{$this->_model[$this->datamodel]->_get('key')};
+				$key_value = $this->dba_data->{$this->_model[$this->datamodel]->_get('primaryKey')};
 			}
 		}		
 		if ($key_value)
@@ -155,7 +138,7 @@ Class Render_object{
 		// Le clic sur le libellé empile (order_push). Si le champ est déjà
 		// le seul critère, ça toggle sa direction (comportement intuitif).
 		$string_render_link .= '<a class="nav-link" href="'.$base_url.'/order_push/'.urlencode($field).'">';
-		$string_render_link .= ci_lang($field).' '.$add_string;
+		$string_render_link .= tr($field).' '.$add_string;
 		$string_render_link .= '</a>';
 
 		if ($this->_model[$datamodel]->_get('defs')[$field]->_get('values')){
@@ -173,10 +156,7 @@ Class Render_object{
 	
 	/* Find How to ... */
 	public function _getCi($field){
-		$this->CI =& get_instance();
-		$data = $this->CI->_get($field);
-		unset($this->CI);
-		return $data;
+		return $this->controller->_get($field);
 	}
 
 	public function Set_Rules_elements($name, Core_model $DataModelToUse )
@@ -187,7 +167,7 @@ Class Render_object{
 		$config = [];
 		foreach($this->_model[$name]->_get('defs') AS $field=>$defs){
 			if (isset($defs->rules) AND $defs->rules){
-				$config[] = ['field' => $field,'label' => ci_lang($field),'rules' =>  $defs->rules];
+				$config[] = ['field' => $field,'label' => tr($field),'rules' =>  $defs->rules];
 				//$this->CI->form_validation->set_rules($field, $this->CI->lang->line($field) , $defs->rules); changed for multi-forms !
 			}	
 		}	

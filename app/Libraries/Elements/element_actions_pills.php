@@ -60,15 +60,14 @@ class element_actions_pills extends element_table
         if (!$this->parent_id) {
             return $this->value;
         }
-        $this->_load_table_model();
-        if (!isset($this->CI->{$this->model})) {
+        if (!$this->model) {
             return $this->model . ' not instantiate';
         }
 
-        $this->CI->{$this->model}->_set('filter', array($this->foreignkey => $this->parent_id));
-        $this->CI->{$this->model}->_set('order', $this->ref ?: 'action');
-        $this->CI->{$this->model}->_set('direction', 'asc');
-        $datas = $this->CI->{$this->model}->get_all();
+        $this->mdl()->_set('filter', array($this->foreignkey => $this->parent_id));
+        $this->mdl()->_set('order', $this->ref ?: 'action');
+        $this->mdl()->_set('direction', 'asc');
+        $datas = $this->mdl()->get_all();
 
         $nb_actions = is_array($datas) ? count($datas) : 0;
 
@@ -96,13 +95,13 @@ class element_actions_pills extends element_table
         // ---------------------------------------------------------------
         // Libellés (avec fallback si la clé de langue n'est pas définie)
         // ---------------------------------------------------------------
-        $lbl_standard = $this->CI->lang->line('ACL_LBL_STANDARD');
+        $lbl_standard = tr('ACL_LBL_STANDARD');
         if (!$lbl_standard) { $lbl_standard = 'Standard'; }
-        $lbl_business = $this->CI->lang->line('ACL_LBL_BUSINESS');
+        $lbl_business = tr('ACL_LBL_BUSINESS');
         if (!$lbl_business) { $lbl_business = 'Métier'; }
-        $lbl_no_action = $this->CI->lang->line('NO_ACTION_DEFINED');
+        $lbl_no_action = tr('NO_ACTION_DEFINED');
         if (!$lbl_no_action) { $lbl_no_action = 'Aucune action définie.'; }
-        $lbl_no_custom = $this->CI->lang->line('ACL_LBL_NO_CUSTOM');
+        $lbl_no_custom = tr('ACL_LBL_NO_CUSTOM');
         if (!$lbl_no_custom) { $lbl_no_custom = 'CRUD uniquement.'; }
 
         // ---------------------------------------------------------------
@@ -179,9 +178,7 @@ class element_actions_pills extends element_table
      */
     protected function _load_table_model()
     {
-        if ($this->model && !isset($this->CI->{$this->model})) {
-            $this->CI->load->model($this->model);
-        }
+        // Le modèle est instancié à la demande par mdl()
     }
 
     /**

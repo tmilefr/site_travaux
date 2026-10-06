@@ -41,7 +41,7 @@ foreach ($zones as $z) {
             </h1>
             <div class="nicdark_space20"></div>
             <h3 class="subtitle grey">
-                <?php echo $this->lang->line('Acl_controllers_controller_subtitle'); ?>
+                <?php echo tr('Acl_controllers_controller_subtitle'); ?>
             </h3>
             <div class="nicdark_space20"></div>
             <div class="nicdark_divider left big">
@@ -51,7 +51,7 @@ foreach ($zones as $z) {
         </div>
 
         <?php
-            echo form_open(
+            echo open_form(
                 'Acl_roles_controller/set_rules/' . $id,
                 array('class' => 'acl-rules-form', 'id' => 'edit'),
                 array('form_mod' => 'roles', 'id' => $id)
@@ -67,26 +67,26 @@ foreach ($zones as $z) {
                         <input type="text"
                                id="aclRulesSearch"
                                class="form-control form-control-sm"
-                               placeholder="<?php echo $this->lang->line('ACL_RULES_SEARCH_PH') ?: 'Rechercher un contrôleur ou une action...'; ?>"
+                               placeholder="<?php echo tr('ACL_RULES_SEARCH_PH') ?: 'Rechercher un contrôleur ou une action...'; ?>"
                                autocomplete="off">
                     </div>
 
                     <div class="acl-rules-toolbar__buttons mb-2 mb-md-0">
                         <button type="button" class="btn btn-sm btn-outline-success js-acl-all-on">
                             <span class="oi oi-check" aria-hidden="true"></span>
-                            <?php echo $this->lang->line('ACL_RULES_ALL_ON') ?: 'Tout cocher'; ?>
+                            <?php echo tr('ACL_RULES_ALL_ON') ?: 'Tout cocher'; ?>
                         </button>
                         <button type="button" class="btn btn-sm btn-outline-secondary js-acl-all-off">
                             <span class="oi oi-x" aria-hidden="true"></span>
-                            <?php echo $this->lang->line('ACL_RULES_ALL_OFF') ?: 'Tout décocher'; ?>
+                            <?php echo tr('ACL_RULES_ALL_OFF') ?: 'Tout décocher'; ?>
                         </button>
                         <button type="button" class="btn btn-sm btn-outline-info js-acl-expand">
                             <span class="oi oi-fullscreen-enter" aria-hidden="true"></span>
-                            <?php echo $this->lang->line('ACL_RULES_EXPAND') ?: 'Tout déplier'; ?>
+                            <?php echo tr('ACL_RULES_EXPAND') ?: 'Tout déplier'; ?>
                         </button>
                         <button type="button" class="btn btn-sm btn-outline-info js-acl-collapse">
                             <span class="oi oi-fullscreen-exit" aria-hidden="true"></span>
-                            <?php echo $this->lang->line('ACL_RULES_COLLAPSE') ?: 'Tout replier'; ?>
+                            <?php echo tr('ACL_RULES_COLLAPSE') ?: 'Tout replier'; ?>
                         </button>
                     </div>
 
@@ -95,7 +95,7 @@ foreach ($zones as $z) {
                             <span class="js-acl-count-active"><?php echo (int) $total_allow_global; ?></span>
                             /
                             <span class="js-acl-count-total"><?php echo (int) $total_acts_global; ?></span>
-                            <?php echo $this->lang->line('ACL_RULES_RIGHTS_LBL') ?: 'droits'; ?>
+                            <?php echo tr('ACL_RULES_RIGHTS_LBL') ?: 'droits'; ?>
                         </span>
                     </div>
                 </div>
@@ -108,7 +108,7 @@ foreach ($zones as $z) {
         foreach ($zones as $zkey => $zone):
             $zone_idx++;
             $collapse_id = 'aclZone_' . ($zkey);
-            $zone_label  = $this->lang->line($zone->label) ?: $zkey;
+            $zone_label  = tr($zone->label) ?: $zkey;
             $zone_color  = ($zone->color);
             $zone_icon   = ($zone->icon);
         ?>
@@ -138,7 +138,7 @@ foreach ($zones as $z) {
 
                     <span class="badge badge-secondary ml-2">
                         <?php echo count($zone->ctrls); ?>
-                        <?php echo $this->lang->line('ACL_KPI_CTRL_SHORT') ?: 'ctrl'; ?>
+                        <?php echo tr('ACL_KPI_CTRL_SHORT') ?: 'ctrl'; ?>
                     </span>
 
                     <div class="ml-auto acl-zone-actions">
@@ -150,7 +150,7 @@ foreach ($zones as $z) {
                                    <?php echo ($zone->total_allow === $zone->total_acts && $zone->total_acts > 0) ? 'checked="checked"' : ''; ?>>
                             <label class="custom-control-label text-white"
                                    for="zoneToggle_<?php echo $zone_idx; ?>">
-                                <?php echo $this->lang->line('ACL_RULES_SELECT_ALL_ZONE') ?: 'Tout cocher la zone'; ?>
+                                <?php echo tr('ACL_RULES_SELECT_ALL_ZONE') ?: 'Tout cocher la zone'; ?>
                             </label>
                         </div>
                     </div>
@@ -165,10 +165,10 @@ foreach ($zones as $z) {
                             <tr>
                                 <th scope="col" class="acl-col-master">&nbsp;</th>
                                 <th scope="col" class="acl-col-name">
-                                    <?php echo $this->lang->line('controller'); ?>
+                                    <?php echo tr('controller'); ?>
                                 </th>
                                 <th scope="col">
-                                    <?php echo $this->lang->line('actions'); ?>
+                                    <?php echo tr('actions'); ?>
                                 </th>
                             </tr>
                         </thead>
@@ -196,7 +196,7 @@ foreach ($zones as $z) {
                                                <?php echo ($ctrl_allow === $ctrl_total && $ctrl_total > 0) ? 'checked="checked"' : ''; ?>>
                                         <label class="custom-control-label sr-only"
                                                for="ctrlToggle_<?php echo $ctrl_id_safe; ?>">
-                                            <?php echo $this->lang->line('ACL_RULES_SELECT_ALL_CTRL') ?: 'Tout cocher'; ?>
+                                            <?php echo tr('ACL_RULES_SELECT_ALL_CTRL') ?: 'Tout cocher'; ?>
                                         </label>
                                     </div>
                                     <?php endif; ?>
@@ -218,7 +218,7 @@ foreach ($zones as $z) {
                                 <td>
                                     <?php if ($ctrl_total === 0): ?>
                                         <em class="text-muted">
-                                            <?php echo $this->lang->line('NO_ACTION_DEFINED') ?: 'Aucune action définie.'; ?>
+                                            <?php echo tr('NO_ACTION_DEFINED') ?: 'Aucune action définie.'; ?>
                                         </em>
                                     <?php else: ?>
                                     <div class="acl-actions-list">
@@ -261,11 +261,11 @@ foreach ($zones as $z) {
                     <span class="js-acl-count-active"><?php echo (int) $total_allow_global; ?></span>
                     /
                     <span class="js-acl-count-total"><?php echo (int) $total_acts_global; ?></span>
-                    <?php echo $this->lang->line('ACL_RULES_RIGHTS_ACTIVE') ?: 'droits actifs'; ?>
+                    <?php echo tr('ACL_RULES_RIGHTS_ACTIVE') ?: 'droits actifs'; ?>
                 </div>
                 <button type="submit" class="btn btn-primary">
                     <span class="oi oi-check" aria-hidden="true"></span>
-                    <?php echo $this->lang->line('VALIDER'); ?>
+                    <?php echo tr('VALIDER'); ?>
                 </button>
             </div>
         </div>

@@ -11,17 +11,14 @@ class element_modelmemo extends element
 {
 
 	protected $dst_field = '';
-	protected $CI = '';
 	protected $api = '';
 
 	public function __construct(){
 		parent::__construct();
-        $this->CI =& get_instance();
 	}
 
     public function __destruct()
     {
-        unset($this->CI);
     }
 
 
@@ -41,7 +38,7 @@ class element_modelmemo extends element
 					'headers': {
 						'accept': 'application/json',
 						'Access-Control-Allow-Origin':'".base_url()."',
-						'Authorization' : 'Bearer ".$this->CI->auth->_get('connected_user')->token."'
+						'Authorization' : 'Bearer ".service('auth')->_get('connected_user')->token."'
 					}
 				}
 				if (this.value != '...'){

@@ -3,15 +3,13 @@
 namespace App\Models;
 class Capacity_model extends Core_model{
 
-	function __construct(){
-		parent::__construct();
-		
-		$this->_set('table'	, 'capacitys');
-		$this->_set('key'	, 'id');
-		$this->_set('order'	, 'id_fam');
-		$this->_set('direction'	, 'desc');
-		$this->_set('json'	, 'Capacity.json');
-	}
+	protected $table = 'capacitys';
+	protected $primaryKey = 'id';
+	protected $order = 'id_fam';
+	protected $direction = 'desc';
+	protected $json = 'Capacity.json';
+
+
 
 }
 ?>

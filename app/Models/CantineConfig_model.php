@@ -8,14 +8,13 @@ namespace App\Models;
  */
 class CantineConfig_model extends Core_model {
 
-    function __construct(){
-        parent::__construct();
-        $this->_set('table' , 'cantine_config');
-        $this->_set('key'   , 'id');
-        $this->_set('order' , 'id_day');
-        $this->_set('direction' , 'asc');
-        $this->_set('json'  , 'CantineConfig.json');
-    }
+	protected $table = 'cantine_config';
+	protected $primaryKey = 'id';
+	protected $order = 'id_day';
+	protected $direction = 'asc';
+	protected $json = 'CantineConfig.json';
+
+
 
     /**
      * Récupère la config pour une école et une année scolaire.
@@ -26,11 +25,7 @@ class CantineConfig_model extends Core_model {
      * @return array [ 1 => obj, 2 => obj, ... 5 => obj ] indexé par id_day
      */
     function GetConfig($ecole, $civil_year){
-        $rows = $this->db->select('*')
-            ->from($this->table)
-            ->where('ecole', $ecole)
-            ->where('civil_year', $civil_year)
-            ->get()->result();
+        $rows = $this->db->table($this->table)->select('*')->where('ecole', $ecole)->where('civil_year', $civil_year)->get()->getResult();
 
         $by_day = [];
         foreach($rows AS $r){
@@ -38,7 +33,7 @@ class CantineConfig_model extends Core_model {
         }
         for($d=1; $d<=5; $d++){
             if (!isset($by_day[$d])){
-                $this->db->insert($this->table, [
+                $this->db->table($this->table)->insert([
                     'id_day'      => $d,
                     'active'      => 0,
                     'nb_slots'    => 0,
@@ -51,7 +46,7 @@ class CantineConfig_model extends Core_model {
                     'created'     => date('Y-m-d H:i:s'),
                     'updated'     => date('Y-m-d H:i:s'),
                 ]);
-                $id = $this->db->insert_id();
+                $id = $this->db->insertID();
                 $by_day[$d] = (object)[
                     'id'          => $id,
                     'id_day'      => $d,
@@ -95,21 +90,16 @@ class CantineConfig_model extends Core_model {
                 'updated'     => date('Y-m-d H:i:s'),
             ];
 
-            $existing = $this->db->select('id')
-                ->from($this->table)
-                ->where('id_day', $id_day)
-                ->where('ecole', $ecole)
-                ->where('civil_year', $civil_year)
-                ->get()->row();
+            $existing = $this->db->table($this->table)->select('id')->where('id_day', $id_day)->where('ecole', $ecole)->where('civil_year', $civil_year)->get()->getRow();
 
             if ($existing){
-                $this->db->where('id', $existing->id)->update($this->table, $payload);
+                $this->db->table($this->table)->where('id', $existing->id)->update($payload);
             } else {
                 $payload['id_day']     = $id_day;
                 $payload['ecole']      = $ecole;
                 $payload['civil_year'] = $civil_year;
                 $payload['created']    = date('Y-m-d H:i:s');
-                $this->db->insert($this->table, $payload);
+                $this->db->table($this->table)->insert($payload);
             }
         }
     }

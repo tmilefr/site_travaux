@@ -8,22 +8,21 @@ Contexte métier : gestion d'inscriptions de familles à des travaux/chantiers, 
 ## Architecture générale
 Le projet suit une architecture MVC classique CodeIgniter avec des surcouches maison :
 app/
-├── Controllers/   → MY_Controller (CRUD générique), Home, Admwork, Units, Api, Acl_*_controller, ...
+├── Controllers/   → CrudController (CRUD générique), Home, Admwork, Units, Api, Acl_*_controller, ...
 ├── Models/        → Core_model (base) + modèles métiers (Infos, Famille, Travaux...)
 │   └── json/      → Schémas JSON décrivant les tables (champs, règles, dbforge)
 ├── Libraries/     → Acl, Render_object (factory), Bootstrap_tools, Libpdf...
-│   └── Compat/    → couche de compatibilité CI3 -> CI4 (input, session, db, lang, loader...)
-├── Config/        → configuration CI4 + Config/legacy (app.php, secured.php)
+├── Config/        → configuration CI4 (Travaux.php = réglages applicatifs, Routes, Filters, Services...)
 ├── Language/      → i18n (français)
 └── Views/         → template/, edition/, unique/
 public/            → document root (index.php, assets/, files/)
 database/sql/      → SQL manuels + jeu de test de recette
 
-> Migré de CodeIgniter 3.1.13 vers **CodeIgniter 4.7** : voir [MIGRATION_CI4.md](MIGRATION_CI4.md).
+> Réécrit pour **CodeIgniter 4.7** (initialement CodeIgniter 3.1.13) : voir [MIGRATION_CI4.md](MIGRATION_CI4.md).
 
 ### Points forts
 1. Approche « factory » par schéma JSON. Chaque table a un fichier JSON (Infos.json, Acl_users.json...) qui décrit les champs, règles de validation, rendu (input, select, select_database, hidden), et la définition dbforge. Le Core_model et le Render_object exploitent ces schémas pour générer formulaires, listes, vues et validations automatiquement. C'est très DRY et productif pour un back-office.
-2. CRUD générique via MY_Controller. Les contrôleurs déclarent seulement _controller_name, _model_name, _edit_view, _list_view, _autorize puis appellent init(). Le reste (routage add/edit/list/delete/view) est géré par la classe mère.
+2. CRUD générique via CrudController. Les contrôleurs déclarent seulement _controller_name, _model_name, _edit_view, _list_view, _autorize puis appellent init(). Le reste (routage add/edit/list/delete/view) est géré par la classe mère.
 3. ACL correctement pensée. Le fichier app/Libraries/Acl.php comporte des commentaires de correction v2 intéressants et pertinents :
 
 DontCheck = FALSE par défaut → secure by default (bonne pratique)
@@ -31,7 +30,7 @@ Cache des permissions en session par role_id (évite un SQL à chaque requête)
 Invalidation du cache à la déconnexion
 Correctif documenté d'un bug où CheckLogin() lisait $this->usercheck avant que la session ne soit rechargée
 
-L'événement `post_controller_constructor` (app/Config/Events.php, ancien hook Loginchecker) appelle acl->Route() avant chaque action → centralisation propre de l'autorisation.
+Le filtre `AclFilter` (app/Filters, ancien hook Loginchecker) appelle acl->Route() avant chaque action → centralisation propre de l'autorisation.
 4. API REST séparée (Api.php) avec JWT, endpoints /api/mails, login/logout, gestion des verbes HTTP (GET/POST/PUT/DELETE), codes de retour corrects (201, 202, 400, 403…).
 5. Git Flow documenté : develop → env. de dev (regio.dev-asso.fr), main → prod (mulhouse-travaux.abcmzwei.eu), branches feature-* et hotfix-*.
 
@@ -41,7 +40,7 @@ L'événement `post_controller_constructor` (app/Config/Events.php, ancien hook 
 codeignter_implement/
 └── application/
 	├── core/
-	│	└── MY_Controller.php => Core Controlleur (essentiellement un CRUD)
+	│	└── CrudController.php => Core Controlleur (essentiellement un CRUD)
 	├── libraries
 	│	├── Render_object.php (factory)
 	│	├── Form_validation.php (override core Form_validation)
@@ -71,7 +70,7 @@ codeignter_implement/
 ## Controlleur
 
 ```php
-class Users_controller extends MY_Controller {
+class Users_controller extends CrudController {
 
 	public function __construct(){
 		parent::__construct();
@@ -607,7 +606,7 @@ date time pour les traces
 ### Param du controlleur API
 
 ```php
-class Api extends MY_Controller {
+class Api extends CrudController {
 
 	/* Chaque objet exposé à besoin d'un entrée de controller */
 

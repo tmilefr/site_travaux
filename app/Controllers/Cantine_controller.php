@@ -23,7 +23,7 @@ use App\Libraries\Inscriptions;
  * @package     WebApp
  * @author      NL
  */
-class Cantine_controller extends MY_Controller {
+class Cantine_controller extends CrudController {
 
     public $CantineConfig_model = null;
     public $CantineGeneration_model = null;
@@ -31,8 +31,8 @@ class Cantine_controller extends MY_Controller {
     public $Admwork_model = null;
     public $Infos_model   = null;
 
-    public function __construct(){
-        parent::__construct();
+    protected function boot(): void
+	{
 
         $this->_controller_name = 'Cantine_controller';
         $this->_model_name      = 'CantineConfig_model';
@@ -47,7 +47,7 @@ class Cantine_controller extends MY_Controller {
             'generate'       => true,
         ];
         $this->_bg_color = 'nicdark_bg_green';
-        $this->title = $this->lang->line('GESTION_'.$this->_controller_name);
+        $this->title = tr('GESTION_'.$this->_controller_name);
 
         $this->init();
 
@@ -57,16 +57,14 @@ class Cantine_controller extends MY_Controller {
         $this->LoadModel('Admwork_model');
         $this->LoadModel('Infos_model');
 
-        $this->load->library('Inscriptions');
+        $this->inscriptions = service('inscriptions');
 
-        $this->lang->load('cantine');
-        $this->lang->load('inscriptions');
 
-        $this->load->library('RefNotifier');
+        $this->refnotifier = service('refNotifier');
     }
 
     public function index(){
-        ci_redirect($this->_controller_name.'/register');
+        $this->goTo($this->_controller_name.'/register');
     }
 
     // ---------------------------------------------------------------
@@ -75,7 +73,7 @@ class Cantine_controller extends MY_Controller {
     public function register($week_offset = 0){
         $week_offset = (int)$week_offset;
         
-        $ecole = $this->input->get('ecole');
+        $ecole = $this->request->getGet('ecole');
 
         if ($this->acl->getType() == 'fam' && !$ecole ){
             $family = $this->Familys_model->GetFamily($this->acl->getUserId());
@@ -83,7 +81,7 @@ class Cantine_controller extends MY_Controller {
         }
         if (!in_array($ecole, ['M','L'])) $ecole = 'M';
 
-        $civil_year = $this->config->item('civil_year');
+        $civil_year = config('Travaux')->civilYear;
         $id_fam = $this->acl->getUserId();
 
         // Lundi → vendredi de la semaine demandée
@@ -92,17 +90,7 @@ class Cantine_controller extends MY_Controller {
 
         // Récupère toutes les sessions cantine de la semaine pour l'école du parent
         $schools = ($this->acl->getType() == 'fam') ? ['B', $ecole] : ['B','M','L'];
-        $sessions = $this->db->select('*')
-            ->from('travaux')
-            ->where('type', 'can')
-            ->where('statut', 1)
-            ->where('archived !=', 1)
-            ->where('date_travaux >=', $monday->format('Y-m-d'))
-            ->where('date_travaux <=', $friday->format('Y-m-d'))
-            ->where('civil_year', $civil_year)
-            ->where_in('accespar', $schools)
-            ->order_by('date_travaux','ASC')
-            ->get()->result();
+        $sessions = $this->db->table('travaux')->select('*')->where('type', 'can')->where('statut', 1)->where('archived !=', 1)->where('date_travaux >=', $monday->format('Y-m-d'))->where('date_travaux <=', $friday->format('Y-m-d'))->where('civil_year', $civil_year)->whereIn('accespar', $schools)->orderBy('date_travaux','ASC')->get()->getResult();
 
         // Indexation par date Y-m-d (max 1 session par date par école côté règles,
         // mais on supporte plusieurs au cas où écoles B+M+L cohabitent)
@@ -113,12 +101,7 @@ class Cantine_controller extends MY_Controller {
         $session_ids = array_map(function($s){ return (int)$s->id; }, $sessions);
         $inscrits_by_work = [];
         if (!empty($session_ids)){
-            $rows = $this->db->select('i.id, i.id_travaux, i.id_famille, i.nb_unites_valides_effectif, f.nom, f.login')
-                ->from('infos i')
-                ->join('famille f', 'f.id = i.id_famille', 'left')
-                ->where_in('i.id_travaux', $session_ids)
-                ->order_by('i.created','ASC')
-                ->get()->result();
+            $rows = $this->db->table('infos i')->select('i.id, i.id_travaux, i.id_famille, i.nb_unites_valides_effectif, f.nom, f.login')->join('famille f', 'f.id = i.id_famille', 'left')->whereIn('i.id_travaux', $session_ids)->orderBy('i.created','ASC')->get()->getResult();
             foreach($rows AS $r){ $inscrits_by_work[(int)$r->id_travaux][] = $r; }
         }
 
@@ -131,7 +114,7 @@ class Cantine_controller extends MY_Controller {
 
             $day = new \stdClass();
             $day->date      = $key;
-            $day->day_label = $this->lang->line('cantine_day_'.$id_day);
+            $day->day_label = tr('cantine_day_'.$id_day);
             $day->day_num   = $date->format('j');
             $day->month_fr  = $this->_frMonth($date);
             $day->passed    = (strtotime($key) < strtotime(date('Y-m-d')));
@@ -191,7 +174,7 @@ class Cantine_controller extends MY_Controller {
     public function register_one($id_work = null){
         $id_work = (int) $id_work;
         if (!$id_work || $this->acl->getType() != 'fam'){
-            ci_redirect($this->_controller_name.'/register');
+            $this->goTo($this->_controller_name.'/register');
         }
 
         $id_fam = $this->acl->getUserId();
@@ -205,11 +188,11 @@ class Cantine_controller extends MY_Controller {
                 Inscriptions::ALREADY_REGISTERED,
                 Inscriptions::SESSION_FULL,
                 Inscriptions::PAST_DATE])) {
-            $this->session->set_flashdata('cantine_msg', $r->message);
+            $this->session->setFlashdata('cantine_msg', $r->message);
         }
 
         $offset = ($r->work) ? $this->_weekOffsetFor($r->work->date_travaux) : 0;
-        ci_redirect($this->_controller_name.'/register/'.$offset);
+        $this->goTo($this->_controller_name.'/register/'.$offset);
     }  
   
     /**
@@ -218,30 +201,30 @@ class Cantine_controller extends MY_Controller {
     public function unregister_one($id_work = null){
         $id_work = (int) $id_work;
         if (!$id_work || $this->acl->getType() != 'fam'){
-            ci_redirect($this->_controller_name.'/register');
+            $this->goTo($this->_controller_name.'/register');
         }
 
         $id_fam = $this->acl->getUserId();
         $r = $this->inscriptions->unregisterSelf($id_work, $id_fam);
 
         if (!$r->success && $r->code === Inscriptions::ALREADY_VALIDATED) {
-            $this->session->set_flashdata('cantine_msg', $r->message);
+            $this->session->setFlashdata('cantine_msg', $r->message);
         }
 
         $offset = ($r->work) ? $this->_weekOffsetFor($r->work->date_travaux) : 0;
-        ci_redirect($this->_controller_name.'/register/'.$offset);
+        $this->goTo($this->_controller_name.'/register/'.$offset);
     }
 
     // ---------------------------------------------------------------
     // VUE ADMIN : paramétrage des jours + génération
     // ---------------------------------------------------------------
     public function config(){
-        $ecole = $this->input->get('ecole');
+        $ecole = $this->request->getGet('ecole');
         if (!in_array($ecole, ['B','M','L'])) $ecole = 'M';
-        $civil_year = $this->config->item('civil_year');
+        $civil_year = config('Travaux')->civilYear;
 
         // Mois affiché dans l'agenda (?ym=YYYY-MM), par défaut mois courant
-        $ym = $this->input->get('ym');
+        $ym = $this->request->getGet('ym');
         if (!$ym || !preg_match('/^\d{4}-\d{2}$/', $ym)){
             $ym = date('Y-m');
         }
@@ -272,24 +255,24 @@ class Cantine_controller extends MY_Controller {
     }
 
     public function save_config(){
-        $ecole = $this->input->post('ecole');
+        $ecole = $this->request->getPost('ecole');
         if (!in_array($ecole, ['B','M','L'])) $ecole = 'B';
-        $civil_year = $this->config->item('civil_year');
+        $civil_year = config('Travaux')->civilYear;
 
         $days = [];
         for($d = 1; $d <= 5; $d++){
             $days[] = [
                 'id_day'      => $d,
-                'active'      => $this->input->post('active_'.$d) ? 1 : 0,
-                'nb_slots'    => (int)$this->input->post('nb_slots_'.$d),
-                'nb_units'    => (float)$this->input->post('nb_units_'.$d),
-                'id_referent' => $this->input->post('id_referent_'.$d),
-                'heure_deb'   => $this->input->post('heure_deb_'.$d),
-                'heure_fin'   => $this->input->post('heure_fin_'.$d),
+                'active'      => $this->request->getPost('active_'.$d) ? 1 : 0,
+                'nb_slots'    => (int)$this->request->getPost('nb_slots_'.$d),
+                'nb_units'    => (float)$this->request->getPost('nb_units_'.$d),
+                'id_referent' => $this->request->getPost('id_referent_'.$d),
+                'heure_deb'   => $this->request->getPost('heure_deb_'.$d),
+                'heure_fin'   => $this->request->getPost('heure_fin_'.$d),
             ];
         }
         $this->CantineConfig_model->SaveConfig($days, $ecole, $civil_year);
-        ci_redirect($this->_controller_name.'/config?ecole='.$ecole);
+        $this->goTo($this->_controller_name.'/config?ecole='.$ecole);
     }
 
     /**
@@ -299,14 +282,14 @@ class Cantine_controller extends MY_Controller {
      *   - custom     : dates saisies par l'admin
      */
     public function generate(){
-        $ecole = $this->input->post('ecole');
+        $ecole = $this->request->getPost('ecole');
         if (!in_array($ecole, ['B','M','L'])) $ecole = 'B';
-        $civil_year = $this->config->item('civil_year');
+        $civil_year = config('Travaux')->civilYear;
 
-        $mode = $this->input->post('period_mode');
+        $mode = $this->request->getPost('period_mode');
         if ($mode === 'custom'){
-            $date_deb = $this->_sanitize_date($this->input->post('date_deb'));
-            $date_fin = $this->_sanitize_date($this->input->post('date_fin'));
+            $date_deb = $this->_sanitize_date($this->request->getPost('date_deb'));
+            $date_fin = $this->_sanitize_date($this->request->getPost('date_fin'));
         } else {
             // Mode school_end par défaut : aujourd'hui → 31/05 de l'année scolaire
             $date_deb = date('Y-m-d');
@@ -314,13 +297,13 @@ class Cantine_controller extends MY_Controller {
         }
 
         if (!$date_deb || !$date_fin){
-            ci_redirect($this->_controller_name.'/config?ecole='.$ecole);
+            $this->goTo($this->_controller_name.'/config?ecole='.$ecole);
         }
 
         $config = $this->CantineConfig_model->GetConfig($ecole, $civil_year);
         $this->CantineGeneration_model->Generate($date_deb, $date_fin, $ecole, $config, $civil_year);
 
-        ci_redirect($this->_controller_name.'/config?ecole='.$ecole);
+        $this->goTo($this->_controller_name.'/config?ecole='.$ecole);
     }
 
     // ---------------------------------------------------------------
@@ -331,13 +314,7 @@ class Cantine_controller extends MY_Controller {
      * Liste des référents (classif reftra/RT) pour le select admin.
      */
     private function _getReferents(){
-        $rows = $this->db->select('tr.id, CONCAT_WS(" ", gr.short, gm.name, gm.surname) AS title', false)
-            ->from('trombi tr')
-            ->join('groupes_member gm', 'tr.ref = gm.id', 'left')
-            ->join('groupes gr', 'tr.id_grp = gr.id', 'left')
-            ->where_in('tr.classif', ['reftra','RT'])
-            ->order_by('gm.name','ASC')
-            ->get()->result();
+        $rows = $this->db->table('trombi tr')->select('tr.id, CONCAT_WS(" ", gr.short, gm.name, gm.surname) AS title', false)->join('groupes_member gm', 'tr.ref = gm.id', 'left')->join('groupes gr', 'tr.id_grp = gr.id', 'left')->whereIn('tr.classif', ['reftra','RT'])->orderBy('gm.name','ASC')->get()->getResult();
         $out = [];
         foreach($rows AS $r){ $out[$r->id] = $r->title; }
         return $out;
