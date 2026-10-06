@@ -42,6 +42,11 @@ class Admwork_controller extends MY_Controller {
 		$this->LoadModel('Familys_model');
 		$this->LoadModel('Trombi_model');
 		
+		// Inscriptions : service utilise par la desinscription et par les
+		// actions du referent (ajout / retrait d'une famille, liste des
+		// familles ajoutables). Son absence provoquait une erreur fatale
+		// << Undefined property: Admwork_controller::$inscriptions >>.
+		$this->load->library('Inscriptions');
 		$this->load->library('RefNotifier');
 
 		$this->render_object->_set('_not_link_list', ['add','view','list','draftvalidation']);

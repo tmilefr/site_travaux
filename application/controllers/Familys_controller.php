@@ -548,6 +548,7 @@ class Familys_controller extends MY_Controller {
 	public function import_history()
 	{
 		$this->_set('view_inprogress', 'unique/'.$this->_controller_name.'_import_history');
+		$this->load->model('FamilyImport_model');
 		$this->data_view['imports'] = $this->FamilyImport_model->GetLastImports(50);
 		$this->render_view();
 	}
