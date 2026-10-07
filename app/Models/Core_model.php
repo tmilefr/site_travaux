@@ -423,7 +423,7 @@ class Core_model extends Model
     public function __destruct()
     {
         if ($this->_debug) {
-            echo debug($this->_debug_array, __FILE__);
+            d($this->_debug_array);
         }
     }
 }

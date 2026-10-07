@@ -1,6 +1,9 @@
 <?php
 
 namespace App\Controllers;
+
+use CodeIgniter\I18n\Time;
+
 /**
  * User Controller
  *
@@ -96,7 +99,7 @@ class Admwork_controller extends CrudController {
 
 			//echo debug($dba_data);
 			$work->design = $this->render_object->GetDesign($work->type);
-			$work->pdf = NameToFilename('Travaux_'.$work->date_travaux.' '.$work->titre).'.pdf';
+			$work->pdf = mb_url_title('Travaux_'.$work->date_travaux.' '.$work->titre, '_', false).'.pdf';
 			//echo debug($work);
 
 			if (!is_file($this->libpdf->_get('pdf_path').$work->pdf) OR $override){
@@ -133,7 +136,7 @@ class Admwork_controller extends CrudController {
 			if ($work->type == 'URG') {
 				$work->delay = -1;
 			} else {
-				$work->delay = Compare('date', $work->date_travaux, date('Y-m-d')) + 1;
+				$work->delay = (int) round(Time::parse($work->date_travaux)->difference(Time::today())->getDays()) + 1;
 			}
 			$work->register       = true;
 			$work->participant    = $this->Infos_model->Decompte($work->id)->nb_participants;

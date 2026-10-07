@@ -43,7 +43,7 @@ $btn_label  = $render_object->_get('_ui_rules')[$form_mod]->name;
 // Détection erreurs de validation
 $has_errors = false;
 foreach ($required_field as $f) {
-    if (field_error($f) !== '') { $has_errors = true; break; }
+    if (validation_show_error($f) !== '') { $has_errors = true; break; }
 }
 ?>
 
@@ -97,7 +97,7 @@ foreach ($required_field as $f) {
                     </strong>
                     <ul class="mb-0 mt-2">
                         <?php foreach ($required_field as $f) {
-                            $err = field_error($f);
+                            $err = validation_show_error($f);
                             if ($err !== '') {
                                 $label = tr($f) ?: $f;
                                 echo '<li><strong>' . htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . '</strong> : '
@@ -136,7 +136,7 @@ foreach ($required_field as $f) {
                                     ?: 'Nom exact de la classe PHP (ex. <code>Acl_users_controller</code>).'; ?>
                             </small>
                             <?php echo $render_object->RenderFormElement('controller'); ?>
-                            <?php echo field_error('controller', '<div class="invalid-feedback d-block mt-1">', '</div>'); ?>
+                            <?php echo validation_show_error('controller', 'invalid_feedback'); ?>
                         </div>
                     </div>
 
@@ -170,7 +170,7 @@ foreach ($required_field as $f) {
                             </div>
 
                             <?php echo $render_object->RenderFormElement('actions'); ?>
-                            <?php echo field_error('actions', '<div class="invalid-feedback d-block mt-1">', '</div>'); ?>
+                            <?php echo validation_show_error('actions', 'invalid_feedback'); ?>
                         </div>
                     </div>
 

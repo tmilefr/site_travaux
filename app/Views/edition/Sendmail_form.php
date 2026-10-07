@@ -18,7 +18,7 @@
 	echo open_form(base_url($render_object->_getCi('_controller_name').'/'.$render_object->_get('form_mod')), array('class' => '', 'id' => 'edit') , array('form_mod'=>'edit','id'=>$id) );
 	//champ obligatoire
 	foreach($required_field AS $name){
-		echo field_error($name, 	'<div class="alert alert-danger">', '</div>');
+		echo validation_show_error($name, 'alert');
 	}
 	?>
 	<div class="card">

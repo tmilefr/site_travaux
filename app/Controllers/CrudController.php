@@ -356,9 +356,6 @@ abstract class CrudController extends BaseController
 	 */
 	protected function runValidation(string $model, ?array $data = null): bool
 	{
-		$validation = service('validation');
-		$validation->reset();
-
 		$fromPost = ($data === null);
 		$data   ??= $this->request->getPost() ?? [];
 		$config   = $this->validation_rules[$model] ?? [];
@@ -369,13 +366,14 @@ abstract class CrudController extends BaseController
 		$rules = [];
 		foreach ($config as $row) {
 			$list = array_filter(explode('|', (string) $row['rules']), static fn ($r) => $r !== '');
+			// CI4 n'a pas de règle qui modifie la valeur : "trim" nettoie les données avant validation
 			if (in_array('trim', $list, true)) {
 				if (isset($data[$row['field']]) && is_string($data[$row['field']])) {
 					$data[$row['field']] = trim($data[$row['field']]);
 				}
 				$list = array_diff($list, ['trim']);
 			}
-			// CI3 n'appliquait pas les autres règles à un champ vide non requis
+			// Un champ vide non requis n'est pas soumis aux autres règles
 			if (! in_array('required', $list, true)) {
 				array_unshift($list, 'permit_empty');
 			}
@@ -386,7 +384,7 @@ abstract class CrudController extends BaseController
 			$this->request->setGlobal('post', $data);
 		}
 
-		return $validation->setRules($rules)->run($data);
+		return $this->validateData($data, $rules);
 	}
 
 	/**
@@ -416,7 +414,7 @@ abstract class CrudController extends BaseController
 		}
 
 		if ($this->_debug) {
-			echo debug($this->_debug_array, __FILE__);
+			d($this->_debug_array);
 		}
 	}
 
@@ -463,9 +461,10 @@ abstract class CrudController extends BaseController
 			$this->{$this->_model_name}->_set('page', 1 );
 		}
 
-		$this->data_view['pagination_links'] = pagination_links(
-			base_url($this->_controller_name.'/list/page'), (int) $total_rows, (int) $effective_pp, (int) $cur_page
-		);
+		// Pager natif : le numéro de page est le 4e segment de l'URL (Controleur/list/page/N)
+		$pager = service('pager');
+		$pager->setPath($this->_controller_name.'/list/page');
+		$this->data_view['pagination_links'] = $pager->makeLinks((int) $cur_page, (int) $effective_pp, (int) $total_rows, 'app_bootstrap', 4);
 
 		$this->data_view['fields']         = $this->{$this->_model_name}->_get('autorized_fields');
 		$this->data_view['datas']          = $this->{$this->_model_name}->get();
@@ -911,10 +910,9 @@ abstract class CrudController extends BaseController
 		fclose($out);
 
 		return $this->response
+			->download($filename, $csv)
 			->setContentType('text/csv', 'UTF-8')
-			->setHeader('Content-Disposition', 'attachment; filename="' . $filename . '"')
-			->setHeader('Cache-Control', 'no-store, no-cache')
-			->setBody($csv);
+			->setHeader('Cache-Control', 'no-store, no-cache');
 	}
 
 	/**

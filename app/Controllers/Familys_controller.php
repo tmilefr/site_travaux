@@ -168,7 +168,8 @@ class Familys_controller extends CrudController {
 			
 			$values = $this->data_view['familys']->_get('values');
 			foreach($values AS $key=>$value){
-				$values[$key] = UnicodeProcess($value);
+				// Libellés contenant des séquences \uXXXX littérales : on les convertit en caractères
+				$values[$key] = preg_replace_callback('/\\\\u([0-9a-f]{4})/i', static fn ($m) => mb_chr(hexdec($m[1]), 'UTF-8'), (string) $value);
 			}
 			$this->data_view['familys']->_set('values',$values);
 
@@ -385,11 +386,7 @@ class Familys_controller extends CrudController {
 		$csv = stream_get_contents($file);
 		fclose($file);
 
-		return $this->response
-			->setContentType('application/csv', 'utf-8')
-			->setHeader('Content-Description', 'File Transfer')
-			->setHeader('Content-Disposition', 'attachment; filename='.$file_name)
-			->setBody($csv);
+		return $this->response->download($file_name, $csv)->setContentType('text/csv', 'UTF-8');
 	}
 
 	/**
