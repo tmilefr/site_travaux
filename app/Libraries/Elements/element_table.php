@@ -35,7 +35,7 @@ class element_table extends element
 	}
 
 	public function PrepareForDBA($value){
-		//echo debug($_POST);
+		//d($this->post(null));
 		//$this->mdl()->_set('debug',TRUE);
 
 		$id_parent = $this->render_object->_get('id'); //PUSH data in object instead ?
@@ -50,8 +50,8 @@ class element_table extends element
 		}	
 
 		/*if ($this->model == 'Trombi_model'){
-			echo debug($datas);
-			echo debug($_POST);
+			d($datas);
+			d($this->post(null));
 	
 			die();
 		}*/

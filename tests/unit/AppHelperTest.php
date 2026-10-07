@@ -27,22 +27,6 @@ final class AppHelperTest extends CIUnitTestCase
         $this->assertStringNotContainsString('<i>', tr('YES'));
     }
 
-    public function testPaginationLinksHiddenWhenOnePage(): void
-    {
-        $this->assertSame('', pagination_links('http://x/list/page', 10, 15, 1));
-        $this->assertSame('', pagination_links('http://x/list/page', 0, 15, 1));
-    }
-
-    public function testPaginationLinksMarkCurrentPage(): void
-    {
-        $html = pagination_links('http://x/list/page', 100, 15, 3);
-
-        $this->assertStringContainsString('class="page-item active"><span class="page-link">3', $html);
-        $this->assertStringContainsString('href="http://x/list/page/4"', $html);
-        $this->assertStringContainsString('href="http://x/list/page/2"', $html);
-        $this->assertStringContainsString('href="http://x/list/page/7"', $html, 'lien vers la dernière page');
-    }
-
     public function testOpenFormCastsHiddenValues(): void
     {
         helper('form');

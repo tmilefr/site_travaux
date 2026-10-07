@@ -23,7 +23,7 @@
 				<?php
 				//champ obligatoire
 				foreach($required_field AS $name){
-					echo field_error($name, 	'<div class="alert alert-danger">', '</div>');
+					echo validation_show_error($name, 'alert');
 				}
 				//echo validation_errors();
 				?>

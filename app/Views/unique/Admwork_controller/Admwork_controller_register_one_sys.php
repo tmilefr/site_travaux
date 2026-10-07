@@ -126,7 +126,7 @@ Vue inscription aux travaux, mode utilisateur SYS
                     echo open_form( base_url('Admwork_controller/managed_one/'.$work->id) , array('class' => '', 'id' => ''), array('form_mod'=>'add' ,'id_travaux'=>$work->id, 'nb_unites_valides'=>$work->nb_units ) );
                     //champ obligatoire
                     foreach($required_field AS $name){
-                        echo field_error($name, 	'<div class="alert alert-danger">', '</div>');
+                        echo validation_show_error($name, 'alert');
                     }
                 ?>
                 <div class="form-row">

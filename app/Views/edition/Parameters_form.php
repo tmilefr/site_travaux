@@ -32,7 +32,7 @@
 			<div class="form-row">
 				<div class="col">
 					<?php 
-						echo field_error($field , 	'<div class="alert alert-danger">', '</div>');
+						echo validation_show_error($field , 'alert');
 						echo $render_object->label($field);
 						echo $render_object->RenderFormElement($field); 
 					?>

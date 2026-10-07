@@ -18,7 +18,6 @@ class element_file extends element
 	public function PrepareForDBA($value){
 
 		if (isset($_FILES[$this->name]["name"]) AND $_FILES[$this->name]["size"] > 0 ){
-			echo debug($_FILES[$this->name]); 
 			$target_dir = ROOTPATH.$this->path;
 			$target_file = $target_dir . basename($_FILES[$this->name]["name"]);
 			if (move_uploaded_file($_FILES[$this->name]["tmp_name"], $target_file)) {

@@ -18,11 +18,13 @@ de compatibilité CI3, plus de `get_instance()`, plus de `$this->load`. Cette br
 | Bibliothèques | `$this->load->library()` | services partagés `service('acl' \| 'auth' \| 'renderObject' ...)` (`app/Config/Services.php`) |
 | Hook ACL | `post_controller_constructor` | filtre `App\Filters\AclFilter` (`Config\Filters`) |
 | Routage | automatique (`controleur/methode`) | `app/Config/Routes.php`, auto-routage désactivé |
-| Validation | `CI_Form_validation` | `service('validation')` (règles issues des schémas JSON) |
+| Validation | `CI_Form_validation` | `Controller::validateData()` (règles issues des schémas JSON) ; erreurs affichées par `validation_show_error($champ, 'alert')` (gabarits `app/Views/Validation`) |
+| Client HTTP (SSO Delta) | `RestClient` (bibliothèque tierce) | `service('curlrequest')` |
+| CSV / PDF | `header()` + `echo` | `$this->response->download()` |
 | E-mail | `CI_Email` | `service('email')`, configuration `Config\Email` |
 | Configuration | `config/app.php`, `secured.php` | `Config\Travaux` + variables du `.env` |
 | Langues | `$lang['CLE']` + `$this->lang->line()` | tableaux `return [...]` dans `app/Language/fr/` + helper `tr()` |
-| Pagination | `CI_Pagination` | helper `pagination_links()` (même rendu Bootstrap, URL `.../list/page/N`) |
+| Pagination | `CI_Pagination` | `service('pager')->makeLinks(..., segment 4)` + gabarit `app/Views/Pager/app_bootstrap.php` (URL `.../list/page/N`) |
 | Journal d'erreurs | `MY_Exceptions` | `abort()` (404/400...), gestionnaire d'erreurs CI4 |
 
 ## 2. Conventions de l'application
@@ -38,7 +40,7 @@ de compatibilité CI3, plus de `get_instance()`, plus de `$this->load`. Cette br
   Les helpers internes (`init`, `LoadModel`, méthodes `_xxx`…) ne sont jamais joignables. Les URL gardent la casse
   d'origine ou le minuscule (compatible avec les droits ACL et les liens des e-mails).
 * **Vues** : les services utiles arrivent comme variables (`$render_object`, `$bootstrap_tools`, `$render_menu`, `$acl`) ;
-  traductions par `tr('CLE')`, erreurs de formulaire par `field_error('champ', '<div>', '</div>')`,
+  traductions par `tr('CLE')`, erreurs de formulaire par `validation_show_error('champ', 'alert')`,
   formulaires par `open_form()` (variante de `form_open()` qui accepte des identifiants non textuels).
 * **Modèles** : propriétés `$table`, `$primaryKey`, `$order`, `$direction`, `$json` ; les requêtes utilisent le Query
   Builder natif. Les noms de classes (`Familys_model`, `Admwork_controller`…) sont conservés : ils sont stockés dans les
