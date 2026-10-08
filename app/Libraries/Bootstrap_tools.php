@@ -241,7 +241,7 @@ class Bootstrap_tools{
 		}
 	}
 	
-	public function render_table($head = [],$datas , $table_style = '', $limit = 0){
+	public function render_table($datas, $head = [], $table_style = '', $limit = 0){
 		$table = '<table class="table '.$table_style.'">';
 		if (count($head)){
 			$table .= '<head><tr>';
