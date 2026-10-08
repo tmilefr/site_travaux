@@ -42,3 +42,5 @@ php_errors.log
 
 # Fichiers CSV du jeu de test de recette (fixtures à versionner)
 !application/migrations/jeu_de_test/csv/*.csv
+
+.env
