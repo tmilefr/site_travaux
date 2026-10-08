@@ -71,10 +71,7 @@ class Libpdf {
 
 		if ($stream){
 			// Le PDF est renvoyé au navigateur par la réponse HTTP du contrôleur
-			return service('response')
-				->setContentType('application/pdf')
-				->setHeader('Content-Disposition', 'attachment; filename="' . $filename . '"')
-				->setBody($this->dompdf->output());
+			return service('response')->download($filename, $this->dompdf->output())->setContentType('application/pdf');
 		}
 
 		return null;

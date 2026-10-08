@@ -36,6 +36,9 @@ class Validation extends BaseConfig
     public array $templates = [
         'list'   => 'CodeIgniter\Validation\Views\list',
         'single' => 'CodeIgniter\Validation\Views\single',
+        // Gabarits de l'application (app/Views/Validation) : validation_show_error($champ, 'alert')
+        'alert'            => 'Validation/alert',
+        'invalid_feedback' => 'Validation/invalid_feedback',
     ];
 
     // --------------------------------------------------------------------

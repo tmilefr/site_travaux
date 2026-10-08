@@ -20,7 +20,7 @@ use Exception;
  *    autoloadée globalement via config/autoload.php, son constructeur
  *    s'exécute AVANT la fin de MY_Controller::__construct(). À ce moment-là,
  *    $this->render_object et $this->form_validation n'existent pas encore,
- *    donc LoadModel() (qui en dépend) plante. Les modèles et RestClient
+ *    donc LoadModel() (qui en dépend) plante. Les modèles et le client HTTP
  *    sont désormais chargés à la demande via _requireDeps(), invoqué au
  *    début de Init(), Login() et DecodeJWT().
  *  - Les consommateurs verifyLogin() / verifyLoginAPI() renvoient un
@@ -62,7 +62,7 @@ class Auth
 	/** @var Familys_model */
 	protected $familys;
 
-	/** @var RestClient|null */
+	/** @var \CodeIgniter\HTTP\CURLRequest|null */
 	protected $rest = NULL;
 
 	/**
@@ -96,7 +96,12 @@ class Auth
 
 		$this->users   = model(Acl_users_model::class);
 		$this->familys = model(Familys_model::class);
-		$this->rest    = new RestClient($this->api);
+		$this->rest    = service('curlrequest', [
+			'baseURI'     => $this->api['base_url'],
+			'headers'     => ['User-Agent' => $this->api['user_agent']],
+			'timeout'     => 15,
+			'http_errors' => false,
+		]);
 
 		$this->Init();
 	}
@@ -278,14 +283,15 @@ class Auth
 	 */
 	private function _loginDelta(array $data)
 	{
-		$result = $this->rest->get($data['login'] . '/' . urlencode($data['password']));
-
-		if ($result->error) {
-			$this->connected_user->msg = $result->error;
+		try {
+			$result = $this->rest->get($data['login'] . '/' . rawurlencode($data['password']));
+		} catch (\CodeIgniter\HTTP\Exceptions\HTTPException $e) {
+			log_message('error', 'Auth::_loginDelta : ' . $e->getMessage());
+			$this->connected_user->msg = $e->getMessage();
 			return;
 		}
 
-		$res = json_decode($result->response);
+		$res = json_decode((string) $result->getBody());
 
 		// Exemple de réponse attendue :
 		// { "auth":200, "family":"LARESSER BURGELIN", "adresse":"...", "cp":"...",
@@ -452,7 +458,7 @@ class Auth
 	function __destruct()
 	{
 		if ($this->_debug) {
-			echo debug($this, __FILE__);
+			d($this);
 		}
 	}
 }

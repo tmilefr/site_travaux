@@ -342,7 +342,7 @@ class Acl
 	public function __destruct()
 	{
 		if ($this->_debug) {
-			echo debug($this, __FILE__);
+			d($this);
 		}
 	}
 }

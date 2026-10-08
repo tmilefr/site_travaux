@@ -25,7 +25,16 @@ class element_date extends element
 	}
 	
 	public function Render(){
-		return GetFormatDate($this->value);
+		// Dates ISO (AAAA-MM-JJ[ hh:mm:ss]) affichées JJ/MM/AAAA ; autres formats inchangés
+		$value = (string) $this->value;
+		if ($value === '' || str_starts_with($value, '0000-00-00')) {
+			return '';
+		}
+		if (preg_match('/^\d{4}-\d{2}-\d{2}/', $value)) {
+			return \CodeIgniter\I18n\Time::createFromFormat('Y-m-d', substr($value, 0, 10))->format('d/m/Y');
+		}
+
+		return $value;
 	}
 }
 

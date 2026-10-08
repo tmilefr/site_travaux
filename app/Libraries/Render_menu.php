@@ -131,7 +131,7 @@ class Render_menu{
 
 	function __destruct(){
 		if ($this->_debug){
-			echo debug($this, __file__);
+			d($this);
 		}
 	}
 	

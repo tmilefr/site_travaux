@@ -80,12 +80,12 @@
                   <div class="form-group">
                     <?php echo form_label('Login', 'login'); ?>
                     <?php echo form_input('login', '', 'class="form-control" aria-describedby="emailHelp" placeholder="E-mail"'); ?>
-                    <?php echo field_error('login', 	'<div class="alert alert-danger">', '</div>'); ?>
+                    <?php echo validation_show_error('login', 'alert'); ?>
                   </div>
                   <div class="form-group">
                     <?php echo form_label('Password', 'password'); ?>
                     <?php echo form_password('password', 'password', 'class="form-control" aria-describedby="passwordHelp" placeholder="Mot de passe"'); ?>
-                    <?php echo field_error('password', 	'<div class="alert alert-danger">', '</div>'); ?>	  
+                    <?php echo validation_show_error('password', 'alert'); ?>	  
                   </div>	
                   <div class="form-group">
                     <div class="modal-footer">

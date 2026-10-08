@@ -58,7 +58,7 @@
                     echo open_form( base_url('Admwork_controller/register_one/'.$work->id) , array('class' => '', 'id' => ''), array('form_mod'=>((isset($work->already_registred->id)) ? 'edit':'add') ,'id'=>((isset($work->already_registred->id)) ? $work->already_registred->id:''),'id_travaux'=>$work->id,'id_famille'=>$id_fam, 'nb_unites_valides'=>$work->nb_units ) );
                     //champ obligatoire
                     foreach($required_field AS $name){
-                        echo field_error($name, 	'<div class="alert alert-danger">', '</div>');
+                        echo validation_show_error($name, 'alert');
                     }
                 ?>
                 <div class="form-row">

@@ -21,7 +21,7 @@
             <table class="table table-striped">
         <?php 
             foreach($familys AS $family){
-                echo '<tr><td>'.$family[0].'</td><td>'.$family[4].'</td><td>'.(($family['exist']) ? debug($family['exist']->id):'non').'</td></tr>';
+                echo '<tr><td>'.$family[0].'</td><td>'.$family[4].'</td><td>'.(($family['exist']) ? $family['exist']->id:'non').'</td></tr>';
             }
         ?>
             </table>

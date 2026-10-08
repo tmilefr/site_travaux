@@ -94,7 +94,7 @@ site_travaux/
 │   │   ├── Libpdf.php              # génération de PDF (Dompdf)
 │   │   ├── Elements/element_*.php  # éléments de formulaire (input, select, etc.)
 │   ├── Language/fr/                # i18n : tableaux PHP (un fichier par contrôleur + Menu, Traduction, Validation)
-│   ├── Helpers/tools_helper.php
+│   ├── Helpers/app_helper.php        # tr(), open_form()
 │   └── Views/
 │       ├── template/               # head.php, footer.php (layout)
 │       ├── edition/                # formulaires

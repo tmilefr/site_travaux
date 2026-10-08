@@ -19,7 +19,6 @@ class element_img extends element
 	public function PrepareForDBA($value){
 
 		if (isset($_FILES[$this->name]["name"]) AND $_FILES[$this->name]["size"] > 0 ){
-			echo debug($_FILES[$this->name]); 
 			$target_dir = ROOTPATH.$this->path;
 			$target_file = $target_dir . basename($this->name.'_'.$_FILES[$this->name]["name"]);
             
