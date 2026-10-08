@@ -162,7 +162,7 @@ $colors = $render_object->GetColors($group->color);
             echo open_form( base_url('Orgchart_controller/view_one/'.$group->id) , array('class' => '', 'id' => ''), array('form_mod'=>((($candidature)) ? 'edit':'add'),'id_fam'=>$id_fam,'id_grp'=>$group->id  ,'id'=>((($candidature)) ? $candidature->id:'')) );
             //champ obligatoire
             foreach($required_field AS $name){
-                echo field_error($name, 	'<div class="alert alert-danger">', '</div>');
+                echo validation_show_error($name, 'alert');
             }
             ?>
             <div class="form-row">

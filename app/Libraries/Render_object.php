@@ -332,7 +332,7 @@ class Render_object{
 	public function __destruct()
 	{
 		if ($this->_debug == TRUE){
-			echo debug($this, __file__ );
+			d($this);
 		}
 	}
 	
