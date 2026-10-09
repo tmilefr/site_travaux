@@ -390,8 +390,6 @@ abstract class CrudController extends BaseController
 		if ($this->request->isAJAX()){
 			echo view($this->view_inprogress, $this->data_view);
 		} else {
-			echo view('template/head', $this->data_view);
-
 			// Nettoie le préfixe 'unique/' s'il est déjà présent
 			$view_clean = str_replace('unique/', '', $this->view_inprogress);
 
@@ -404,8 +402,8 @@ abstract class CrudController extends BaseController
 				$this->view_inprogress = 'unique/' . $this->_controller_name . '/' . $view_clean;
 			}
 
-			echo view($this->view_inprogress, $this->data_view);
-			echo view('template/footer', $this->data_view);
+			// layouts/page étend layouts/main (en-tête + pied) autour de la vue de contenu
+			echo view('layouts/page', $this->data_view + ['content_view' => $this->view_inprogress]);
 		}
 
 		if ($this->_debug) {

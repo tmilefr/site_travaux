@@ -130,7 +130,7 @@
 - [ ] `$config['maintenance'] = false`, `$config['debug_app'] = 'none'` (sauf test dédié).
 - [ ] SMTP de recette pointant sur une **boîte de capture** (MailHog, Mailtrap ou alias interne) — jamais sur les adresses réelles des familles.
 
-> ⚠️ **Règle absolue** : ne jamais lancer `php public/index.php cron sendmail` sur une base contenant les adresses réelles des familles avec un SMTP de production. Vider la table `sendmail` ou remplacer les adresses avant toute campagne de test.
+> ⚠️ **Règle absolue** : ne jamais lancer `php spark cron:sendmail` sur une base contenant les adresses réelles des familles avec un SMTP de production. Vider la table `sendmail` ou remplacer les adresses avant toute campagne de test.
 
 ### 3.2 Navigateurs cibles
 
@@ -395,12 +395,12 @@ SELECT SUM(nb_unites_valides_effectif) FROM infos
 
 | ID | P | Objectif | Étapes | Résultat attendu |
 |---|---|---|---|---|
-| CRO-01 | P1 | Envoi de la file | `php public/index.php cron sendmail 10` avec 3 mails en attente | 3 mails partis, `statut=1`, log en `sendmail_statut` |
+| CRO-01 | P1 | Envoi de la file | `php spark cron:sendmail 10` avec 3 mails en attente | 3 mails partis, `statut=1`, log en `sendmail_statut` |
 | CRO-02 | P1 | Gestion d'erreur SMTP | Config SMTP volontairement fausse | `statut=2`, message d'erreur enregistré, pas d'interruption du lot |
 | CRO-03 | P1 | Taille du lot | `cron sendmail 2` avec 5 mails en attente | Exactement 2 traités |
-| CRO-04 | P1 | Verrou d'exécution | Lancer deux exécutions simultanées | La seconde s'arrête immédiatement (`process.loc`) |
-| CRO-05 | P2 | Verrou résiduel | Laisser un `process.loc` orphelin | Comportement documenté (déblocage manuel ou expiration) — anomalie si blocage définitif |
-| CRO-06 | P1 | Mails de validation référent | `php public/index.php cron send_ref_validation_mails 7` avec une session à J+5 | Token créé (expiration J+30), mail poussé en file, `travaux.ref_mail_sent_at` renseigné |
+| CRO-04 | P1 | Verrou d'exécution | Lancer deux exécutions simultanées | La seconde s'arrête immédiatement (« Un autre processus est déjà en cours », code retour 1) |
+| CRO-05 | P2 | Verrou résiduel | Tuer (`kill -9`) une exécution en cours, puis relancer | Le verrou `flock` (`writable/cron.lock`) est libéré par le système : la relance fonctionne |
+| CRO-06 | P1 | Mails de validation référent | `php spark cron:ref-validation 7` avec une session à J+5 | Token créé (expiration J+30), mail poussé en file, `travaux.ref_mail_sent_at` renseigné |
 | CRO-07 | P1 | Non‑duplication | Relancer immédiatement CRO-06 | Aucun nouveau token ni mail pour la même session |
 | CRO-08 | P2 | Référent introuvable | Session sans référent ou chaîne `trombi` cassée | Session ignorée sans erreur, trace en log |
 | CRO-09 | P2 | Alertes nouvelles sessions | `cron send_new_session_alerts` | Familles concernées notifiées, filtrage par école et préférences respecté |
@@ -535,7 +535,7 @@ Ces cas s'appliquent à **chaque** contrôleur reposant sur `CrudController` (`F
 - [ ] Inscription puis désinscription à une session réelle de test, ensuite nettoyée
 - [ ] `Units_controller/valid` affiche les sessions en attente
 - [ ] Un mail de test traverse la file (`sendmail` → cron → boîte de réception)
-- [ ] `php public/index.php cron sendmail` et `cron send_ref_validation_mails` s'exécutent sans erreur en CLI
+- [ ] `php spark cron:sendmail`, `cron:ref-validation` et `cron:session-alerts` s'exécutent sans erreur en CLI
 - [ ] Crontabs actifs sur le serveur (`*/10 * * * *` et `0 6 * * *`)
 - [ ] Aucune erreur dans `writable/logs/` après 30 min d'exploitation
 
@@ -684,7 +684,7 @@ Ces points méritent une attention particulière en recette ; ils sont issus des
 | `trombi.ref` / `groupes_member.id_fam` en VARCHAR | Une valeur non numérique casse silencieusement la chaîne référent → aucun mail envoyé | ORG-08, CRO-08 |
 | Tokens de validation | Rejeu et expiration : risque de double comptage d'unités | REF-06, REF-07, REF-11 |
 | `Translations_controller` | Écriture de fichiers PHP depuis l'interface : traversée de répertoire et fichier corrompu | TRA-04, TRA-07 |
-| Verrou cron (`process.loc`) | Un verrou orphelin peut bloquer définitivement les envois | CRO-04, CRO-05 |
+| Verrou cron (`writable/cron.lock`, flock) | Deux cron simultanés doivent s'exclure ; le verrou ne doit jamais rester orphelin | CRO-04, CRO-05 |
 | Import CSV | Écrasement de données locales (unités, mots de passe) | IMP-09 |
 | Format de date `H` vs `h` | Bug historique sur `updated` — à revérifier après toute modification des éléments de date | BOF-12 |
 
