@@ -44,7 +44,9 @@ Events::on('pre_system', static function (): void {
      * --------------------------------------------------------------------
      * If you delete, they will no longer be collected.
      */
-    if (CI_DEBUG && ! is_cli()) {
+    // Barre de debug : opt-in (app.debugToolbar = true dans .env). Chaque requête écrit un fichier
+    // writable/debugbar/*.json (jusqu'à plusieurs Mo) : à ne pas laisser actif en continu.
+    if (CI_DEBUG && ! is_cli() && filter_var(env('app.debugToolbar', false), FILTER_VALIDATE_BOOLEAN)) {
         Events::on('DBQuery', 'CodeIgniter\Debug\Toolbar\Collectors\Database::collect');
         service('toolbar')->respond();
         // Hot Reload route - for framework use on the hot reloader.

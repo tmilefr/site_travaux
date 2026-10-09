@@ -110,4 +110,12 @@ class Filters extends BaseFilters
      * @var array<string, array<string, list<string>>>
      */
     public array $filters = [];
+
+    public function __construct()
+    {
+        parent::__construct();
+        if (! filter_var(env('app.debugToolbar', false), FILTER_VALIDATE_BOOLEAN)) {
+            $this->globals['after'] = array_values(array_diff($this->globals['after'], ['toolbar']));
+        }
+    }
 }
