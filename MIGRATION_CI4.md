@@ -39,7 +39,7 @@ de compatibilité CI3, plus de `get_instance()`, plus de `$this->load`. Cette br
   `$_autorize` (et uniquement pour `list/add/edit/delete/view` présents dans `$_autorize`).
   Les helpers internes (`init`, `LoadModel`, méthodes `_xxx`…) ne sont jamais joignables. Les URL gardent la casse
   d'origine ou le minuscule (compatible avec les droits ACL et les liens des e-mails).
-* **Vues** : les services utiles arrivent comme variables (`$render_object`, `$bootstrap_tools`, `$render_menu`, `$acl`) ;
+* **Vues** : les services utiles arrivent comme variables (`$render_object`, `$bootstrap_tools`, `$acl`) ;
   traductions par `tr('CLE')`, erreurs de formulaire par `validation_show_error('champ', 'alert')`,
   formulaires par `open_form()` (variante de `form_open()` qui accepte des identifiants non textuels).
 * **Modèles** : propriétés `$table`, `$primaryKey`, `$order`, `$direction`, `$json` ; les requêtes utilisent le Query

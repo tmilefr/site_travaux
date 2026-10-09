@@ -77,8 +77,6 @@ abstract class CrudController extends BaseController
 	public $bootstrap_tools = null;
 	/** @var \App\Libraries\Acl */
 	public $acl = null;
-	/** @var \App\Libraries\Render_menu */
-	public $render_menu = null;
 
 	/**
 	 * Liste blanche des colonnes que l'utilisateur peut masquer dans la liste.
@@ -107,7 +105,6 @@ abstract class CrudController extends BaseController
 		$this->acl             = service('acl');
 		$this->render_object   = service('renderObject');
 		$this->bootstrap_tools = service('bootstrapTools');
-		$this->render_menu     = service('renderMenu');
 
 		$this->render_object->_set('controller', $this);
 
@@ -313,7 +310,6 @@ abstract class CrudController extends BaseController
 		foreach($this->_autorize AS $key=>$value){
 			$this->_set_ui_rules($key , $value);
 		}
-		$this->render_menu->init();
 		//to permit use it in view.
 		$this->render_object->_set('_ui_rules' , $this->_rules);
 		$this->_debug($this->_rules, __FUNCTION__, '_ui_rules', __FILE__,181);
@@ -321,7 +317,6 @@ abstract class CrudController extends BaseController
 		// Services exposés aux vues
 		$this->data_view['render_object']   = $this->render_object;
 		$this->data_view['bootstrap_tools'] = $this->bootstrap_tools;
-		$this->data_view['render_menu']     = $this->render_menu;
 		$this->data_view['acl']             = $this->acl;
 
 		$search_object 					= new StdClass();
