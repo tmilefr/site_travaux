@@ -1,8 +1,7 @@
 # Disable directory browsing
-Options -Indexes
+# Options -Indexes : refuse sur certains hebergements (AllowOverride restreint)
 
 <IfModule mod_rewrite.c>
-	Options +FollowSymlinks
 	RewriteEngine On
 
 	# Si l'application est dans un sous-dossier, decommenter et adapter :

@@ -169,7 +169,6 @@ class Api extends CrudController
 				if ($this->runValidation($this->_model_name, $sendmail) === FALSE){
 					return $this->_renderJson(400, ['message' => implode(' ', service('validation')->getErrors())]);
 				}
-				$sendmail['updated'] = date('Y-m-d H:i:s');
 				$this->{$this->_model_name}->_set('key_value', $id);
 				$this->{$this->_model_name}->_set('datas', $sendmail);
 				$this->{$this->_model_name}->put();
@@ -182,14 +181,12 @@ class Api extends CrudController
 				if ($this->runValidation($this->_model_name, $sendmail) === FALSE){
 					return $this->_renderJson(400, ['message' => implode(' ', service('validation')->getErrors())]);
 				}
-				$sendmail['created'] = date('Y-m-d H:i:s');
 				$id = $this->{$this->_model_name}->post($sendmail);
 				/* Init E-mail Statut  */
 				$statut = [];
 				$statut['id_sen'] = $id;
 				$statut['date'] = date('Y-m-d H:i:s');
 				$statut['statut'] = 0; //nouveau
-				$statut['created'] = date('Y-m-d H:i:s');
 				$id = $this->Sendmail_statut_model->post($statut);
 
 				return $this->_renderJson(201 ,["id" => $id]);

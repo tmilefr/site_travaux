@@ -76,6 +76,7 @@ CREATE TABLE IF NOT EXISTS `travaux` (
   `created`          DATETIME     NULL,
   `updated`          DATETIME     NULL,
   `ref_mail_sent_at` DATETIME     NULL,
+  `alert_sent_at` DATETIME     NULL,
   PRIMARY KEY (`id`),
   KEY `idx_date` (`date_travaux`),
   KEY `idx_civil_year` (`civil_year`),
@@ -387,6 +388,7 @@ CALL _add_col_if_missing('travaux', 'statut',          "VARCHAR(255) NULL DEFAUL
 CALL _add_col_if_missing('travaux', 'archived',        'INT(11) NULL DEFAULT 0');
 CALL _add_col_if_missing('travaux', 'civil_year',      'VARCHAR(255) NULL');
 CALL _add_col_if_missing('travaux', 'ref_mail_sent_at','DATETIME NULL');
+CALL _add_col_if_missing('travaux', 'alert_sent_at','DATETIME NULL');
 CALL _add_col_if_missing('travaux', 'created',         'DATETIME NULL');
 CALL _add_col_if_missing('travaux', 'updated',         'DATETIME NULL');
 

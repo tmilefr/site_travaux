@@ -145,7 +145,7 @@ class Admwork_model extends Core_model{
 
 	/**
 	 * Marque la session comme "alerte e-mail famille envoyée".
-	 * Utilisé par Cron::send_new_session_alerts pour garantir l'idempotence.
+	 * Utilisé par cron:session-alerts (CronJobs::sendNewSessionAlerts) pour garantir l'idempotence.
 	 *
 	 * @param int $id_travaux
 	 * @return void
