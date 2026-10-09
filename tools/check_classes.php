@@ -5,6 +5,9 @@
  * des namespaces / use. Usage : php tools/check_classes.php
  */
 require __DIR__ . '/../vendor/autoload.php';
+// Les classes du framework sont seulement localisees (findFile), pas chargees : certaines (CLI) exigent le contexte spark
+$loader = null;
+foreach (spl_autoload_functions() as $f) { if (is_array($f) && $f[0] instanceof \Composer\Autoload\ClassLoader) { $loader = $f[0]; break; } }
 
 $root = realpath(__DIR__ . '/../app');
 $it   = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root));
@@ -37,9 +40,10 @@ foreach ($it as $file) {
         return ($ns ? $ns . '\\' : '') . $name;
     };
     $skip = ['self', 'static', 'parent', 'array', 'callable', 'string', 'int', 'float', 'bool', 'mixed', 'void', 'null', 'object', 'iterable', 'false', 'true', 'never'];
-    $check = function (string $name, int $line) use ($resolve, $skip, $path, &$bad) {
+    $check = function (string $name, int $line) use ($resolve, $skip, $path, &$bad, $loader) {
         if (in_array(strtolower($name), $skip, true)) return;
         $fq = $resolve($name);
+        if (str_starts_with($fq, 'CodeIgniter\\') && $loader->findFile($fq)) return;
         if (!class_exists($fq) && !interface_exists($fq) && !trait_exists($fq) && !enum_exists($fq)) {
             // classe declaree dans le meme fichier ?
             if (str_contains(file_get_contents($path), 'class ' . basename(str_replace('\\', '/', $fq)))) return;

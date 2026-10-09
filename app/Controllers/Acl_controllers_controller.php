@@ -516,7 +516,6 @@ class Acl_controllers_controller extends CrudController {
 	{
 		$ctrls_added   = 0;
 		$actions_added = 0;
-		$now = date('Y-m-d H:i:s');
 
 		// 1) Insertion des contrôleurs choisis
 		foreach ($picks_ctrls as $class) {
@@ -526,8 +525,6 @@ class Acl_controllers_controller extends CrudController {
 			$obj = new \stdClass();
 			$obj->controller = $class;
 			$obj->actions    = ''; // champ historique ; les vraies actions vont dans acl_actions
-			$obj->created    = $now;
-			$obj->updated    = $now;
 			$new_id = $this->{$this->_model_name}->post($obj);
 			$ctrls_added++;
 
@@ -565,8 +562,6 @@ class Acl_controllers_controller extends CrudController {
 			$obj = new \stdClass();
 			$obj->id_ctrl = $id_ctrl;
 			$obj->action  = $action;
-			$obj->created = $now;
-			$obj->updated = $now;
 			$this->Acl_actions_model->post($obj);
 			$actions_added++;
 		}
@@ -807,8 +802,6 @@ class Acl_controllers_controller extends CrudController {
 					$obj = new \stdClass();
 					$obj->id_ctrl = $row['id'];
 					$obj->action  = $action_name;
-					$obj->created = date('Y-m-d H:i:s');
-					$obj->updated = date('Y-m-d H:i:s');
 					$this->Acl_actions_model->post($obj);
 					$inserted++;
 				}

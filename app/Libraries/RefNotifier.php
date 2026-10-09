@@ -18,7 +18,7 @@ use App\Models\Trombi_model;
  *
  * Pour rester cohérent avec le reste de l'application, on ne fait pas
  * d'envoi SMTP synchrone : on insère une ligne dans `sendmail`, et le
- * cron `php index.php cron sendmail` (déjà planifié toutes les 10 min)
+ * cron `php spark cron:sendmail` (déjà planifié toutes les 10 min)
  * se charge de la livraison.
  *
  * Cas dégradé : si l'on ne retrouve pas l'e-mail du responsable, on
@@ -244,7 +244,7 @@ class RefNotifier
     /**
      * Dépose le mail dans la file `sendmail`. Crée aussi la ligne
      * `sendmail_statut` initiale (statut = 0), à l'identique du reste
-     * de l'application (cf. Api::mails et Cron::send_ref_validation_mails).
+     * de l'application (cf. Api::mails et cron:ref-validation).
      *
      * @param string|null $email
      * @param string|null $name

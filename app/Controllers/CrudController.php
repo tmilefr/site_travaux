@@ -77,8 +77,6 @@ abstract class CrudController extends BaseController
 	public $bootstrap_tools = null;
 	/** @var \App\Libraries\Acl */
 	public $acl = null;
-	/** @var \App\Libraries\Render_menu */
-	public $render_menu = null;
 
 	/**
 	 * Liste blanche des colonnes que l'utilisateur peut masquer dans la liste.
@@ -107,7 +105,6 @@ abstract class CrudController extends BaseController
 		$this->acl             = service('acl');
 		$this->render_object   = service('renderObject');
 		$this->bootstrap_tools = service('bootstrapTools');
-		$this->render_menu     = service('renderMenu');
 
 		$this->render_object->_set('controller', $this);
 
@@ -313,7 +310,6 @@ abstract class CrudController extends BaseController
 		foreach($this->_autorize AS $key=>$value){
 			$this->_set_ui_rules($key , $value);
 		}
-		$this->render_menu->init();
 		//to permit use it in view.
 		$this->render_object->_set('_ui_rules' , $this->_rules);
 		$this->_debug($this->_rules, __FUNCTION__, '_ui_rules', __FILE__,181);
@@ -321,7 +317,6 @@ abstract class CrudController extends BaseController
 		// Services exposés aux vues
 		$this->data_view['render_object']   = $this->render_object;
 		$this->data_view['bootstrap_tools'] = $this->bootstrap_tools;
-		$this->data_view['render_menu']     = $this->render_menu;
 		$this->data_view['acl']             = $this->acl;
 
 		$search_object 					= new StdClass();
@@ -395,8 +390,6 @@ abstract class CrudController extends BaseController
 		if ($this->request->isAJAX()){
 			echo view($this->view_inprogress, $this->data_view);
 		} else {
-			echo view('template/head', $this->data_view);
-
 			// Nettoie le préfixe 'unique/' s'il est déjà présent
 			$view_clean = str_replace('unique/', '', $this->view_inprogress);
 
@@ -409,8 +402,8 @@ abstract class CrudController extends BaseController
 				$this->view_inprogress = 'unique/' . $this->_controller_name . '/' . $view_clean;
 			}
 
-			echo view($this->view_inprogress, $this->data_view);
-			echo view('template/footer', $this->data_view);
+			// layouts/page étend layouts/main (en-tête + pied) autour de la vue de contenu
+			echo view('layouts/page', $this->data_view + ['content_view' => $this->view_inprogress]);
 		}
 
 		if ($this->_debug) {
@@ -453,21 +446,15 @@ abstract class CrudController extends BaseController
 		$this->{$this->_model_name}->_set('per_page',      $effective_pp);
 		$this->{$this->_model_name}->_set('page',          $this->session->get($this->set_ref_field('page')));
 
-		$cur_page   = (($this->{$this->_model_name}->_get('page')) ? $this->{$this->_model_name}->_get('page'):1);
-		$total_rows = $this->{$this->_model_name}->get_pagination();
+		// Model::paginate() : le pager partagé mémorise page courante et total ; l'URL est Controleur/list/page/N
+		$model = $this->{$this->_model_name};
+		$this->data_view['fields'] = $model->_get('autorized_fields');
+		$this->data_view['datas']  = $model->get();
+		$total_rows = $model->get_pagination();
+		$cur_page   = service('pager')->getCurrentPage();
 
-		if ($effective_pp > $total_rows ){
-			$cur_page = 1;
-			$this->{$this->_model_name}->_set('page', 1 );
-		}
-
-		// Pager natif : le numéro de page est le 4e segment de l'URL (Controleur/list/page/N)
-		$pager = service('pager');
-		$pager->setPath($this->_controller_name.'/list/page');
-		$this->data_view['pagination_links'] = $pager->makeLinks((int) $cur_page, (int) $effective_pp, (int) $total_rows, 'app_bootstrap', 4);
-
-		$this->data_view['fields']         = $this->{$this->_model_name}->_get('autorized_fields');
-		$this->data_view['datas']          = $this->{$this->_model_name}->get();
+		$model->pager->setPath($this->_controller_name.'/list/page');
+		$this->data_view['pagination_links'] = $model->pager->links('default', 'app_bootstrap');
 
 		// Vague 1
 		$this->data_view['total_rows']       = (int) $total_rows;
@@ -759,6 +746,10 @@ abstract class CrudController extends BaseController
 		}
 		$this->render_object->_set('post_data', $this->request->getPost());
 		foreach($fields AS $field){
+			// created / updated : horodatage natif du modèle, jamais fourni par le formulaire
+			if (in_array($this->{$model_name}->_get('defs')[$field]->_get('type'), ['created','updated'], true)){
+				continue;
+			}
 			if (method_exists($this->{$model_name}->_get('defs')[$field],'PrepareForDBA')){
 				$datas[$field] 	= $this->{$model_name}->_get('defs')[$field]->PrepareForDBA($this->request->getPost($field));
 			} else {

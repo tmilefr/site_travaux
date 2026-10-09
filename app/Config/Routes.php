@@ -26,7 +26,6 @@ $controllers = [
     'Api',
     'Candidatures_controller',
     'Cantine_controller',
-    'Cron',
     'Event_controller',
     'Familys_controller',
     'Files_controller',
@@ -52,13 +51,5 @@ foreach ($controllers as $controller) {
         $routes->match($verbs, $prefix, $controller . '::dispatch/index');
         $routes->match($verbs, $prefix . '/(:segment)', $controller . '::dispatch/$1');
         $routes->match($verbs, $prefix . '/(:segment)/(:any)', $controller . '::dispatch/$1/$2');
-    }
-}
-
-// Tâches planifiées (ligne de commande) : php public/index.php cron sendmail 10
-foreach (['sendmail', 'send_ref_validation_mails', 'send_new_session_alerts'] as $task) {
-    foreach (['cron', 'Cron'] as $prefix) {
-        $routes->cli($prefix . '/' . $task, 'Cron::' . $task);
-        $routes->cli($prefix . '/' . $task . '/(:num)', 'Cron::' . $task . '/$1');
     }
 }

@@ -16,6 +16,7 @@ class Core_model extends Model
 {
     protected $table = '';
     protected $primaryKey = 'id';
+    protected $returnType = 'object';
 
     /** Valeur de la clé primaire de l'enregistrement courant */
     protected $key_value;
@@ -66,6 +67,37 @@ class Core_model extends Model
     protected function log(): void
     {
         $this->_debug_array[] = (string) $this->db->getLastQuery();
+    }
+
+    /**
+     * Configure la protection des champs et les horodatages natifs d'après les colonnes réelles de la table :
+     * `created` est posé à l'insertion et `updated` à chaque écriture, par Model (plus par les formulaires).
+     */
+    protected function ensureFields(): void
+    {
+        if ($this->table === '' || $this->allowedFields) {
+            return;
+        }
+        $columns             = $this->db->getFieldNames($this->table);
+        $this->allowedFields = $columns;
+        $this->dateFormat    = 'datetime';
+        $this->createdField  = in_array('created', $columns, true) ? 'created' : '';
+        $this->updatedField  = in_array('updated', $columns, true) ? 'updated' : '';
+        $this->useTimestamps = $this->createdField !== '' || $this->updatedField !== '';
+    }
+
+    public function insert($row = null, bool $returnID = true)
+    {
+        $this->ensureFields();
+
+        return parent::insert($row, $returnID);
+    }
+
+    public function update($id = null, $row = null): bool
+    {
+        $this->ensureFields();
+
+        return parent::update($id, $row);
     }
 
     // ------------------------------------------------------------------
@@ -191,7 +223,7 @@ class Core_model extends Model
     /** Retourne la ligne correspondante ou false. */
     public function is_exist($field = 'id', $value = null, $fields = null)
     {
-        $row = $this->tb()->where($fields ?: [$field => $value])->get()->getRow();
+        $row = $this->where($fields ?: [$field => $value])->first();
         $this->log();
 
         return $row ?: false;
@@ -200,7 +232,7 @@ class Core_model extends Model
     /** Toutes les lignes (filtre + recherche globale + tri simple), sans pagination. */
     public function get_all()
     {
-        $b = $this->tb();
+        $b = $this->builder();
         foreach ((array) $this->filter as $key => $value) {
             $b->where($key, $value);
         }
@@ -209,10 +241,9 @@ class Core_model extends Model
                 $b->orLike($value, $this->global_search);
             }
         }
-        $datas = $b->select(implode(',', $this->autorized_fields))
-            ->orderBy((string) $this->order, (string) $this->direction)
-            ->get()
-            ->getResult();
+        $b->select(implode(',', $this->autorized_fields))
+            ->orderBy((string) $this->order, (string) $this->direction);
+        $datas = $this->findAll();
         $this->log();
 
         return $datas;
@@ -226,22 +257,22 @@ class Core_model extends Model
         return $datas;
     }
 
-    /** La ligne dont la clé primaire vaut $key_value. */
+    /** La ligne dont la clé primaire vaut $key_value (objet ou null). */
     public function get_one()
     {
-        $datas = $this->tb()->select('*')->where($this->primaryKey, $this->key_value)->get()->getRow();
+        $row = $this->find($this->key_value);
         $this->log();
 
-        return $datas;
+        return $row;
     }
 
-    /** Insère une ligne et retourne son identifiant. */
+    /** Insère une ligne (tableau ou objet) et retourne son identifiant. */
     public function post($datas)
     {
-        $this->tb()->insert($datas);
+        $id = $this->insert($datas);
         $this->log();
 
-        return $this->db->insertID();
+        return $id;
     }
 
     // ------------------------------------------------------------------
@@ -315,35 +346,37 @@ class Core_model extends Model
         return implode(',', $cols);
     }
 
-    /** Nombre total de lignes (filtre + recherche), mis en cache. */
+    /** Nombre total de lignes de la liste (renseigné par get() ; calculé à la demande sinon). */
     public function get_pagination()
     {
-        if (! $this->nb) {
-            $b = $this->tb();
+        if ($this->nb === null) {
+            $b = $this->builder();
             $this->applyFilter($b);
             $this->applySearch($b);
-            $this->nb = $b->select($this->table . '.' . $this->primaryKey)->get()->getNumRows();
+            $this->nb = $b->countAllResults();
         }
         $this->_debug_array[] = 'get_pagination : ' . $this->nb;
 
         return $this->nb;
     }
 
-    /** Page courante de la liste (filtre, recherche, tri, pagination). */
+    /**
+     * Page courante de la liste (filtre, recherche, tri) par Model::paginate().
+     * Le pager partagé de CI4 mémorise le total ; le numéro de page est le 4e segment de l'URL.
+     */
     public function get()
     {
-        $b = $this->tb();
+        $b = $this->builder();
         $this->applyFilter($b);
         $this->applySearch($b);
-        if ($this->per_page) {
-            if (! $this->page) {
-                $this->page = 1;
-            }
-            $b->limit((int) $this->per_page, ($this->page - 1) * $this->per_page);
-        }
         $b->select($this->listFields());
         $this->applyOrder($b);
-        $datas = $b->get()->getResult();
+        if ($this->per_page) {
+            $datas     = $this->paginate((int) $this->per_page, 'default', (int) $this->page, 4);
+            $this->nb  = $this->pager->getTotal('default');
+        } else {
+            $datas = $this->findAll();
+        }
         $this->log();
 
         return $datas;
@@ -352,12 +385,12 @@ class Core_model extends Model
     /** Comme get() mais sans LIMIT (export CSV). */
     public function get_all_filtered()
     {
-        $b = $this->tb();
+        $b = $this->builder();
         $this->applyFilter($b);
         $this->applySearch($b);
         $b->select($this->listFields());
         $this->applyOrder($b);
-        $datas = $b->get()->getResult();
+        $datas = $this->findAll();
         $this->log();
 
         return $datas;
@@ -366,11 +399,11 @@ class Core_model extends Model
     /** Supprime plusieurs lignes ; retourne le nombre de lignes supprimées. */
     public function delete_bulk(array $ids)
     {
-        $ids = array_filter(array_map('intval', $ids));
+        $ids = array_values(array_filter(array_map('intval', $ids)));
         if (empty($ids)) {
             return 0;
         }
-        $this->tb()->whereIn($this->primaryKey, $ids)->delete();
+        parent::delete($ids);
         $this->log();
 
         return $this->db->affectedRows();
@@ -379,15 +412,17 @@ class Core_model extends Model
     /** Met à jour la ligne courante avec $this->datas (limitée aux champs autorisés). */
     public function put($id = null)
     {
-        foreach ($this->datas as $field => $data) {
-            if (! in_array($field, $this->autorized_fields, true)) {
-                unset($this->datas[$field]);
-            }
-        }
         if ($id) {
             $this->key_value = $id;
         }
-        $this->tb()->where($this->primaryKey, $this->key_value)->update($this->datas);
+        $datas = $this->datas;
+        if ($this->autorized_fields) {
+            $datas = array_intersect_key((array) $datas, array_flip($this->autorized_fields));
+        }
+        if (! $this->key_value || ! $datas) {
+            return;
+        }
+        $this->update($this->key_value, $datas);
         $this->log();
     }
 
@@ -395,10 +430,13 @@ class Core_model extends Model
     public function delete($id = null, bool $purge = false)
     {
         $id ??= $this->key_value;
-        $this->tb()->whereIn($this->primaryKey, (array) $id)->delete();
+        if (! $id) {
+            return false;
+        }
+        $res = parent::delete($id, $purge);
         $this->log();
 
-        return true;
+        return $res;
     }
 
     // ------------------------------------------------------------------

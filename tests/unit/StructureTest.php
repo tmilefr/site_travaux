@@ -60,4 +60,36 @@ final class StructureTest extends CIUnitTestCase
             $this->assertNotNull(json_decode(file_get_contents($file)), basename($file) . ' : JSON invalide');
         }
     }
+
+    public function testCronJobsAreSparkCommands(): void
+    {
+        $this->assertFileDoesNotExist(APPPATH . 'Controllers/Cron.php', 'Les tâches planifiées sont des commandes spark (app/Commands)');
+
+        $names = [];
+        foreach (glob(APPPATH . 'Commands/*.php') as $file) {
+            $this->assertMatchesRegularExpression("/protected \\\$name\\s*=\\s*'(cron:[a-z-]+)'/", file_get_contents($file), basename($file));
+            preg_match("/protected \\\$name\\s*=\\s*'([^']+)'/", file_get_contents($file), $m);
+            $names[] = $m[1];
+        }
+        sort($names);
+        $this->assertSame(['cron:ref-validation', 'cron:sendmail', 'cron:session-alerts'], $names);
+    }
+
+    public function testLayoutAndMenuCellAreWired(): void
+    {
+        $this->assertFileExists(APPPATH . 'Views/layouts/main.php');
+        $this->assertFileExists(APPPATH . 'Views/layouts/page.php');
+        $this->assertFileExists(APPPATH . 'Cells/menu.php');
+
+        $layout = file_get_contents(APPPATH . 'Views/layouts/main.php');
+        $this->assertStringContainsString("renderSection('content')", $layout);
+
+        // chaque position de menu appelée par le gabarit existe dans Menus.json
+        $menus = json_decode(file_get_contents(APPPATH . 'Models/json/Menus.json'), true);
+        preg_match_all("/'position' => '([a-z]+)'/", $layout, $m);
+        $this->assertNotEmpty($m[1]);
+        foreach ($m[1] as $position) {
+            $this->assertArrayHasKey($position, $menus, "Menu « {$position} » absent de Menus.json");
+        }
+    }
 }

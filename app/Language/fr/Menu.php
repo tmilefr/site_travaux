@@ -3,9 +3,8 @@
 // =====================================================================
 // Traductions pour les MENUS — chargées sur toutes les pages.
 //
-// Render_menu (application/libraries/Render_menu.php) lit application/
-// models/json/Menus.json et appelle Lang($element->name) pour chaque
-// entrée. Comme le menu est rendu sur toutes les pages (via template/
+// App\Cells\MenuCell lit app/Models/json/Menus.json et appelle
+// tr($element->name) pour chaque entrée. Comme le menu est rendu sur toutes les pages (via template/
 // head.php), il a besoin des libellés de TOUS les contrôleurs, pas
 // seulement de celui qui sert la requête courante.
 //

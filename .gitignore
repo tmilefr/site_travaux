@@ -36,3 +36,4 @@ php_errors.log
 
 # Sorties PHPUnit
 /build/
+writable/cron.lock
