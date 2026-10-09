@@ -10,14 +10,11 @@ namespace App\Libraries\Elements;
 class element_created extends element
 {	
 	protected $form_mod;
+	/** Horodatage posé par le modèle (Model::$useTimestamps) : aucun champ de formulaire. */
 	public function RenderFormElement(){
-		if ($this->form_mod == 'edit'){
-			return  form_hidden($this->name, (string) $this->value);
-		} else {
-			return form_hidden($this->name, date('Y-m-d H:i:s'));
-		}
+		return '';
 	}
-	
+
 	public function Render(){
 		return ($this->value);
 	}

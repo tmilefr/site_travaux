@@ -453,21 +453,15 @@ abstract class CrudController extends BaseController
 		$this->{$this->_model_name}->_set('per_page',      $effective_pp);
 		$this->{$this->_model_name}->_set('page',          $this->session->get($this->set_ref_field('page')));
 
-		$cur_page   = (($this->{$this->_model_name}->_get('page')) ? $this->{$this->_model_name}->_get('page'):1);
-		$total_rows = $this->{$this->_model_name}->get_pagination();
+		// Model::paginate() : le pager partagé mémorise page courante et total ; l'URL est Controleur/list/page/N
+		$model = $this->{$this->_model_name};
+		$this->data_view['fields'] = $model->_get('autorized_fields');
+		$this->data_view['datas']  = $model->get();
+		$total_rows = $model->get_pagination();
+		$cur_page   = service('pager')->getCurrentPage();
 
-		if ($effective_pp > $total_rows ){
-			$cur_page = 1;
-			$this->{$this->_model_name}->_set('page', 1 );
-		}
-
-		// Pager natif : le numéro de page est le 4e segment de l'URL (Controleur/list/page/N)
-		$pager = service('pager');
-		$pager->setPath($this->_controller_name.'/list/page');
-		$this->data_view['pagination_links'] = $pager->makeLinks((int) $cur_page, (int) $effective_pp, (int) $total_rows, 'app_bootstrap', 4);
-
-		$this->data_view['fields']         = $this->{$this->_model_name}->_get('autorized_fields');
-		$this->data_view['datas']          = $this->{$this->_model_name}->get();
+		$model->pager->setPath($this->_controller_name.'/list/page');
+		$this->data_view['pagination_links'] = $model->pager->links('default', 'app_bootstrap');
 
 		// Vague 1
 		$this->data_view['total_rows']       = (int) $total_rows;
@@ -759,6 +753,10 @@ abstract class CrudController extends BaseController
 		}
 		$this->render_object->_set('post_data', $this->request->getPost());
 		foreach($fields AS $field){
+			// created / updated : horodatage natif du modèle, jamais fourni par le formulaire
+			if (in_array($this->{$model_name}->_get('defs')[$field]->_get('type'), ['created','updated'], true)){
+				continue;
+			}
 			if (method_exists($this->{$model_name}->_get('defs')[$field],'PrepareForDBA')){
 				$datas[$field] 	= $this->{$model_name}->_get('defs')[$field]->PrepareForDBA($this->request->getPost($field));
 			} else {
