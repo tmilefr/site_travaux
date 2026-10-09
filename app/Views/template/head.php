@@ -51,8 +51,8 @@
 								}
 								?>
 								</li>
-								<?php echo $render_menu->Get('sysmenu');?>						
-								<?php echo $render_menu->Get('optionmenu');?>	
+								<?= view_cell('App\Cells\MenuCell', ['position' => 'sysmenu']) ?>						
+								<?= view_cell('App\Cells\MenuCell', ['position' => 'optionmenu']) ?>	
 								<?php if ( $acl->Islog() ) { ?>
 
 								<?php
@@ -132,7 +132,7 @@
 								} ?>
 						<nav>
                             <ul class="nicdark_menu blue nicdark_margin010 nicdark_padding50">
-								<?php echo $render_menu->Get('mainmenu');?>	
+								<?= view_cell('App\Cells\MenuCell', ['position' => 'mainmenu']) ?>	
                             </ul>
 							
                         </nav>

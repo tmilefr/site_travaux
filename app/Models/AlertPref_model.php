@@ -18,7 +18,7 @@ namespace App\Models;
  *
  * Méthode métier :
  *   - GetSubscribers($type) : familles abonnées à un type donné
- *     (utilisée par Cron::send_new_session_alerts).
+ *     (utilisée par cron:session-alerts (CronJobs::sendNewSessionAlerts)).
  */
 class AlertPref_model extends Core_model
 {

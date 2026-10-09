@@ -28,6 +28,15 @@ class Services extends BaseService
         return new \App\Libraries\Bootstrap_tools();
     }
 
+    public static function cronJobs(bool $getShared = true)
+    {
+        if ($getShared) {
+            return static::getSharedInstance('cronJobs');
+        }
+
+        return new \App\Libraries\CronJobs();
+    }
+
     public static function renderObject(bool $getShared = true)
     {
         if ($getShared) {
@@ -35,15 +44,6 @@ class Services extends BaseService
         }
 
         return new \App\Libraries\Render_object(static::bootstrapTools());
-    }
-
-    public static function renderMenu(bool $getShared = true)
-    {
-        if ($getShared) {
-            return static::getSharedInstance('renderMenu');
-        }
-
-        return new \App\Libraries\Render_menu(static::acl());
     }
 
     /** Contrôle d'accès (rôles / actions) de la requête courante. */
