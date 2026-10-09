@@ -96,7 +96,7 @@ site_travaux/
 │   ├── Language/fr/                # i18n : tableaux PHP (un fichier par contrôleur + Menu, Traduction, Validation)
 │   ├── Helpers/app_helper.php        # tr(), open_form()
 │   └── Views/
-│       ├── template/               # head.php, footer.php (layout)
+│       ├── layouts/                # main.php (gabarit), page.php (View Layout : étend main)
 │       ├── edition/                # formulaires
 │       ├── unique/                 # vues spécifiques par contrôleur
 │       └── errors/                 # pages d'erreur CI4
@@ -666,14 +666,14 @@ Réponse 201 :
 
 ## 10. Cron & tâches planifiées
 
-Les commandes sont à lancer via PHP CLI depuis la racine du projet.
+Les tâches sont des commandes spark (`app/Commands`, groupe « Travaux ») à lancer depuis la racine du projet (`php spark list`). La logique est dans `App\Libraries\CronJobs` ; un verrou `flock` (`writable/cron.lock`) empêche deux exécutions simultanées et disparaît seul si le processus est tué.
 
-### 10.1 `cron sendmail`
+### 10.1 `cron:sendmail`
 
 Pool d'envoi des emails en file (`sendmail` table).
 
 ```bash
-php public/index.php cron sendmail [size=10]
+php spark cron:sendmail [taille=10]
 ```
 
 - Récupère jusqu'à `$size` mails en statut 0
@@ -684,15 +684,15 @@ php public/index.php cron sendmail [size=10]
 **Crontab recommandé** :
 
 ```cron
-*/10 * * * *  cd /var/www/site_travaux && php public/index.php cron sendmail
+*/10 * * * *  cd /var/www/site_travaux && php spark cron:sendmail
 ```
 
-### 10.2 `cron send_ref_validation_mails`
+### 10.2 `cron:ref-validation`
 
 Envoie aux référents un lien personnel pour la validation des présences.
 
 ```bash
-php public/index.php cron send_ref_validation_mails [days_before=7]
+php spark cron:ref-validation [jours=7]
 ```
 
 - Cherche les `travaux` non archivés, sans `ref_mail_sent_at`, à venir dans `$days_before` jours
@@ -705,10 +705,21 @@ php public/index.php cron send_ref_validation_mails [days_before=7]
 **Crontab recommandé** :
 
 ```cron
-0 6 * * *  cd /var/www/site_travaux && php public/index.php cron send_ref_validation_mails
+0 6 * * *  cd /var/www/site_travaux && php spark cron:ref-validation
 ```
 
-### 10.3 Archivage automatique
+### 10.3 `cron:session-alerts`
+
+Alerte les familles abonnées (Home/myaccount) de chaque nouvelle session publiée.
+
+```bash
+php spark cron:session-alerts [jours=0]
+```
+
+- Nécessite la colonne `travaux.alert_sent_at` (`database/sql/mig_alert_sent_at.sql`), posée à l'envoi pour ne pas notifier deux fois
+- `jours` : ne notifie que les sessions des N prochains jours (0 = sans borne)
+
+### 10.4 Archivage automatique
 
 Pas un vrai cron : déclenché à la première visite de `Admwork_controller/register` chaque jour, avec throttle via `writable/cache/last_archive_run.txt`. Archive les travaux passés depuis plus de 30 jours (sauf type `URG`).
 
@@ -838,7 +849,7 @@ SOURCE database/sql/mig_cantine.sql;
 - Vues spécifiques : `app/Views/unique/Xxx_controller_<action>.php`
 - Schémas JSON : `app/Models/json/Xxx.json` (PascalCase, sans `_model`)
 - Langue : `app/Language/<idiom>/<controller_lowercase>_lang.php`
-- Cron : méthode publique de `Cron` controller, lock via `process.loc`
+- Cron : commande spark dans `app/Commands`, logique dans `CronJobs`, verrou `writable/cron.lock`
 
 ### 13.4 Bonnes pratiques observées
 
@@ -846,7 +857,7 @@ SOURCE database/sql/mig_cantine.sql;
 - **Cache permissions** : par `role_id` en session, invalidé à la déconnexion.
 - **Migration password transparente** : pas de batch SQL à lancer, la migration se fait à la connexion.
 - **Timing constant** : `PasswordAuthenticator::verify()` exécute `password_hash` même si le login n'existe pas, pour empêcher l'énumération d'utilisateurs.
-- **Lock cron** : `Cron::_setLock()` empêche deux exécutions parallèles via `process.loc`.
+- **Lock cron** : `CronJobs::locked()` (flock sur `writable/cron.lock`) empêche deux exécutions parallèles.
 - **Throttle archivage** : flag fichier journalier dans `writable/cache/`.
 
 ### 13.5 Pièges connus

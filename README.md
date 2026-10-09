@@ -14,7 +14,7 @@ app/
 ├── Libraries/     → Acl, Render_object (factory), Bootstrap_tools, Libpdf...
 ├── Config/        → configuration CI4 (Travaux.php = réglages applicatifs, Routes, Filters, Services...)
 ├── Language/      → i18n (français)
-└── Views/         → template/, edition/, unique/
+└── Views/         → layouts/, edition/, unique/
 public/            → document root (index.php, assets/, files/)
 database/sql/      → SQL manuels + jeu de test de recette
 
@@ -58,8 +58,8 @@ codeignter_implement/
 	│
 	└── views
 		├── template
-		│	├── head.php
-		│	└── footer.php
+		│	├── main.php   (gabarit : en-tête, menus, pied)
+		│	└── page.php   (étend main avec la vue de contenu)
 		├── edtion
 		│	└── XXXX_form.php => edition de la vue XXX
 		└── unique
@@ -786,7 +786,7 @@ PUT /api/mails/7
 ### Implementation de l'envoi
 En console 
 ```php
-php public/index.php cron sendmail
+php spark cron:sendmail
 
 ```
 

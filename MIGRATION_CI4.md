@@ -24,7 +24,12 @@ de compatibilité CI3, plus de `get_instance()`, plus de `$this->load`. Cette br
 | E-mail | `CI_Email` | `service('email')`, configuration `Config\Email` |
 | Configuration | `config/app.php`, `secured.php` | `Config\Travaux` + variables du `.env` |
 | Langues | `$lang['CLE']` + `$this->lang->line()` | tableaux `return [...]` dans `app/Language/fr/` + helper `tr()` |
-| Pagination | `CI_Pagination` | `service('pager')->makeLinks(..., segment 4)` + gabarit `app/Views/Pager/app_bootstrap.php` (URL `.../list/page/N`) |
+| Pagination | `CI_Pagination` | `Model::paginate()` (pager partagé, segment 4) + gabarit `app/Views/Pager/app_bootstrap.php` (URL `.../list/page/N`) |
+| Accès aux données | `$this->db->get()` + méthodes maison | `Core_model` : `find` / `insert` / `update` / `delete` / `first` / `findAll` / `paginate` natifs, `allowedFields` déduit des colonnes de la table |
+| Horodatage | champs `created` / `updated` postés par le formulaire | `Model::$useTimestamps` : `created` à l'insertion, `updated` à chaque écriture, jamais fournis par le client |
+| Tâches planifiées | contrôleur `Cron` (`index.php cron sendmail`) | commandes spark `cron:sendmail`, `cron:ref-validation`, `cron:session-alerts` (`app/Commands`) + `App\Libraries\CronJobs` |
+| Menus | bibliothèque `Render_menu` (HTML dans le PHP) | View Cell `App\Cells\MenuCell` (droits ACL) + `app/Cells/menu.php` (balisage) |
+| Gabarit de page | `template/head` + vue + `template/footer` | View Layouts : `layouts/page` étend `layouts/main` (`extend` / `section` / `renderSection`) |
 | Journal d'erreurs | `MY_Exceptions` | `abort()` (404/400...), gestionnaire d'erreurs CI4 |
 
 ## 2. Conventions de l'application
@@ -77,7 +82,13 @@ chmod -R u+rwX writable public/files public/data
 3. **Secrets** : reporter l'ancien `application/config/secured.php` dans le `.env` (voir `env.example`) :
    `API_KEY` → `travaux.apiKey`, `PASSWORD_SALT` → `travaux.passwordSalt`, `SITE_CAPTCHA_KEY`/`SITE_CAPTCHA_SECRET_KEY` →
    `travaux.siteCaptchaKey`/`travaux.siteCaptchaSecretKey`, `mail_from_*` → `travaux.mailFrom*`, `smtp_*` → `email.SMTP*`.
-4. **Cron** : `php public/index.php cron sendmail [n]` (le dernier argument n'est plus l'environnement : il vient de `CI_ENVIRONMENT`).
+4. **Cron** : commandes spark, à planifier ainsi (le contrôleur `Cron` et ses URL n'existent plus) :
+   ```cron
+   */10 * * * *  cd /chemin/du/site && php spark cron:sendmail
+   0 6 * * *     cd /chemin/du/site && php spark cron:ref-validation
+   0 7 * * *     cd /chemin/du/site && php spark cron:session-alerts
+   ```
+   Appliquer aussi `database/sql/mig_alert_sent_at.sql` (colonne `travaux.alert_sent_at`, absente des migrations d'origine).
 5. **Traductions** : les langues sont désormais identifiées par leur code (`fr`) et non par `french`.
 
 ## 5. Changements de comportement et corrections
@@ -88,7 +99,7 @@ chmod -R u+rwX writable public/files public/data
   L'accès non authentifié à `Api/login` reste bloqué par l'ACL (non modifié).
 * Le CRUD générique n'est plus joignable pour `Home`, `Cantine_controller`, `Parameters`… (contrôleurs sans `$_autorize`) :
   c'était possible mais sans objet. `MY_Controller`/`BaseController` ne sont plus routables (404).
-* L'horodatage par défaut des champs « créé/modifié » est en 24 h (`H`) au lieu de 12 h (`h`).
+* Les champs « créé/modifié » sont posés par le modèle (24 h) et non plus par des champs cachés de formulaire ; `updated` est aussi renseigné à la création.
 * Un champ vide non requis n'est plus soumis aux autres règles (comportement CI3 conservé explicitement : `permit_empty`).
 
 ## 6. Vérifications
@@ -101,7 +112,7 @@ tools/smoke.sh http://localhost:8080 <login> <mot_de_passe> routes.txt   # GET d
 
 Passé sur la base de recette (`database/sql/jeu_de_test/`) en admin et en famille : connexion bcrypt et migration MD5 → bcrypt,
 listes (filtres, tri, pagination, export CSV), formulaires CRUD, inscription à une session (POST), PDF, scan ACL,
-traductions, cron `sendmail` en CLI. Les pages `view/*` sans vue associée et `Jsondata` sans argument échouent comme avant.
+traductions, commandes spark (`cron:sendmail` jusqu'à l'échec SMTP du bac à sable, `cron:ref-validation`, `cron:session-alerts`, verrou). Les pages `view/*` sans vue associée et `Jsondata` sans argument échouent comme avant.
 
 ## 7. Reste à faire / points d'attention
 
