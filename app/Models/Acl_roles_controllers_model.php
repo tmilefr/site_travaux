@@ -18,7 +18,7 @@ class Acl_roles_controllers_model extends Core_model{
 	}
 
 	function DelRole($id_role){
-		$this->db->table($this->table)->whereIn('id_role', $id_role)->delete();
+		$this->db->table($this->table)->whereIn('id_role', (array) $id_role)->delete();
 		$this->log();
 	}
 }
