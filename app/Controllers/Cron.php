@@ -70,15 +70,13 @@ class Cron extends CrudController {
             $this->email->setMessage($listemail->message);
 
             $listemail->statut = (($this->email->send(false)) ? 1:2);
-            // Bug fix : 'h' = format 12h (sans AM/PM), donc 14h devenait 02h.
-            // 'H' = format 24h, qui est le bon pour un timestamp en BDD.
-            $listemail->updated = date('Y-m-d H:i:s');
 
             /* MAJ send mail */
             $sendmail = [];
             foreach( $listemail AS $field=>$value){
                 $sendmail[$field] = $value;
             }
+            unset($sendmail['updated']); // horodaté par le modèle
             $this->Sendmail_model->_set('key_value', $listemail->id);
             $this->Sendmail_model->_set('datas', $sendmail);
             $this->Sendmail_model->put();
@@ -88,7 +86,6 @@ class Cron extends CrudController {
             $statut['id_sen'] = $listemail->id;
             $statut['date'] = date('Y-m-d H:i:s');
             $statut['sendstatut'] = $listemail->statut; //nouveau
-            $statut['created'] = date('Y-m-d H:i:s');
             $statut['error'] = $this->email->printDebugger();
             $statut['sendstatut'] = $listemail->statut;
             $this->Sendmail_statut_model->post($statut);
@@ -196,7 +193,6 @@ class Cron extends CrudController {
                 'email'     => $refFamily->e_mail,
                 'object'    => $subject,
                 'message'   => $message,
-                'created'   => date('Y-m-d H:i:s'),
             ]);
 
             // 5) Marquer la session comme notifiée
@@ -295,7 +291,6 @@ class Cron extends CrudController {
                     'email'     => $fam->e_mail,
                     'object'    => $subject,
                     'message'   => $message_template,
-                    'created'   => date('Y-m-d H:i:s'),
                 ]);
                 $total_mails++;
             }
