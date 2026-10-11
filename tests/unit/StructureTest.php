@@ -92,4 +92,16 @@ final class StructureTest extends CIUnitTestCase
             $this->assertArrayHasKey($position, $menus, "Menu « {$position} » absent de Menus.json");
         }
     }
+
+    public function testUploadsGoThroughTheWhitelist(): void
+    {
+        foreach (['file', 'img'] as $type) {
+            $code = file_get_contents(APPPATH . "Libraries/Elements/element_{$type}.php");
+            $this->assertStringContainsString('UploadTrait', $code);
+            $this->assertStringNotContainsString('move_uploaded_file', $code, "element_{$type} doit utiliser UploadedFile::move()");
+            $this->assertStringNotContainsString('$_FILES', $code);
+        }
+        $this->assertFileExists(ROOTPATH . 'public/files/.htaccess', 'Les scripts doivent être interdits dans public/files');
+        $this->assertDoesNotMatchRegularExpression("/'php'|\"php\"/", file_get_contents(APPPATH . 'Libraries/Elements/element_file.php'));
+    }
 }
