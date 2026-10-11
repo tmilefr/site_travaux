@@ -93,6 +93,13 @@ chmod -R u+rwX writable public/files public/data
 
 ## 5. Changements de comportement et corrections
 
+* **Envois de fichiers** (`element_file`, `element_img`) : seules les extensions d'une liste blanche sont acceptées (jamais de `.php`),
+  le nom est assaini, un fichier existant n'est jamais écrasé, une image est vérifiée (`getimagesize`) puis redimensionnée par le
+  gestionnaire d'images natif (JPEG, PNG, GIF, WebP). Avant : un `.php` envoyé par le formulaire était exécutable depuis
+  `public/files/` et un PNG provoquait une erreur 500. `public/files/.htaccess` interdit en plus l'exécution de scripts.
+* Génération cantine : le journal utilisait des colonnes absentes de certaines bases (`date_deb`, `date_fin`, `nb_skipped`) ; appliquer
+  `database/sql/mig_cantine_generation_cols.sql` (rejouable).
+
 * `Familys_controller::import_history` n'avait jamais chargé `FamilyImport_model` (erreur 500) — corrigé.
 * `Admwork_controller::MakePdf` visait une vue inexistante — corrigé ; le PDF est renvoyé par la réponse HTTP.
 * `Api::login` s'appuyait sur `Acl::CheckLogin()` (qui retourne un message) : il appelle maintenant `Auth::Login()` et renvoie le JWT.
@@ -108,6 +115,7 @@ chmod -R u+rwX writable public/files public/data
 php tools/check_classes.php              # toutes les classes référencées dans app/ se résolvent
 vendor/bin/phpunit tests/unit            # structure (routes, langues, API CI3 absente), helpers
 tools/smoke.sh http://localhost:8080 <login> <mot_de_passe> routes.txt   # GET de chaque route : 500 et pages HTML vides
+tools/e2e.sh http://localhost:8080 <login> <mot_de_passe>               # envois de fichiers, import CSV, génération cantine
 ```
 
 Passé sur la base de recette (`database/sql/jeu_de_test/`) en admin et en famille : connexion bcrypt et migration MD5 → bcrypt,
@@ -116,8 +124,9 @@ traductions, commandes spark (`cron:sendmail` jusqu'à l'échec SMTP du bac à s
 
 ## 7. Reste à faire / points d'attention
 
-* À recetter : uploads de fichiers/images (`element_file`, `element_img`), import CSV des familles, génération cantine,
-  envoi SMTP réel.
+* Recette de bout en bout rejouable : `tools/e2e.sh <url> <login> <mot_de_passe>` (base de recette uniquement) couvre les envois de
+  fichiers et d'images, l'import CSV des familles et la génération cantine (30 contrôles). Reste à recetter : envoi SMTP vers des
+  adresses réelles et le SSO Delta (non joignables depuis le bac à sable).
 * Les actions renvoient encore souvent le HTML par `echo` dans `render_view()` (CI4 le capture comme corps de réponse) ; elles
   peuvent progressivement `return view(...)`.
 * Les identifiants de l'ancien `.env` versionné (`DB_DEV_*`, `PWD`) figurent dans l'historique git : à changer.
