@@ -77,8 +77,19 @@ chmod -R u+rwX writable public/files public/data
 ```
 
 1. **Document root** du serveur web : `public/` (un `.htaccess` racine redirige vers `public/` en mutualisé).
-2. **Table des sessions** : exécuter une fois `database/sql/ci4_ci_sessions.sql` (colonne `TIMESTAMP` au lieu d'un entier ;
-   purge les sessions : les utilisateurs devront se reconnecter).
+2. **Base de données de production** : après une sauvegarde (`mysqldump`), exécuter **un seul script**, rejouable sans risque :
+   ```bash
+   mysql -u USER -p NOM_DE_LA_BASE < database/sql/mig_prod_vers_ci4.sql
+   ```
+   Il remplace `mig_family_import.sql`, `mig_cantine.sql`, `mig_alert_sent_at.sql`, `mig_cantine_generation_cols.sql`,
+   `mig_sendmail_statut_error_text.sql` et `ci4_ci_sessions.sql`, et ajoute ce qu'aucun script ne créait :
+   `famille.password` en `VARCHAR(255)` (le hash bcrypt fait 60 caractères, la colonne en faisait 50 : la connexion d'une famille
+   dont le mot de passe est migré aurait échoué), `famille.alert_types` / `type_session`, `infos.civil_year`,
+   `travaux.ref_mail_sent_at` / `alert_sent_at`, les tables `validation_tokens`, `famille_alerts`, `parameters`,
+   `family_import`, `cantine_*`, et la table des sessions au format CI4 (**les sessions en cours sont perdues** : tout le monde
+   se reconnecte). Aucune donnée n'est supprimée ; validé sur le schéma de production (MariaDB 10.11) avec smoke test et `tools/e2e.sh`.
+   Ensuite, ouvrir *Droits > Contrôleurs* et lancer le scan pour déclarer les contrôleurs/actions ajoutés
+   (`Cantine_controller`, import CSV des familles, `Parameters`…), puis les cocher pour les rôles concernés.
 3. **Secrets** : reporter l'ancien `application/config/secured.php` dans le `.env` (voir `env.example`) :
    `API_KEY` → `travaux.apiKey`, `PASSWORD_SALT` → `travaux.passwordSalt`, `SITE_CAPTCHA_KEY`/`SITE_CAPTCHA_SECRET_KEY` →
    `travaux.siteCaptchaKey`/`travaux.siteCaptchaSecretKey`, `mail_from_*` → `travaux.mailFrom*`, `smtp_*` → `email.SMTP*`.
@@ -92,6 +103,13 @@ chmod -R u+rwX writable public/files public/data
 5. **Traductions** : les langues sont désormais identifiées par leur code (`fr`) et non par `french`.
 
 ## 5. Changements de comportement et corrections
+
+* **Envois de fichiers** (`element_file`, `element_img`) : seules les extensions d'une liste blanche sont acceptées (jamais de `.php`),
+  le nom est assaini, un fichier existant n'est jamais écrasé, une image est vérifiée (`getimagesize`) puis redimensionnée par le
+  gestionnaire d'images natif (JPEG, PNG, GIF, WebP). Avant : un `.php` envoyé par le formulaire était exécutable depuis
+  `public/files/` et un PNG provoquait une erreur 500. `public/files/.htaccess` interdit en plus l'exécution de scripts.
+* Génération cantine : le journal utilisait des colonnes absentes de certaines bases (`date_deb`, `date_fin`, `nb_skipped`) ; appliquer
+  `database/sql/mig_cantine_generation_cols.sql` (rejouable).
 
 * `Familys_controller::import_history` n'avait jamais chargé `FamilyImport_model` (erreur 500) — corrigé.
 * `Admwork_controller::MakePdf` visait une vue inexistante — corrigé ; le PDF est renvoyé par la réponse HTTP.
@@ -108,6 +126,7 @@ chmod -R u+rwX writable public/files public/data
 php tools/check_classes.php              # toutes les classes référencées dans app/ se résolvent
 vendor/bin/phpunit tests/unit            # structure (routes, langues, API CI3 absente), helpers
 tools/smoke.sh http://localhost:8080 <login> <mot_de_passe> routes.txt   # GET de chaque route : 500 et pages HTML vides
+tools/e2e.sh http://localhost:8080 <login> <mot_de_passe>               # envois de fichiers, import CSV, génération cantine
 ```
 
 Passé sur la base de recette (`database/sql/jeu_de_test/`) en admin et en famille : connexion bcrypt et migration MD5 → bcrypt,
@@ -116,8 +135,9 @@ traductions, commandes spark (`cron:sendmail` jusqu'à l'échec SMTP du bac à s
 
 ## 7. Reste à faire / points d'attention
 
-* À recetter : uploads de fichiers/images (`element_file`, `element_img`), import CSV des familles, génération cantine,
-  envoi SMTP réel.
+* Recette de bout en bout rejouable : `tools/e2e.sh <url> <login> <mot_de_passe>` (base de recette uniquement) couvre les envois de
+  fichiers et d'images, l'import CSV des familles et la génération cantine (30 contrôles). Reste à recetter : envoi SMTP vers des
+  adresses réelles et le SSO Delta (non joignables depuis le bac à sable).
 * Les actions renvoient encore souvent le HTML par `echo` dans `render_view()` (CI4 le capture comme corps de réponse) ; elles
   peuvent progressivement `return view(...)`.
 * Les identifiants de l'ancien `.env` versionné (`DB_DEV_*`, `PWD`) figurent dans l'historique git : à changer.

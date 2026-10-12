@@ -302,11 +302,12 @@ CREATE TABLE IF NOT EXISTS `family_import` (
 -- ------------------------------------------------------ cantine_generation
 CREATE TABLE IF NOT EXISTS `cantine_generation` (
   `id`         INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
-  `date_from`  DATE         NULL,
-  `date_to`    DATE         NULL,
+  `date_deb`   DATE         NULL,
+  `date_fin`   DATE         NULL,
   `ecole`      VARCHAR(3)   NULL,
   `civil_year` VARCHAR(255) NULL,
   `nb_created` INT(11)      NULL,
+  `nb_skipped` INT(11)      NULL,
   `created`    DATETIME     NULL,
   `updated`    DATETIME     NULL,
   PRIMARY KEY (`id`)
