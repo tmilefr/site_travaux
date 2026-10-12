@@ -104,4 +104,14 @@ final class StructureTest extends CIUnitTestCase
         $this->assertFileExists(ROOTPATH . 'public/files/.htaccess', 'Les scripts doivent être interdits dans public/files');
         $this->assertDoesNotMatchRegularExpression("/'php'|\"php\"/", file_get_contents(APPPATH . 'Libraries/Elements/element_file.php'));
     }
+
+    public function testDocumentationEmbedsTheProductionMigrationScript(): void
+    {
+        $doc = file_get_contents(ROOTPATH . 'DOCUMENTATION.md');
+        $sql = trim(file_get_contents(ROOTPATH . 'database/sql/mig_prod_vers_ci4.sql'));
+
+        $this->assertStringContainsString($sql, str_replace("\r\n", "\n", $doc), 'Le script SQL du § 13 de DOCUMENTATION.md doit être identique à database/sql/mig_prod_vers_ci4.sql');
+        $this->assertFileDoesNotExist(ROOTPATH . 'MIGRATION_CI4.md', 'Documentation fusionnée dans DOCUMENTATION.md');
+        $this->assertFileDoesNotExist(ROOTPATH . 'TEST_PLAN.md', 'Documentation fusionnée dans DOCUMENTATION.md');
+    }
 }
