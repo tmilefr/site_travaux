@@ -37,3 +37,5 @@ php_errors.log
 # Sorties PHPUnit
 /build/
 writable/cron.lock
+/public/files/*
+!/public/files/.htaccess

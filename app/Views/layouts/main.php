@@ -159,6 +159,9 @@
 
 		
 
+<?php if ($upload_error = session()->getFlashdata('upload_error')): ?>
+	<div class="nicdark_container nicdark_clearfix"><div class="alert alert-danger"><?= esc($upload_error) ?></div></div>
+<?php endif ?>
 <?= $this->renderSection('content') ?>
 <div class="nicdark_space30"></div>
 
