@@ -190,6 +190,40 @@ class Database extends Config
         ],
     ];
 
+    /**
+     * Base MariaDB dédiée aux tests fonctionnels (schéma de production + migration CI4).
+     * Paramétrée par l'environnement : database.mariadb.hostname, .username, .password, .database, .port
+     * (voir .github/workflows/ci.yml et tests/_support/Database/MariaDbTestCase.php).
+     *
+     * @var array<string, mixed>
+     */
+    public array $mariadb = [
+        'DSN'          => '',
+        'hostname'     => '127.0.0.1',
+        'username'     => 'root',
+        'password'     => 'root',
+        'database'     => 'site_travaux_test',
+        'DBDriver'     => 'MySQLi',
+        'DBPrefix'     => '',
+        'pConnect'     => false,
+        'DBDebug'      => true,
+        'charset'      => 'utf8mb4',
+        'DBCollat'     => 'utf8mb4_general_ci',
+        'swapPre'      => '',
+        'encrypt'      => false,
+        'compress'     => false,
+        'strictOn'     => false,
+        'failover'     => [],
+        'port'         => 3306,
+        'numberNative' => false,
+        'foundRows'    => false,
+        'dateFormat'   => [
+            'date'     => 'Y-m-d',
+            'datetime' => 'Y-m-d H:i:s',
+            'time'     => 'H:i:s',
+        ],
+    ];
+
     public function __construct()
     {
         parent::__construct();
