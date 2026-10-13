@@ -60,6 +60,10 @@ class element_table extends element
 			if ($value != '...'){
 				$lgn = new \stdClass();
 				foreach($this->mdl()->_get('defs') AS $field=>$defs){
+					// created / updated : horodatage posé par le modèle, jamais fourni par le formulaire
+					if (in_array($field, ['created','updated'], true)){
+						continue;
+					}
 					$lgn->{$field} = $datas[$field][$key];
 				}
 				if ($lgn->{$this->ref}){
