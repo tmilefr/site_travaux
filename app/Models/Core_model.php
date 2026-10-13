@@ -106,6 +106,13 @@ class Core_model extends Model
     {
         $this->ensureFields();
 
+        // `created` ne doit jamais être écrasé à la mise à jour : on l'écarte (vide ou non).
+        if (is_array($row)) {
+            unset($row['created']);
+        } elseif (is_object($row)) {
+            unset($row->created);
+        }
+
         return parent::update($id, $row);
     }
 
