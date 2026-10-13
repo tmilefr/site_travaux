@@ -1391,7 +1391,7 @@ La réponse contient le JWT (`jwt`), `id`, `role_id`, `type`, `expireAt` (voir [
 
 L'envoi effectif est fait par `php spark cron:sendmail` ([§ 9](#9-tâches-planifiées-spark)).
 
-> `api/login` est dans la liste des pages invitées de l'ACL (`Acl::$guestPages`) : un client externe peut s'y connecter sans session. Sans cela, `AclFilter` redirigeait l'appel vers la page de connexion HTML. Les autres actions de l'API exigent la session ouverte par ce login (cookie).
+> `api/login` est dans la liste des pages invitées de l'ACL (`Acl::$guestPages`) : un client externe peut s'y connecter sans session. Sans cela, `AclFilter` redirigeait l'appel vers la page de connexion HTML. Les autres actions de l'API s'authentifient avec le JWT renvoyé par ce login, en en-tête `Authorization: Bearer <jwt>` (lu par `Acl`, sans session ; durée de vie 6000 s). La session web reste acceptée.
 
 **Jeu de test de recette** — `GET|POST /Api/jeu_de_test` (recette uniquement). L'action recharge le jeu de `database/sql/jeu_de_test/` sans accès à MySQL :
 

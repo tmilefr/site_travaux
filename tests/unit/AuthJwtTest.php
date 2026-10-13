@@ -87,4 +87,19 @@ final class AuthJwtTest extends CIUnitTestCase
         $this->assertSame(7, $restored->id);
         $this->assertSame(3, $restored->role_id);
     }
+
+    public function testVerifyJwtReturnsUserDataOrNull(): void
+    {
+        $auth = $this->makeAuth();
+        $auth->EncodeJWT();
+        $jwt = $auth->_get('connected_user')->token;
+
+        $data = $auth->VerifyJWT($jwt);
+        $this->assertSame(3, $data->role_id);
+        $this->assertTrue($data->autorize);
+
+        $this->assertNull($auth->VerifyJWT('pas.un.jwt'));
+        $this->assertNull($auth->VerifyJWT(''));
+        $this->assertNull($auth->VerifyJWT(JWT::encode(['data' => ['autorize' => true]], 'autre-cle-suffisamment-longue-pour-hs256', 'HS256')));
+    }
 }

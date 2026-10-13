@@ -58,19 +58,24 @@ n'ajoute que les colonnes manquantes.
 
 Sur l'environnement de recette, poser `travaux.allowTestData = true` dans le `.env`
 (désactivé par défaut : l'endpoint répond alors 404), donner le droit `api/jeu_de_test`
-au rôle administrateur, puis, connecté en administrateur (`Api/login`) :
+au rôle administrateur, puis, connecté en administrateur. `Api/login` renvoie un
+JWT, à passer en `Authorization: Bearer` (dans Postman : type « Bearer Token »,
+pas « JWT Bearer », qui sert à signer un jeton) :
 
 ```bash
+JWT=$(curl -s -X POST https://recette.example/Api/login -H 'Content-Type: application/json' \
+      -d '{"login":"admin.recette@recette.local","password":"…","type_cnx":"NORM"}' | jq -r .jwt)
+
 # État du jeu (nombre de lignes par table, plage 9000–9999)
-curl -b cookies.txt https://recette.example/Api/jeu_de_test
+curl -H "Authorization: Bearer $JWT" https://recette.example/Api/jeu_de_test
 
 # Purge puis rechargement — le mot de passe est celui des comptes de test
-curl -b cookies.txt -X POST https://recette.example/Api/jeu_de_test \
+curl -H "Authorization: Bearer $JWT" -X POST https://recette.example/Api/jeu_de_test \
      -H 'Content-Type: application/json' \
      -d '{"action":"reload","password":"MotDePasseRecette"}'
 
 # Retrait du jeu
-curl -b cookies.txt -X POST https://recette.example/Api/jeu_de_test \
+curl -H "Authorization: Bearer $JWT" -X POST https://recette.example/Api/jeu_de_test \
      -H 'Content-Type: application/json' -d '{"action":"purge"}'
 ```
 

@@ -202,6 +202,34 @@ class Auth
 		}
 	}
 
+	/**
+	 * Vérifie un JWT (signature, expiration) sans toucher à la session ni interrompre la requête.
+	 *
+	 * @param  string $token
+	 * @return stdClass|null  données de l'utilisateur (autorize, type, name, id, role_id), ou null si le jeton est invalide
+	 */
+	public function VerifyJWT($token)
+	{
+		if ($token === '' || $this->secretKey === '') {
+			return NULL;
+		}
+
+		try {
+			$decoded = JWT::decode($token, new Key($this->secretKey, 'HS256'));
+		} catch (Exception $e) {
+			log_message('notice', 'Auth::VerifyJWT : ' . $e->getMessage());
+
+			return NULL;
+		}
+
+		$data = $decoded->data ?? NULL;
+		if (!is_object($data) || ($data->autorize ?? FALSE) !== TRUE) {
+			return NULL;
+		}
+
+		return $data;
+	}
+
 	// -----------------------------------------------------------------------
 	// Login
 	// -----------------------------------------------------------------------

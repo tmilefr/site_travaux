@@ -90,8 +90,8 @@ class Acl
 		$segments     = array_values(array_filter(explode('/', trim(service('request')->getPath(), '/')), 'strlen'));
 		$this->action = strtolower($segments[1] ?? 'index');
 
-		// Récupère l'objet utilisateur depuis la session
-		$this->usercheck = $this->session->get('usercheck');
+		// Récupère l'objet utilisateur : JWT « Authorization: Bearer » (API), sinon session
+		$this->usercheck = $this->_usercheckFromBearer() ?? $this->session->get('usercheck');
 
 		if (!isset($this->usercheck->autorize)) {
 			$this->_initGuestUsercheck();
@@ -287,6 +287,34 @@ class Acl
 	// -----------------------------------------------------------------------
 	// Méthodes privées
 	// -----------------------------------------------------------------------
+
+	/**
+	 * Utilisateur décrit par l'en-tête « Authorization: Bearer <jwt> » (jeton délivré par Api/login).
+	 * Sans état : rien n'est écrit en session. Null si l'en-tête est absent ou le jeton invalide.
+	 *
+	 * @return \stdClass|null
+	 */
+	private function _usercheckFromBearer()
+	{
+		$header = service('request')->getHeaderLine('Authorization');
+		if (!preg_match('/^Bearer\s+(\S+)$/i', $header, $m)) {
+			return NULL;
+		}
+
+		$data = service('auth')->VerifyJWT($m[1]);
+		if ($data === NULL) {
+			return NULL;
+		}
+
+		$usercheck           = new \stdClass();
+		$usercheck->autorize = TRUE;
+		$usercheck->type     = $data->type;
+		$usercheck->name     = $data->name;
+		$usercheck->id       = (int) $data->id;
+		$usercheck->role_id  = (int) $data->role_id;
+
+		return $usercheck;
+	}
 
 	/**
 	 * Initialise un objet usercheck "invité" (non connecté).
