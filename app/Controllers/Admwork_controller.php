@@ -452,8 +452,10 @@ class Admwork_controller extends CrudController {
 			$this->data_view['msg'] = '<div class="alert alert-success">'
 				. tr('REF_REMOVE_SAVED') . '</div>';
 
-		} elseif ($action === 'add' && !$is_open) {
-			$added = $this->_ProcessRefAdd($id_work);
+		} elseif ($action === 'add') {
+			// Ajout possible avant, pendant et après la session
+			// (en validation : personne venue sans être inscrite, capacité ignorée)
+			$added = $this->_ProcessRefAdd($id_work, $is_open);
 			if ($added === true) {
 				$this->data_view['msg'] = '<div class="alert alert-success">'
 					. tr('REF_ADD_SAVED') . '</div>';
@@ -469,12 +471,10 @@ class Admwork_controller extends CrudController {
 		$this->data_view['design'] = $this->render_object->GetDesign($work->type);
 
 		// ---- Familles disponibles pour inscription (mode gestion) ----
-		if (!$is_open) {
-			$this->data_view['available_families'] = $this->_GetFamiliesAvailableForWork($work);
-			// Options pour type_participant (depuis Infos_model)
-			$this->data_view['type_participant_values'] =
-				$this->Infos_model->_get('defs')['type_participant']->_get('values');
-		}
+		$this->data_view['available_families'] = $this->_GetFamiliesAvailableForWork($work);
+		// Options pour type_participant (depuis Infos_model)
+		$this->data_view['type_participant_values'] =
+			$this->Infos_model->_get('defs')['type_participant']->_get('values');
 
 		$this->_set('view_inprogress', 'unique/Admwork_controller_validate_one_ref');
 		$this->render_view();
@@ -490,12 +490,13 @@ class Admwork_controller extends CrudController {
 	 * @param int $id_work
 	 * @return true|string  true si OK, message d'erreur sinon
 	 */
-	private function _ProcessRefAdd($id_work){
+	private function _ProcessRefAdd($id_work, $ignore_capacity = false){
         $r = $this->inscriptions->registerByRef(
             (int) $id_work,
             (int) $this->request->getPost('id_famille'),
             $this->request->getPost('type_participant'),
-            (int) $this->request->getPost('type_session') ?: 1
+            (int) $this->request->getPost('type_session') ?: 1,
+            (bool) $ignore_capacity
         );
         return $r->success ? true : $r->message;
     }

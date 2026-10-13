@@ -225,7 +225,7 @@ class Inscriptions
      * @param int    $type_session
      * @return stdClass
      */
-    public function registerByRef($id_work, $id_fam, $type_participant, $type_session = 1)
+    public function registerByRef($id_work, $id_fam, $type_participant, $type_session = 1, $ignore_capacity = false)
     {
         $id_work = (int) $id_work;
         $id_fam  = (int) $id_fam;
@@ -242,7 +242,7 @@ class Inscriptions
         }
 
         $nb_participants = ($type_participant === 'Both') ? 2 : 1;
-        if (!$this->_hasCapacity($work, $nb_participants)) {
+        if (!$ignore_capacity && !$this->_hasCapacity($work, $nb_participants)) {
             return $this->_fail($r, self::SESSION_FULL);
         }
 

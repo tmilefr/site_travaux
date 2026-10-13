@@ -396,6 +396,72 @@ $days_to_go = floor((strtotime($work->date_travaux) - strtotime('today')) / 8640
                 <?php echo form_close(); ?>
             </div>
 
+            <?php if (!empty($available_families)) { ?>
+                <div class="grid grid_12">
+                    <div class="nicdark_space20"></div>
+                    <div class="card">
+                        <div class="card-header <?php echo $design->color; ?>">
+                            <h4 class="white"><?php echo tr('REF_ADD_FAMILY'); ?></h4>
+                        </div>
+                        <div class="card-body">
+                            <?php
+                            echo open_form(
+                                $postUrl,
+                                ['class' => '', 'id' => 'ref_add_form_late'],
+                                ['action' => 'add', 'type_session' => $work->type_session]
+                            );
+                            ?>
+                            <div class="form-row">
+                                <div class="form-group col-md-5">
+                                    <label for="id_famille_late">
+                                        <b><?php echo tr('id_famille'); ?> *</b>
+                                    </label>
+                                    <select name="id_famille" id="id_famille_late" class="form-control" required>
+                                        <option value="">— <?php echo tr('SELECT_FAMILY'); ?> —</option>
+                                        <?php foreach ($available_families as $fam) { ?>
+                                            <option value="<?php echo $fam->id; ?>">
+                                                <?php echo htmlspecialchars($fam->nom, ENT_QUOTES); ?>
+                                                <?php if (!empty($fam->ecole)) { ?>
+                                                    (<?php echo $fam->ecole; ?>)
+                                                <?php } ?>
+                                            </option>
+                                        <?php } ?>
+                                    </select>
+                                </div>
+                                <div class="form-group col-md-4">
+                                    <label for="type_participant_late">
+                                        <b><?php echo tr('type_participant'); ?> *</b>
+                                    </label>
+                                    <select name="type_participant" id="type_participant_late" class="form-control" required>
+                                        <?php
+                                        if (!empty($type_participant_values)) {
+                                            foreach ($type_participant_values as $cle => $label) {
+                                                echo '<option value="' . htmlspecialchars($cle, ENT_QUOTES) . '">'
+                                                    . htmlspecialchars($label, ENT_QUOTES) . '</option>';
+                                            }
+                                        } else {
+                                            echo '<option value="One">1 parent</option>';
+                                            echo '<option value="Both">2 parents</option>';
+                                        }
+                                        ?>
+                                    </select>
+                                </div>
+                                <div class="form-group col-md-3 d-flex align-items-end">
+                                    <button type="submit" class="btn btn-success btn-block">
+                                        <i class="icon-plus"></i>
+                                        <?php echo tr('REF_ADD_BTN'); ?>
+                                    </button>
+                                </div>
+                            </div>
+                            <?php echo form_close(); ?>
+                            <p class="small text-muted">
+                                * <?php echo tr('REQUIRED_FIELDS'); ?>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            <?php } ?>
+
         <?php } /* fin mode validation */ ?>
     </div>
 </section>
