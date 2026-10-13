@@ -90,6 +90,15 @@ class Core_model extends Model
     {
         $this->ensureFields();
 
+        // Un `created` présent mais vide (champ de formulaire) empêche CI4 de poser l'horodatage : on l'écarte.
+        if (is_array($row)) {
+            if (array_key_exists('created', $row) && ($row['created'] === null || $row['created'] === '')) {
+                unset($row['created']);
+            }
+        } elseif (is_object($row) && property_exists($row, 'created') && ($row->created === null || $row->created === '')) {
+            unset($row->created);
+        }
+
         return parent::insert($row, $returnID);
     }
 
