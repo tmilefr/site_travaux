@@ -311,6 +311,9 @@ antérieure du schéma. Deux écarts notables :
 
 - la table `trombi` n'a pas la colonne `ref`, sur laquelle repose toute la
   chaîne reliant une session à sa famille référente ;
+- en production, `trombi` ne contient plus que `id, id_grp, ref, order, classif, created, updated` :
+  les anciennes colonnes (`photo`, `nom`, `email`, `title`…) n'existent plus, et le jeu de test
+  n'en écrit aucune (le nom affiché vient de `groupes_member`) ;
 - la table `groupes` n'a pas les colonnes éditoriales (`short`, `intro`,
   `mission`…) que le code affiche ;
 - `mig_family_import.sql` commence par `ALTER TABLE famille`, alors
