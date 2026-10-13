@@ -98,6 +98,11 @@ class Core_model extends Model
         } elseif (is_object($row) && property_exists($row, 'created') && ($row->created === null || $row->created === '')) {
             unset($row->created);
         }
+        if (is_array($row) && array_key_exists('updated', $row) && ($row['updated'] === null || $row['updated'] === '')) {
+            unset($row['updated']);
+        } elseif (is_object($row) && property_exists($row, 'updated') && ($row->updated === null || $row->updated === '')) {
+            unset($row->updated);
+        }
 
         return parent::insert($row, $returnID);
     }
@@ -109,8 +114,14 @@ class Core_model extends Model
         // `created` ne doit jamais être écrasé à la mise à jour : on l'écarte (vide ou non).
         if (is_array($row)) {
             unset($row['created']);
+            if (array_key_exists('updated', $row) && ($row['updated'] === null || $row['updated'] === '')) {
+                unset($row['updated']);
+            }
         } elseif (is_object($row)) {
             unset($row->created);
+            if (property_exists($row, 'updated') && ($row->updated === null || $row->updated === '')) {
+                unset($row->updated);
+            }
         }
 
         return parent::update($id, $row);
