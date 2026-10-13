@@ -1689,7 +1689,7 @@ plus de `$this->load`. Cette réécriture (branche `ci4-natif`) remplace l'appro
 * `Familys_controller::import_history` n'avait jamais chargé `FamilyImport_model` (erreur 500) — corrigé.
 * `Admwork_controller::MakePdf` visait une vue inexistante — corrigé ; le PDF est renvoyé par la réponse HTTP.
 * `Api::login` s'appuyait sur `Acl::CheckLogin()` (qui retourne un message) : il appelle maintenant `Auth::Login()` et renvoie le JWT.
-  L'accès non authentifié à `Api/login` reste bloqué par l'ACL (non modifié).
+  `Api/login` est désormais une page invitée de l'ACL (appel possible sans session).
 * Le CRUD générique n'est plus joignable pour `Home`, `Cantine_controller`, `Parameters`… (contrôleurs sans `$_autorize`) :
   c'était possible mais sans objet. `MY_Controller`/`BaseController` ne sont plus routables (404).
 * Les champs « créé/modifié » sont posés par le modèle (24 h) et non plus par des champs cachés de formulaire ; `updated` est aussi renseigné à la création.
