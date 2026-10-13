@@ -1394,6 +1394,17 @@ L'envoi effectif est fait par `php spark cron:sendmail` ([§ 9](#9-tâches-plani
 > **Point d'attention** : `Api/login` n'est pas dans la liste des pages invitées de l'ACL ; un appel sans session est donc refusé par `AclFilter`.
 > Pour une utilisation par un client externe, ajouter `api/login` à `Acl::$guestPages`.
 
+**Jeu de test de recette** — `GET|POST /Api/jeu_de_test` (recette uniquement). L'action recharge le jeu de `database/sql/jeu_de_test/` sans accès à MySQL :
+
+```
+GET  /Api/jeu_de_test                                      → nombre de lignes du jeu, par table (plage 9000–9999)
+POST /Api/jeu_de_test  {"action":"reload","password":"…"}  → purge puis recharge (mot de passe commun des comptes de test)
+POST /Api/jeu_de_test  {"action":"purge"}                  → retire le jeu de test
+```
+
+Garde-fous : répond **404** tant que `travaux.allowTestData = true` n'est pas posé dans le `.env` (désactivé par défaut) ; **403** hors rôle administrateur (rôle 1) ; le droit `api/jeu_de_test` se donne à ce rôle dans l'ACL, comme pour les autres actions de l'API.
+L'année civile (`@CY`) est reprise de `civilYear`, et les hashes sont calculés à la volée : le mot de passe n'est stocké nulle part. Le script est exécuté dans une transaction (`App\Libraries\JeuDeTest`).
+
 ## 9. Tâches planifiées (spark)
 
 Les tâches sont des commandes spark (`app/Commands`, groupe « Travaux ») à lancer depuis la racine du projet (`php spark list`). La logique est dans `App\Libraries\CronJobs` ; un verrou `flock` (`writable/cron.lock`) empêche deux exécutions simultanées et disparaît seul si le processus est tué.
@@ -1477,7 +1488,7 @@ Pas un vrai cron : déclenché à la première visite de `Admwork_controller/reg
 
 Réglages applicatifs, avec valeurs par défaut surchargeables dans `.env` (préfixe `travaux.`) :
 `appName`, `slogan`, `about`, `debugApp` (`none` | `debug`), `sidebar`, `unitTodo` (unités attendues par famille), `maintenance`,
-`civilYear` (année scolaire courante, ex. `2025-2026`), `roleFamille` (`role_id` par défaut des familles), `captcha`, `siteCaptchaKey`,
+`civilYear` (année scolaire courante, ex. `2025-2026`), `allowTestData` (active `Api/jeu_de_test`, recette uniquement), `roleFamille` (`role_id` par défaut des familles), `captcha`, `siteCaptchaKey`,
 `siteCaptchaSecretKey`, `apiKey`, `passwordSalt`, `mailFromEmail`, `mailFromName`, `mailReplyTo`, `deltaBaseUrl`, `deltaUserAgent`.
 
 ### 10.2 Le fichier `.env`
@@ -1495,6 +1506,7 @@ database.default.password = '...'
 
 # Application (Config\Travaux)
 travaux.civilYear = '2025-2026'
+travaux.allowTestData = false             # true en RECETTE seulement : active Api/jeu_de_test (rechargement du jeu de test)
 travaux.apiKey = '...'                    # clé de signature des JWT
 travaux.passwordSalt = '...'              # sel historique crypt() : NE PAS CHANGER (sert à lire les anciens mots de passe)
 travaux.captcha = false                   # true pour activer le reCAPTCHA au login

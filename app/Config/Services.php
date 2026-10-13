@@ -66,6 +66,16 @@ class Services extends BaseService
         return new \App\Libraries\Auth();
     }
 
+    /** Rechargement du jeu de test de recette (drapeau travaux.allowTestData). */
+    public static function jeuDeTest(bool $getShared = true)
+    {
+        if ($getShared) {
+            return static::getSharedInstance('jeuDeTest');
+        }
+
+        return new \App\Libraries\JeuDeTest();
+    }
+
     public static function passwordAuthenticator(bool $getShared = true)
     {
         if ($getShared) {

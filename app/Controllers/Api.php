@@ -210,6 +210,55 @@ class Api extends CrudController
 		return $this->_renderJson(405, ["message" => "Method Not Allowed"]);
 	}
 
+	/**
+	 * Recharge, purge ou décrit le jeu de test de recette (database/sql/jeu_de_test/).
+	 *
+	 * GET  Api/jeu_de_test            => nombre de lignes du jeu, par table (plage 9000-9999)
+	 * POST Api/jeu_de_test            => {"action":"reload","password":"..."} ou {"action":"purge"}
+	 *
+	 * Réservé à l'administrateur (rôle 1), et répond 404 tant que travaux.allowTestData n'est pas
+	 * activé dans le .env. Les droits ACL se donnent comme pour les autres actions de l'API.
+	 */
+	public function jeu_de_test(){
+		if ($early = $this->cors(['GET','POST','OPTIONS'])) return $early;
+
+		$jeu = service('jeuDeTest');
+		if (! $jeu->enabled()) {
+			return $this->_renderJson(404, ['message' => 'Not Found']);
+		}
+		if ((int) $this->acl->getUserRoleId() !== 1) {
+			return $this->_renderJson(403, ['message' => 'Forbiden']);
+		}
+
+		try {
+			if (strtoupper($this->request->getMethod()) === 'GET') {
+				return $this->_renderJson(200, ['counts' => $jeu->status()]);
+			}
+
+			$input  = $this->request->getJSON();
+			$action = $input->action ?? 'reload';
+
+			switch ($action) {
+				case 'reload':
+					$password = (string) ($input->password ?? '');
+					if ($password === '') {
+						return $this->_renderJson(400, ['message' => 'password est requis']);
+					}
+
+					return $this->_renderJson(200, $jeu->reload($password));
+
+				case 'purge':
+					return $this->_renderJson(200, $jeu->purge());
+			}
+		} catch (\RuntimeException $e) {
+			log_message('error', 'Api::jeu_de_test : ' . $e->getMessage());
+
+			return $this->_renderJson(500, ['message' => $e->getMessage()]);
+		}
+
+		return $this->_renderJson(400, ['message' => 'action inconnue (reload | purge)']);
+	}
+
 	public function logout(){
 		$this->session->destroy();
 

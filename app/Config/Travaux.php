@@ -13,6 +13,7 @@ use CodeIgniter\Config\BaseConfig;
  *   travaux.apiKey = ...
  *   travaux.passwordSalt = ...
  *   travaux.civilYear = 2026-2027
+ *   travaux.allowTestData = true      (recette uniquement)
  *
  * La configuration SMTP se fait avec les variables natives de Config\Email
  * (email.SMTPHost, email.SMTPUser, email.SMTPPass, email.SMTPPort, email.SMTPCrypto).
@@ -42,6 +43,12 @@ class Travaux extends BaseConfig
 
     /** Clé HMAC de signature des JWT de l'API */
     public string $apiKey = '';
+
+    /**
+     * Autorise Api/jeu_de_test (rechargement du jeu de test de recette).
+     * À activer UNIQUEMENT en recette : travaux.allowTestData = true dans le .env.
+     */
+    public bool $allowTestData = false;
 
     /** Sel historique crypt() (migration des anciens mots de passe) */
     public string $passwordSalt = '';

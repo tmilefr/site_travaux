@@ -54,6 +54,29 @@ mysql -u root -p travaux_recette < jeu_de_test/00_schema_complement.sql
 `00_schema_complement.sql` ne touche pas aux tables déjà conformes : il
 n'ajoute que les colonnes manquantes.
 
+### Par l'API (sans accès MySQL)
+
+Sur l'environnement de recette, poser `travaux.allowTestData = true` dans le `.env`
+(désactivé par défaut : l'endpoint répond alors 404), donner le droit `api/jeu_de_test`
+au rôle administrateur, puis, connecté en administrateur (`Api/login`) :
+
+```bash
+# État du jeu (nombre de lignes par table, plage 9000–9999)
+curl -b cookies.txt https://recette.example/Api/jeu_de_test
+
+# Purge puis rechargement — le mot de passe est celui des comptes de test
+curl -b cookies.txt -X POST https://recette.example/Api/jeu_de_test \
+     -H 'Content-Type: application/json' \
+     -d '{"action":"reload","password":"MotDePasseRecette"}'
+
+# Retrait du jeu
+curl -b cookies.txt -X POST https://recette.example/Api/jeu_de_test \
+     -H 'Content-Type: application/json' -d '{"action":"purge"}'
+```
+
+L'année civile est reprise de `civilYear` (plus de réglage manuel de `@CY`). Le schéma
+(`00_schema_complement.sql`) doit déjà être en place : l'API ne crée aucune table.
+
 ---
 
 ## Avant de charger : deux réglages
