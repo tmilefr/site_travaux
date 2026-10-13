@@ -220,6 +220,12 @@ class Auth
 			$data['type_cnx'] = 'NORM'; // API par défaut
 		}
 
+		// Comptes de recette (ex. famille1@recette.local, admin.recette@...) :
+		// ils n'existent pas chez Delta, on force la connexion locale.
+		if (!empty($data['login']) && stripos((string) $data['login'], 'recette') !== FALSE) {
+			$data['type_cnx'] = 'NORM';
+		}
+
 		switch ($data['type_cnx']) {
 			case 'NORM':
 				$this->_loginNormal($data);
