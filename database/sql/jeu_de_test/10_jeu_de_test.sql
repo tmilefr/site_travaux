@@ -1,9 +1,9 @@
 -- =====================================================================
 --  SITE_TRAVAUX — JEU DE TEST DE RECETTE
 -- ---------------------------------------------------------------------
---  Charge le jeu de données de référence décrit dans le plan de recette
---  (Plan_de_recette_site_travaux.docx, § 5.3) et utilisé par les cas de
---  test du classeur plan_tests_site_travaux.xlsx.
+--  Charge le jeu de données de référence décrit dans le plan de test
+--  (DOCUMENTATION.md, § 15.4) et utilisé par les cas de test du classeur
+--  plan_tests_site_travaux.xlsx.
 --
 --  ATTENTION — À N'EXÉCUTER QUE SUR UN ENVIRONNEMENT DE RECETTE.
 --  Ne jamais charger ce fichier en production.
@@ -25,8 +25,8 @@ SET NAMES utf8mb4;
 -- ---------------------------------------------------------------------
 --  PARAMÈTRES — à ajuster avant exécution
 -- ---------------------------------------------------------------------
---  @CY doit être STRICTEMENT identique à $config['civil_year']
---  (application/config/app.php), sinon aucune session ne s'affichera.
+--  @CY doit être STRICTEMENT identique à travaux.civilYear
+--  (app/Config/Travaux.php ou .env), sinon aucune session ne s'affichera.
 SET @CY      = '2025-2026';   -- année civile de la campagne en cours
 SET @CY_PREV = '2024-2025';   -- année précédente (test de cloisonnement)
 
@@ -53,7 +53,7 @@ SET @MAIL_DOM = 'recette.local';
 --  @PWD_BCRYPT : hash bcrypt, pour les comptes d'administration et les
 --                familles.
 --  @PWD_MD5    : même mot de passe en MD5, pour le compte à hash
---                historique (cas T1-10 : la migration vers bcrypt doit
+--                historique (cas AUT-05 : la migration vers bcrypt doit
 --                s'opérer à la première connexion).
 
 DROP PROCEDURE IF EXISTS `_check_pwd_vars`;
@@ -77,6 +77,14 @@ SET @LUNDI = DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY);
 -- ---------------------------------------------------------------------
 --  PURGE PRÉALABLE (rejouabilité)
 -- ---------------------------------------------------------------------
+-- Familles créées par l'import CSV (codes ZZIMPORT*, hors plage 9000–9999) et
+-- membres / e-mails ajoutés par un import aux familles du jeu : sans ces
+-- suppressions, un rechargement après IMP-02 ne serait pas rejouable.
+DELETE FROM `members` WHERE `id_fam` IN (SELECT `id` FROM `famille` WHERE `idfamille` LIKE 'ZZIMPORT%');
+DELETE FROM `emails`  WHERE `id_fam` IN (SELECT `id` FROM `famille` WHERE `idfamille` LIKE 'ZZIMPORT%');
+DELETE FROM `famille` WHERE `idfamille` LIKE 'ZZIMPORT%';
+DELETE FROM `members` WHERE `id_fam` BETWEEN 9000 AND 9999;
+DELETE FROM `emails`  WHERE `id_fam` BETWEEN 9000 AND 9999;
 DELETE FROM `infos`             WHERE `id` BETWEEN 9000 AND 9999;
 DELETE FROM `unites`            WHERE `id` BETWEEN 9000 AND 9999;
 DELETE FROM `validation_tokens` WHERE `id` BETWEEN 9000 AND 9999;
@@ -100,7 +108,7 @@ DELETE FROM `cantine_config`    WHERE `id` BETWEEN 9000 AND 9999;
 --  1. COMPTES D'ADMINISTRATION (table acl_users, profil « sys »)
 -- =====================================================================
 --  Rôle ACL restreint, pour vérifier le cloisonnement entre deux profils
---  administrateurs (cas T10-xx). Ses droits sont recopiés depuis le rôle
+--  administrateurs (cas ACL-04, ACL-06). Ses droits sont recopiés depuis le rôle
 --  Famille (id 2), ce qui en fait un rôle valide mais volontairement
 --  limité.
 INSERT INTO `acl_roles` (`id`,`role_name`,`role_description`,`created`,`updated`) VALUES
@@ -151,13 +159,13 @@ VALUES
   '68100','Mulhouse','Adresse a mettre a jour', CONCAT('famille.import@',@MAIL_DOM), NULL,
   '1','M',NULL,NULL,@CY,0,@NOW,@NOW);
 
--- E-mails complémentaires de U-FAM1 (table liée, cas T12-03 / FAM-04)
+-- E-mails complémentaires de U-FAM1 (table liée, cas FAM-04)
 INSERT INTO `emails` (`id`,`id_fam`,`email`,`name`,`created`,`updated`) VALUES
  (9001,9001, CONCAT('conjoint.famille1@',@MAIL_DOM),'Conjoint',@NOW,@NOW),
  (9002,9001, CONCAT('secours.famille1@',@MAIL_DOM),'Contact de secours',@NOW,@NOW);
 
 -- Préférences d'alerte : U-FAM1 abonnée, U-FAM2 volontairement non abonnée
--- (cas T9-07 : une famille désabonnée ne doit recevoir aucun message).
+-- (cas MAI-07 : une famille désabonnée ne doit recevoir aucun message).
 INSERT INTO `famille_alerts` (`id`,`id_fam`,`id_type`,`created`,`updated`) VALUES
  (9001,9001,'WORK_REGISTER',@NOW,@NOW),
  (9002,9003,'WORK_REGISTER',@NOW,@NOW);
@@ -206,9 +214,9 @@ INSERT INTO `groupes_member` (`id`,`id_fam`,`name`,`surname`,`email`,`phone`,`cr
  (9002,'9001','Martin','Claire', CONCAT('famille1@',@MAIL_DOM),'0300000002',@NOW,@NOW),
  -- Membre volontairement incohérent : id_fam non numérique. Il apparaît
  -- dans la liste des référents, mais la jointure vers famille ne remonte
- -- aucune ligne — sans erreur SQL (cas T14-09, T9-08).
+ -- aucune ligne — sans erreur SQL (cas ORG-08, CRO-08).
  (9003,'REF-INCONNU','Chaine','Rompue', CONCAT('chaine.rompue@',@MAIL_DOM),'0300000003',@NOW,@NOW),
- -- Membre sans photo, pour vérifier l'image de remplacement (cas T11-10)
+ -- Membre sans photo, pour vérifier l'image de remplacement (cas IHM-10)
  (9004,'9005','Petit','Julie', CONCAT('famille3@',@MAIL_DOM),'0300000004',@NOW,@NOW);
 
 --  classif : 'reftra' = Référent de session, 'RT' = Responsable de
@@ -230,7 +238,7 @@ INSERT INTO `trombi` (`id`,`id_grp`,`ref`,`order`,`classif`,`created`,`updated`)
  -- Membre simple : ne doit PAS apparaître dans la liste des référents
  (9005,9001,'9004',4,'ME',@NOW,@NOW);
 
--- Candidature en attente de traitement (cas T14-07 / T14-08)
+-- Candidature en attente de traitement (cas ORG-06 / ORG-07)
 INSERT INTO `candidatures` (`id`,`id_fam`,`id_grp`,`name`,`surname`,`email`,`phone`,`memo`,`created`,`updated`) VALUES
  (9001,'9002',9001,'Dubois','Marc', CONCAT('famille2@',@MAIL_DOM),'0300000005',
   'Candidature de recette : à accepter puis refuser pour tester le circuit.',@NOW,@NOW);
@@ -249,17 +257,17 @@ INSERT INTO `travaux`
   `nb_inscrits_max`,`referent_travaux`,`ecole`,`accespar`,`archived`,`civil_year`,
   `type_session`,`statut`,`created`,`updated`)
 VALUES
- -- T-BROUILLON : ne doit JAMAIS apparaître côté famille (cas T2-15)
+ -- T-BROUILLON : ne doit JAMAIS apparaître côté famille (cas TRV-02)
  (9001, DATE_FORMAT(DATE_ADD(CURDATE(), INTERVAL 20 DAY),'%Y-%m-%d'),'09:00','12:00','TRA',2,
   '[RECETTE] Session en brouillon','Session non publiée : invisible côté famille.',
   '6','9001','M','M',0,@CY,1,'0',@NOW,@NOW),
 
- -- T-FUTUR : session de référence pour l'inscription (cas T3-01 et suivants)
+ -- T-FUTUR : session de référence pour l'inscription (cas TRV-05 et suivants)
  (9002, DATE_FORMAT(DATE_ADD(CURDATE(), INTERVAL 15 DAY),'%Y-%m-%d'),'09:00','12:00','TRA',2,
   '[RECETTE] Travaux - session ouverte','Session publiée avec 4 places. Support des tests d''inscription.',
   '4','9001','M','M',0,@CY,1,'1',@NOW,@NOW),
 
- -- T-PLEIN : 2 places, déjà 2 inscrits (cas T3-06 : session complète)
+ -- T-PLEIN : 2 places, déjà 2 inscrits (cas TRV-07 : session complète)
  (9003, DATE_FORMAT(DATE_ADD(CURDATE(), INTERVAL 10 DAY),'%Y-%m-%d'),'14:00','17:00','MEN',1,
   '[RECETTE] Menage - session complete','Toutes les places sont prises : l''inscription doit être refusée.',
   '2','9001','B','B',0,@CY,1,'1',@NOW,@NOW),
@@ -269,12 +277,12 @@ VALUES
   '[RECETTE] Travaux - a valider','Session passée, présences à valider par le référent.',
   '6','9001','M','M',0,@CY,1,'1',@NOW,@NOW),
 
- -- T-VIEUX : plus de 30 jours, doit être archivée automatiquement (T8-01)
+ -- T-VIEUX : plus de 30 jours, doit être archivée automatiquement (TRV-15)
  (9005, DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 45 DAY),'%Y-%m-%d'),'09:00','11:00','GOU',1,
   '[RECETTE] Gouter - a archiver','Session de plus de 30 jours : l''archivage automatique doit la masquer.',
   '5','9001','M','M',0,@CY,2,'1',@NOW,@NOW),
 
- -- T-URG : sans date, ne doit JAMAIS être archivée (cas T8-03 / T2-21)
+ -- T-URG : sans date, ne doit JAMAIS être archivée (cas TRV-15 / TRV-19)
  (9006, '','','','URG',1,
   '[RECETTE] Urgence - sans date','Session d''urgence : pas de date, jamais archivée.',
   '10','9001','B','B',0,@CY,2,'1',@NOW,@NOW),
@@ -284,7 +292,7 @@ VALUES
   '[RECETTE] Lavage - Lutterbach uniquement','Cloisonnement par école : invisible pour une famille Mulhouse.',
   '6','9001','L','L',0,@CY,1,'1',@NOW,@NOW),
 
- -- T-AN-1 : année civile précédente (cas T2-18 : cloisonnement par année)
+ -- T-AN-1 : année civile précédente (cas TRV-04 : cloisonnement par année)
  (9008, DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 300 DAY),'%Y-%m-%d'),'09:00','12:00','TRA',2,
   '[RECETTE] Session annee precedente','Rattachée à l''année civile précédente : ne doit pas apparaître.',
   '6','9001','M','M',0,@CY_PREV,1,'1',@NOW,@NOW),
@@ -294,12 +302,12 @@ VALUES
   '[RECETTE] Dechetterie - type Action','Session de type Action : doit s''afficher séparément dans la file de validation.',
   '4','9001','M','M',0,@CY,2,'1',@NOW,@NOW),
 
- -- T-REF-KO : référent dont la chaîne est rompue (cas T9-08 / T14-09)
+ -- T-REF-KO : référent dont la chaîne est rompue (cas CRO-08 / ORG-08)
  (9010, DATE_FORMAT(DATE_ADD(CURDATE(), INTERVAL 6 DAY),'%Y-%m-%d'),'09:00','12:00','TRA',2,
   '[RECETTE] Session sans referent joignable','La chaîne référent est rompue : aucun mail ne doit partir, sans erreur.',
   '6','9002','M','M',0,@CY,1,'1',@NOW,@NOW),
 
- -- T-DERNIERE-PLACE : 3 places, 2 prises (cas T3-11 : concurrence).
+ -- T-DERNIERE-PLACE : 3 places, 2 prises (cas TRV-11 : concurrence).
  -- Rattachée au SECOND référent (trombi 9003 → Martin Claire), pour que le
  -- jeu exerce deux référents distincts : « mes sessions » doit donner des
  -- listes différentes selon la famille connectée.
@@ -380,8 +388,8 @@ VALUES
 -- =====================================================================
 --  7. JETONS DE VALIDATION RÉFÉRENT
 -- ---------------------------------------------------------------------
---  Trois jetons couvrant les trois comportements attendus (cas T5-03 à
---  T5-11). Ces valeurs sont FIXES et donc publiques : elles ne doivent
+--  Trois jetons couvrant les trois comportements attendus (cas REF-04 à
+--  REF-10). Ces valeurs sont FIXES et donc publiques : elles ne doivent
 --  exister que sur un environnement de recette.
 --
 --  URL de test : <base_url>/Admwork_controller/validate_by_token/<token>
@@ -416,7 +424,7 @@ INSERT IGNORE INTO `cantine_config`
 --  9. FILE D'ENVOI D'E-MAILS
 -- ---------------------------------------------------------------------
 --  Trois messages en attente (statut 0) pour tester le cron d'envoi
---  (cas T9-02, T9-13). Les adresses pointent sur un domaine inexistant :
+--  (cas CRO-01, CRO-03). Les adresses pointent sur un domaine inexistant :
 --  vérifier malgré tout que le SMTP de recette est bien une boîte de
 --  capture avant de lancer le cron.
 -- =====================================================================

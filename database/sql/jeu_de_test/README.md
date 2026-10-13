@@ -2,7 +2,7 @@
 
 Jeu de données de référence à charger sur l'environnement de recette avant
 une campagne de tests. Il met en place les comptes, les sessions, les
-inscriptions et les cas limites décrits au § 5.3 du plan de recette et
+inscriptions et les cas limites décrits au § 15.4 du plan de test (`DOCUMENTATION.md`) et
 utilisés par les cas de test du classeur `plan_tests_site_travaux.xlsx`.
 
 > **À n'exécuter que sur un environnement de recette.** Ces scripts créent
@@ -19,7 +19,7 @@ utilisés par les cas de test du classeur `plan_tests_site_travaux.xlsx`.
 | `charger_jeu_de_test.sh` | Script de chargement : demande le mot de passe des comptes, génère les hashes et charge le jeu. |
 | `10_jeu_de_test.sql` | Charge le jeu de données. Rejouable : il purge ses propres lignes avant de recharger. |
 | `90_purge_jeu_de_test.sql` | Retire le jeu de test et rien d'autre. |
-| `csv/import_ok.csv` | Export ABCM valide pour les tests d'import (onglet 13 du classeur). |
+| `csv/import_ok.csv` | Export ABCM valide pour les tests d'import (cas IMP-01 à IMP-09). |
 | `csv/import_ko.csv` | Même fichier volontairement corrompu : lignes tronquées, code famille vide, e-mail manquant. |
 
 ---
@@ -97,7 +97,7 @@ dans `app/Config/Travaux.php` (ou `travaux.civilYear` du `.env`). Sinon aucune s
 n'apparaîtra dans l'application.
 
 **2. Le serveur SMTP.** Le jeu place trois messages en file d'attente. Avant
-de lancer `php index.php cron sendmail`, vérifier que le SMTP de recette
+de lancer `php spark cron:sendmail`, vérifier que le SMTP de recette
 pointe sur une boîte de capture (MailHog, Mailtrap, alias interne). Les
 adresses du jeu utilisent le domaine inexistant `recette.local`, mais
 c'est une ceinture, pas une bretelle.
@@ -243,7 +243,7 @@ Les valeurs complètes figurent dans `10_jeu_de_test.sql`, section 8.
   modification.
 
 Un réimport immédiat du même fichier doit donner un différentiel vide
-(test d'idempotence, cas T13-04).
+(test d'idempotence, cas IMP-04).
 
 Les fichiers sont encodés en **CP1252** avec le séparateur `;`, conformément
 au format d'export ABCM attendu par l'application.

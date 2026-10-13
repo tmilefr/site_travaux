@@ -1962,7 +1962,7 @@ tools/e2e.sh   http://localhost:8080 <login> <mot_de_passe>             # envois
 | Outil | Rôle |
 |---|---|
 | `tools/check_classes.php` | Analyse statique : toutes les classes citées dans `app/` existent (les classes du framework sont localisées sans être chargées) |
-| `tests/unit` (PHPUnit, 11 tests) | Contrôleurs routés, fichiers de langue valides, aucune API CodeIgniter 3, schémas JSON valides, commandes spark et menus raccordés, envois de fichiers via la liste blanche, script SQL de migration identique à celui du § 13 |
+| `tests/unit` (PHPUnit, 36 tests) | Structure (contrôleurs routés, langues, API CI3 absente, schémas JSON, commandes spark, liste blanche d'envois, script SQL de migration identique au § 13), helpers, `PasswordAuthenticator` (bcrypt, `crypt()`, MD5, rehash), JWT, `Acl` (droits, `guestPages`), jeu de test (scripts limités à la plage 9000–9999) |
 | `tools/smoke.sh` | Se connecte puis appelle chaque couple contrôleur/action en GET : signale les erreurs 5xx, les erreurs PHP affichées et les pages HTML incomplètes (sans `</html>`) |
 | `tools/e2e.sh` (+ `tools/e2e/make_fixtures.php`) | Recette de bout en bout, **sur la base de recette uniquement** (écrit en base et dans `public/files`) : fichiers (`.txt` accepté, `.php` refusé, doublon renommé, `.php` inaccessible par HTTP), images (JPEG/PNG, faux `.jpg`, redimensionnement), import CSV (aperçu, application, accents CP1252, chemin forgé, historique), cantine (configuration, génération, journal, idempotence) |
 
@@ -2064,7 +2064,7 @@ Variables de `tools/e2e.sh` : `DB="mysql -uroot -proot --default-character-set=u
 - [ ] `.env` présent et renseigné (`travaux.apiKey`, `travaux.passwordSalt`, SMTP `email.*`).
 - [ ] `.env` (`database.default.*`) pointant sur la base de **recette** et jamais sur la production.
 - [ ] Droits d'écriture sur `writable/`, `public/files/`, `app/Language/`.
-- [ ] `travaux.civilYear` (`.env`) cohérent avec les données de test (par défaut `2025-2026`).
+- [ ] `travaux.civilYear` (`.env`) cohérent avec les données de test (par défaut `2025-2026` ; adapter à la campagne en cours — `Api/jeu_de_test` reprend cette valeur).
 - [ ] `travaux.maintenance = false`, `travaux.debugApp = none` (sauf test dédié) et `CI_ENVIRONMENT = production`.
 - [ ] SMTP de recette pointant sur une **boîte de capture** (MailHog, Mailtrap ou alias interne) — jamais sur les adresses réelles des familles.
 
@@ -2087,32 +2087,43 @@ Résolutions : **360×740** (mobile), **768×1024** (tablette), **1440×900** (b
 
 #### 15.4.1 Comptes
 
+Comptes créés par `database/sql/jeu_de_test/10_jeu_de_test.sql` (domaine `@recette.local`). Le mot de passe est choisi au chargement (`charger_jeu_de_test.sh` ou `Api/jeu_de_test`) et commun à tous les comptes.
+
 | Réf. | Login | Type | Rôle | Usage |
 |---|---|---|---|---|
-| `U-ADM` | `admin` | `sys` | admin | Toutes les actions d'administration |
-| `U-SYS2` | `gestion@test.local` | `sys` | rôle restreint | Vérifier le cloisonnement entre rôles `sys` |
-| `U-FAM1` | `famille1@test.local` | `fam` | `role_famille` (2) | Famille école **M**, 2 enfants, 0 unité |
-| `U-FAM2` | `famille2@test.local` | `fam` | `role_famille` | Famille école **L**, unités déjà validées |
-| `U-REF` | `referent@test.local` | `fam` | `role_famille` | Référente de `T-FUTUR` et `T-PASSE` |
-| `U-LEGACY` | `legacy@test.local` | `fam` | `role_famille` | Mot de passe encore en hash MD5/`crypt()` (test de migration bcrypt) |
-| `U-DELTA` | compte Delta de test | `fam` | — | Connexion SSO |
+| `U-ADM` | `admin.recette@recette.local` | `sys` | admin (1) | Toutes les actions d'administration |
+| `U-SYS2` | `restreint.recette@recette.local` | `sys` | rôle restreint (9001) | Vérifier le cloisonnement entre rôles `sys` (droits recopiés du rôle Famille) |
+| `U-FAM1` | `famille1@recette.local` | `fam` | `role_famille` (2) | Famille école **M**, 2 enfants, 0 unité, abonnée aux alertes. **Déjà inscrite à `T-FUTUR`**, à `T-PASSE` et à `T-ACTION`. Second référent de session |
+| `U-FAM2` | `famille2@recette.local` | `fam` | `role_famille` | Famille école **L**, unités déjà validées (T-VIEUX + 3 unités complémentaires), non abonnée aux alertes, candidature en attente |
+| `U-REF` | `referent@recette.local` | `fam` | `role_famille` | Référente principale de `T-FUTUR`, `T-PASSE`, `T-ACTION`… ; porte les 3 jetons de validation |
+| `U-LEGACY` | `legacy@recette.local` | `fam` | `role_famille` | Mot de passe encore en hash **MD5** (test de migration bcrypt) |
+| `U-FAM3` | `famille3@recette.local` | `fam` | `role_famille` | Famille école **B** (les deux), 3 enfants ; cantine du vendredi, T-PLEIN, T-PASSE |
+| `U-FAM4` | `famille.import@recette.local` | `fam` | `role_famille` | Cible de l'import CSV (modifiée par `import_ok.csv`) |
+| `U-DELTA` | compte Delta de test | `fam` | — | Connexion SSO — **non créé par le jeu de test** : prévoir un compte Delta réel (AUT-06) |
 
 #### 15.4.2 Données métier
 
+Dates relatives au jour du chargement (J). Détail complet : `database/sql/jeu_de_test/README.md` et onglet « Jeu de données » du classeur `plan_tests_site_travaux.xlsx`.
+
 | Réf. | Objet | Caractéristiques |
 |---|---|---|
-| `T-BROUILLON` | `travaux` | `statut=0`, date future — ne doit **pas** apparaître côté famille |
-| `T-FUTUR` | `travaux` | `type=TRA`, `statut=1`, date J+15, `nb_inscrits_max=4`, `nb_units=2`, `accespar=M`, référent = `U-REF` |
-| `T-PLEIN` | `travaux` | `nb_inscrits_max=2` et déjà 2 inscrits — test de saturation |
-| `T-PASSE` | `travaux` | date J-5, non archivé — validation référent |
-| `T-VIEUX` | `travaux` | date J-45, `archived=0` — test d'archivage automatique |
-| `T-URG` | `travaux` | `type=URG`, sans date — ne doit **jamais** être archivé |
-| `T-LUT` | `travaux` | `accespar=L` — invisible pour `U-FAM1` (école M) |
-| `T-AN-1` | `travaux` | `civil_year=2024-2025` — cloisonnement par année |
-| `T-CAN` | `travaux` | `type=can`, généré par le module cantine |
-| `G-COM` | `groupes` | Commission `type=com` avec 2 membres et 1 candidature en attente |
-| `CSV-OK` | fichier | Export ABCM valide, 10 familles dont 2 nouvelles et 1 modifiée |
-| `CSV-KO` | fichier | Même fichier avec colonnes manquantes / encodage erroné |
+| `T-BROUILLON` | `travaux` 9001 | `statut=0`, J+20 — ne doit **pas** apparaître côté famille |
+| `T-FUTUR` | `travaux` 9002 | `type=TRA`, `statut=1`, J+15, `nb_inscrits_max=4`, `nb_units=2`, `accespar=M`, référent = `U-REF` ; **`U-FAM1` y est déjà inscrite** |
+| `T-PLEIN` | `travaux` 9003 | `nb_inscrits_max=2`, déjà 2 inscrits (`U-FAM2`, `U-FAM3`) — test de saturation |
+| `T-PASSE` | `travaux` 9004 | J-5, non archivé, 3 inscrits non validés — validation référent |
+| `T-VIEUX` | `travaux` 9005 | J-45, `archived=0` — test d'archivage automatique (déjà validée pour `U-FAM2`) |
+| `T-URG` | `travaux` 9006 | `type=URG`, sans date — ne doit **jamais** être archivé |
+| `T-LUT` | `travaux` 9007 | `accespar=L` — invisible pour `U-FAM1` (école M) |
+| `T-AN-1` | `travaux` 9008 | `civil_year` précédente — cloisonnement par année |
+| `T-ACTION` | `travaux` 9009 | J-3, type de session « Action », 2 inscrits non validés — file de validation (UNI-01) |
+| `T-REF-KO` | `travaux` 9010 | J+6, référent à chaîne rompue (`id_fam` non numérique) — aucun mail, aucune erreur (CRO-08, ORG-08) |
+| `T-DERNIERE-PLACE` | `travaux` 9011 | J+8, 3 places dont 2 prises (`U-FAM2`, `U-FAM3`), second référent — concurrence (TRV-11) |
+| `T-CAN` | `travaux` 9020–9024 | `type=can`, semaine en cours (lundi, mardi, jeudi, vendredi ; vendredi saturé) |
+| `G-COM` | `groupes` 9001 | Commission TRAVAUX (`type=com`) : 4 rattachements `trombi` dont 3 référents proposables, et 1 candidature en attente (`U-FAM2`) |
+| `TOK-OK` / `TOK-EXP` / `TOK-USED` | `validation_tokens` 9001–9003 | Jetons référent valide (T-PASSE), expiré (T-ACTION), déjà utilisé (T-VIEUX) |
+| `MAIL-3` | `sendmail` 9001–9003 | 3 mails en attente (`statut=0`) |
+| `CSV-OK` | fichier | `csv/import_ok.csv` : 4 familles dont 2 nouvelles (`ZZIMPORT01`, `ZZIMPORT02`) et 1 modifiée (`ZZTEST006`) |
+| `CSV-KO` | fichier | `csv/import_ko.csv` : lignes tronquées, code famille vide, e-mail manquant |
 
 #### 15.4.3 Requêtes SQL utiles
 
@@ -2144,8 +2155,8 @@ SELECT SUM(nb_unites_valides_effectif) FROM infos
 | 1 | `AUT-01` — Connexion admin | Redirection vers le tableau de bord, menu `sys` complet |
 | 2 | `AUT-04` — Connexion famille | Menu `fam`, pas d'entrée d'administration |
 | 3 | `TRV-01` — `Admwork_controller/register` | Liste des sessions à venir, sans erreur PHP |
-| 4 | `TRV-05` — Inscription à une session | Ligne créée dans `infos`, compteur d'inscrits incrémenté |
-| 5 | `TRV-08` — Désinscription | Ligne supprimée, place libérée |
+| 4 | `TRV-08` — Désinscription (`U-FAM1` est déjà inscrite à `T-FUTUR`) | Ligne supprimée, place libérée |
+| 5 | `TRV-05` — Inscription à une session | Ligne créée dans `infos`, compteur d'inscrits incrémenté |
 | 6 | `CAN-03` — Agenda cantine semaine courante | Grille lundi-vendredi affichée |
 | 7 | `UNI-01` — `Units_controller/valid` | Cartes par session, filtres et compteurs opérationnels |
 | 8 | `FAM-01` — `Familys_controller/histo` | Total d'unités correct pour `U-FAM1` |
@@ -2203,13 +2214,13 @@ SELECT SUM(nb_unites_valides_effectif) FROM infos
 | TRV-02 | P1 | fam | Brouillon masqué | Chercher `T-BROUILLON` dans la liste | Absent de la vue famille ; visible uniquement en `Admwork_controller/list` (admin) |
 | TRV-03 | P1 | fam | Filtrage par école | En `U-FAM1` (école M), chercher `T-LUT` (`accespar=L`) | Session non proposée ; les sessions `accespar=B` restent visibles |
 | TRV-04 | P2 | fam | Cloisonnement par année | Chercher `T-AN-1` | Absent de la liste courante |
-| TRV-05 | P1 | fam | Inscription | `register_one/<T-FUTUR>`, `type_participant = Mr` | `infos` créé avec `nb_participants=1`, unités prévues = `nb_units`, redirection avec confirmation |
+| TRV-05 | P1 | fam | Inscription | En `U-FAM1`, **après TRV-08** (le jeu l'inscrit déjà à `T-FUTUR`) : `register_one/<T-FUTUR>`, `type_participant = Mr` | `infos` créé avec `nb_participants=1`, unités prévues = `nb_units`, redirection avec confirmation |
 | TRV-06 | P1 | fam | Inscription couple | Même session, `type_participant = Both` | `nb_participants = 2` (règle métier forcée côté serveur, indépendante du POST) |
 | TRV-07 | P1 | fam | Session complète | S'inscrire sur `T-PLEIN` | Message `TOO_MANY_PEOPLE`, **aucune** ligne créée |
 | TRV-08 | P1 | fam | Désinscription | Se désinscrire de `T-FUTUR` | Ligne `infos` supprimée, place recomptée, session à nouveau proposée |
 | TRV-09 | P1 | fam | Double inscription | S'inscrire deux fois à la même session | Refus (`ALREADY_REGISTERED`), pas de doublon en base |
 | TRV-10 | P2 | fam | Session passée | Tenter de s'inscrire à `T-PASSE` | Refus (`PAST_DATE`) |
-| TRV-11 | P2 | fam | Concurrence sur la dernière place | Deux navigateurs, deux familles, dernière place de `T-FUTUR`, valider quasi simultanément | Une seule inscription acceptée ; l'autre reçoit `TOO_MANY_PEOPLE` (à défaut, ouvrir une anomalie sur le contrôle de capacité) |
+| TRV-11 | P2 | fam | Concurrence sur la dernière place | Deux navigateurs, deux familles non inscrites (`U-FAM1` et `U-REF`), dernière place de `T-DERNIERE-PLACE`, valider quasi simultanément | Une seule inscription acceptée ; l'autre reçoit `TOO_MANY_PEOPLE` (à défaut, ouvrir une anomalie sur le contrôle de capacité) |
 | TRV-12 | P1 | sys | CRUD session | `Admwork_controller/add`, `edit`, `delete` | Création, modification et suppression conformes ; validations de champs actives |
 | TRV-13 | P2 | sys | Inscription pour le compte d'une famille | `managed_one/<id>` | Inscription créée au nom de la famille choisie, **sans** notification « inscription famille » au référent |
 | TRV-14 | P2 | sys | Génération PDF | `MakePdf/<id_work>` | PDF de la feuille de session généré, lisible, avec les inscrits et les horaires |
@@ -2335,12 +2346,12 @@ SELECT SUM(nb_unites_valides_effectif) FROM infos
 |---|---|---|---|---|
 | CRO-01 | P1 | Envoi de la file | `php spark cron:sendmail 10` avec 3 mails en attente | 3 mails partis, `statut=1`, log en `sendmail_statut` |
 | CRO-02 | P1 | Gestion d'erreur SMTP | Config SMTP volontairement fausse | `statut=2`, message d'erreur enregistré, pas d'interruption du lot |
-| CRO-03 | P1 | Taille du lot | `cron sendmail 2` avec 5 mails en attente | Exactement 2 traités |
+| CRO-03 | P1 | Taille du lot | `cron sendmail 2` avec les 3 mails du jeu en attente (recharger le jeu après CRO-01) | Exactement 2 traités, 1 reste en `statut=0` |
 | CRO-04 | P1 | Verrou d'exécution | Lancer deux exécutions simultanées | La seconde s'arrête immédiatement (« Un autre processus est déjà en cours », code retour 1) |
 | CRO-05 | P2 | Verrou résiduel | Tuer (`kill -9`) une exécution en cours, puis relancer | Le verrou `flock` (`writable/cron.lock`) est libéré par le système : la relance fonctionne |
-| CRO-06 | P1 | Mails de validation référent | `php spark cron:ref-validation 7` avec une session à J+5 | Token créé (expiration J+30), mail poussé en file, `travaux.ref_mail_sent_at` renseigné |
+| CRO-06 | P1 | Mails de validation référent | `php spark cron:ref-validation 10` (sessions MEN/TRA de J à J+10 avec référent : `T-DERNIERE-PLACE` J+8, `T-PLEIN` J+10) | 2 tokens créés (expiration J+30), 2 mails poussés en file, `travaux.ref_mail_sent_at` renseigné ; avec l'argument 7 par défaut, seule `T-REF-KO` (J+6) est candidate (voir CRO-08) |
 | CRO-07 | P1 | Non-duplication | Relancer immédiatement CRO-06 | Aucun nouveau token ni mail pour la même session |
-| CRO-08 | P2 | Référent introuvable | Session sans référent ou chaîne `trombi` cassée | Session ignorée sans erreur, trace en log |
+| CRO-08 | P2 | Référent introuvable | Session sans référent ou chaîne `trombi` cassée (`T-REF-KO`) | Session ignorée sans erreur, trace en log |
 | CRO-09 | P2 | Alertes nouvelles sessions | `php spark cron:session-alerts` | Familles concernées notifiées, filtrage par école et préférences respecté |
 | CRO-10 | P2 | Exécution web impossible | Appeler `/cron/sendmail` via le navigateur | Page introuvable (404) : les tâches ne sont plus exposées en HTTP |
 | CRO-11 | P3 | Volumétrie | 500 mails en file, lots successifs | Pas de fuite mémoire ni de timeout ; durée mesurée et notée |
@@ -2544,19 +2555,22 @@ Pièces jointes : capture, extrait de writable/logs/, requête SQL de contrôle
 
 ### 15.10 Automatisation
 
-L'outillage décrit au [§ 14](#14-vérifications-automatisées) existe : `tools/check_classes.php`, PHPUnit (11 tests de structure et de helpers),
-`tools/smoke.sh` (GET de toutes les routes, erreurs 5xx) et `tools/e2e.sh` (30 contrôles de bout en bout, **base de recette uniquement**).
+L'outillage décrit au [§ 14](#14-vérifications-automatisées) existe : `tools/check_classes.php`, PHPUnit (36 tests : structure, helpers, `PasswordAuthenticator`, JWT, `Acl`, jeu de test),
+`tools/smoke.sh` (GET de toutes les routes, erreurs 5xx), `tools/e2e.sh` (30 contrôles de bout en bout, **base de recette uniquement**) et l'intégration continue
+GitHub Actions (`.github/workflows/ci.yml` : `php -l`, PHPUnit sur PHP 8.2 et 8.3 avec MariaDB).
 
 **Cas déjà couverts par `tools/e2e.sh`** : IMP-01, IMP-02, IMP-03, IMP-04 (partiellement), IMP-07 (CP1252), IMP-08, BOF-10, SEC-11, CAN-01, CAN-02.
+`e2e.sh` génère ses propres CSV (`tools/e2e/make_fixtures.php`), distincts de `csv/import_ok.csv` / `import_ko.csv` du jeu de test, mais suppose la présence des familles `ZZTEST001` et `ZZTEST002`.
+
+**Cas couverts, au moins en partie, par PHPUnit** : AUT-02 et AUT-03 (rejet des identifiants), AUT-05 (migration `crypt()`/MD5 vers bcrypt), SEC-17 (rehash), ACL-02, ACL-03 et ACL-09 (`AclTest`), API-05 (jeton signé d'une autre clé ou malformé).
+**Non couverts** : l'expiration d'un JWT (API-06) et les règles d'inscription (capacité, doublon, date passée).
 
 Pistes restantes, par rapport effort/valeur décroissant :
 
-1. **Tests unitaires métier (PHPUnit)** sur les briques sans dépendance HTTP : `PasswordAuthenticator` (bcrypt, migration `crypt()`/MD5, rehash), `Inscriptions`
-   (codes de retour `SESSION_FULL`, `PAST_DATE`, `ALREADY_VALIDATED`…, calcul de capacité), parsing et différentiel de l'import CSV (à extraire de
-   `Familys_controller` dans une classe dédiée), `Acl` (résolution des droits, `guestPages`).
+1. **Tests unitaires métier (PHPUnit)** sur les briques encore sans test : `Inscriptions` (codes de retour `SESSION_FULL`, `PAST_DATE`, `ALREADY_VALIDATED`…, calcul de capacité),
+   parsing et différentiel de l'import CSV (à extraire de `Familys_controller` dans une classe dédiée), expiration des JWT.
 2. **Smoke test navigateur (Playwright)** : les 12 cas du [§ 15.5](#155-campagne-de-smoke-test-30-min) contre la recette, après chaque déploiement.
-3. **Intégration continue (GitHub Actions)** sur `develop` et `main` : `php -l` récursif sur `app/`, `php tools/check_classes.php`, PHPUnit, contrôle qu'aucun secret
-   (`.env`) n'entre dans le dépôt.
+3. **Compléter la CI** : `php tools/check_classes.php` et contrôle qu'aucun secret (`.env`) n'entre dans le dépôt.
 
 ### 15.11 Annexes
 
@@ -2574,23 +2588,23 @@ Statuts : **OK** (conforme) · **KO** (anomalie ouverte) · **N/A** (non applica
 | Module | Cas | dont P1 |
 |---|---|---|
 | AUT — Authentification | 14 | 6 |
-| ACL — Droits et rôles | 11 | 6 |
+| ACL — Droits et rôles | 11 | 7 |
 | TRV — Travaux | 19 | 9 |
-| REF — Validation référent | 11 | 7 |
-| CAN — Cantine | 11 | 7 |
+| REF — Validation référent | 11 | 8 |
+| CAN — Cantine | 11 | 8 |
 | UNI — Unités | 12 | 6 |
 | FAM — Familles | 12 | 4 |
-| IMP — Import CSV | 9 | 4 |
+| IMP — Import CSV | 9 | 5 |
 | ORG — Organigramme | 9 | 1 |
 | MAI — E-mails | 11 | 4 |
-| CRO — Cron | 11 | 5 |
-| API — API REST | 16 | 10 |
-| BOF — Back-office | 15 | 6 |
+| CRO — Cron | 11 | 6 |
+| API — API REST | 16 | 12 |
+| BOF — Back-office | 15 | 7 |
 | TRA — Traductions | 9 | 3 |
-| SEC — Sécurité | 17 | 13 |
+| SEC — Sécurité | 17 | 14 |
 | IHM — Ergonomie | 10 | 3 |
 | PER — Performance | 6 | 0 |
-| **Total** | **203** | **94** |
+| **Total** | **203** | **103** |
 
 #### 15.11.3 Zones à risque identifiées à la lecture du code
 

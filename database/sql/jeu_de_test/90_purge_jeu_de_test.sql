@@ -24,6 +24,8 @@
 SET SESSION sql_mode = 'NO_ENGINE_SUBSTITUTION';
 
 -- Ordre : des tables filles vers les tables mères.
+DELETE FROM `members`              WHERE `id_fam` BETWEEN 9000 AND 9999;
+DELETE FROM `emails`               WHERE `id_fam` BETWEEN 9000 AND 9999;
 DELETE FROM `cantine_inscriptions` WHERE `id` BETWEEN 9000 AND 9999;
 DELETE FROM `cantine_config`       WHERE `id` BETWEEN 9000 AND 9999;
 DELETE FROM `validation_tokens`    WHERE `id` BETWEEN 9000 AND 9999;
