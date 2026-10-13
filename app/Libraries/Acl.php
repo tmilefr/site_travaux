@@ -54,6 +54,7 @@ class Acl
 		'home/about',
 		'home/maintenance',
 		'home',
+		'api/login',
 		'admwork_controller/validate_by_token',
 		'translations_controller/switch_lang'
 	];

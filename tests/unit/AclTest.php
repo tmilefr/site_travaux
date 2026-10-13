@@ -91,6 +91,8 @@ final class AclTest extends CIUnitTestCase
 
         $this->assertContains('home/login', $pages);
         $this->assertContains('home/logout', $pages);
+        $this->assertContains('api/login', $pages);
+        $this->assertNotContains('api/jeu_de_test', $pages);
         $this->assertNotContains('admwork_controller/index', $pages);
     }
 }
