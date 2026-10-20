@@ -512,7 +512,7 @@ class Familys_controller extends MY_Controller {
 		$report = $this->_apply_diff($diff);
 
 		// Log
-		$civil_year = $this->get_work_civil_year();
+		$civil_year = $this->config->item('civil_year');
 		$user_id    = method_exists($this->acl, 'getUserId') ? (int) $this->acl->getUserId() : null;
 
 		$now = date('Y-m-d H:i:s');
@@ -921,7 +921,7 @@ class Familys_controller extends MY_Controller {
 			],
 		];
 
-		$civil_year = $this->get_work_civil_year();
+		$civil_year = $this->config->item('civil_year');
 		$now = date('Y-m-d H:i:s');
 
 		$this->db->trans_start();
