@@ -28,7 +28,7 @@ class Admwork_model extends Core_model{
 	 */
 	function GetFiltered($civil_year, $schools, $exclude_types = []){ //'can'
 		$b = $this->tb()->select('*')
-			->where("civil_year IN ('".$civil_year."','2025-2026')")
+			->where('civil_year', $civil_year)
 			->where('statut', 1)
 			->whereIn('accespar', $schools)
 			->orderBy('date_travaux', 'DESC');

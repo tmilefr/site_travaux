@@ -110,10 +110,11 @@
 									?>
 									<?php if (!$_is_register) { ?>
 									<li class="nav-item dropdown year-selector">
-										<a class="nav-link dropdown-toggle" href="#" id="yearDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+										<a class="btn btn-warning btn-sm dropdown-toggle font-weight-bold mx-2" style="color:#212529;" href="#" id="yearDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
 										title="<?php echo htmlspecialchars(tr('civil_year'), ENT_QUOTES, 'UTF-8'); ?>">
 											<span class="oi oi-calendar" aria-hidden="true"></span>
-											<span class="small ml-1"><?php echo htmlspecialchars($_work_year, ENT_QUOTES, 'UTF-8'); ?></span>
+											<?php echo htmlspecialchars(tr('civil_year'), ENT_QUOTES, 'UTF-8'); ?> :
+											<?php echo htmlspecialchars($_work_year, ENT_QUOTES, 'UTF-8'); ?>
 										</a>
 										<div class="dropdown-menu dropdown-menu-right" aria-labelledby="yearDropdown">
 											<?php foreach ($_civil_year->years() as $_y_key => $_y_label) { ?>
