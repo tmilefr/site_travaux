@@ -20,7 +20,7 @@ use CodeIgniter\Config\BaseConfig;
  */
 class Travaux extends BaseConfig
 {
-    public string $appName = "Site de l'association des parents de l'école ABCM de Mulhouse et Lutterbach";
+    public string $appName = "Extranet de l'association RegioSchule";
     public string $slogan  = 'Outil de gestion des travaux';
     public string $about   = 'By NL';
 

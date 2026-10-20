@@ -122,7 +122,7 @@ class Familys_controller extends CrudController {
 				$family_info = explode(';',$lgn);
 				$family_info['exist'] = $this->Familys_model->GetFamilyByLogin($family_info[4]);
 				if ($family_info['exist'] ){
-					$this->Familys_model->SetCivilYears($family_info['exist']->id, '2025-2026');
+					$this->Familys_model->SetCivilYears($family_info['exist']->id, config('Travaux')->civilYear);
 				} else {
 					$familys[] = $family_info;
 				}
