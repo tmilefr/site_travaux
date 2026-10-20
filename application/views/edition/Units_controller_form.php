@@ -15,7 +15,7 @@
 		<div class="nicdark_space10"></div>
 	</div>
 	<?php
-	echo form_open($this->render_object->_getCi('_controller_name').'/'.$this->render_object->_get('form_mod'), array('class' => '', 'id' => 'edit') , array('form_mod'=>$this->render_object->_get('form_mod'),'id'=>$id,'civil_year'=>get_instance()->get_work_civil_year(),'archived'=>0) );
+	echo form_open($this->render_object->_getCi('_controller_name').'/'.$this->render_object->_get('form_mod'), array('class' => '', 'id' => 'edit') , array('form_mod'=>$this->render_object->_get('form_mod'),'id'=>$id,'civil_year'=>$this->config->item('civil_year'),'archived'=>0) );
 
 	//champ obligatoire
 	foreach($required_field AS $name){
