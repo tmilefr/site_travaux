@@ -66,6 +66,16 @@ class Services extends BaseService
         return new \App\Libraries\Auth();
     }
 
+    /** Année civile de travail choisie dans la barre de menu (voir App\Libraries\CivilYear). */
+    public static function civilYear(bool $getShared = true)
+    {
+        if ($getShared) {
+            return static::getSharedInstance('civilYear');
+        }
+
+        return new \App\Libraries\CivilYear();
+    }
+
     /** Rechargement du jeu de test de recette (drapeau travaux.allowTestData). */
     public static function jeuDeTest(bool $getShared = true)
     {

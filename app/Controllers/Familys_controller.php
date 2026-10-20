@@ -512,7 +512,7 @@ class Familys_controller extends CrudController {
 		$report = $this->_apply_diff($diff);
 
 		// Log
-		$civil_year = config('Travaux')->civilYear;
+		$civil_year = service('civilYear')->get();
 		$user_id    = method_exists($this->acl, 'getUserId') ? (int) $this->acl->getUserId() : null;
 
 		$now = date('Y-m-d H:i:s');
@@ -917,7 +917,7 @@ class Familys_controller extends CrudController {
 			],
 		];
 
-		$civil_year = config('Travaux')->civilYear;
+		$civil_year = service('civilYear')->get();
 		$now = date('Y-m-d H:i:s');
 
 		$this->db->transStart();

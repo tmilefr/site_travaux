@@ -33,6 +33,16 @@ class Travaux extends BaseConfig
     /** Année civile (scolaire) courante, format AAAA-AAAA */
     public string $civilYear = '2025-2026';
 
+    /** Années civiles proposées dans le sélecteur du menu (clé = valeur stockée en base) */
+    public array $civilYears = [
+        '2022-2023' => '2022-2023',
+        '2023-2024' => '2023-2024',
+        '2024-2025' => '2024-2025',
+        '2025-2026' => '2025-2026',
+        '2026-2027' => '2026-2027',
+        '2027-2028' => '2027-2028',
+    ];
+
     /** Rôle ACL attribué par défaut aux familles */
     public int $roleFamille = 2;
 

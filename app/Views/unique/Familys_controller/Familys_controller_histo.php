@@ -17,16 +17,6 @@
             <div class="nicdark_space10"></div>
             <?php echo tr('INFO_UNITS_'.$acl->getType());?>
         </div>
-        <div class="grid grid_5">
-            <ul class="nav nav-pills">
-                <?php 
-                foreach($civil_year AS $key=>$value){
-                    echo '<li class="nav-item" ><a  class="nav-link '.(($filter_ec == $key) ? 'active':'').'" href="'.base_url($render_object->_getCi('_controller_name').'/'.$render_object->_getCi('_action')).'/filter/civil_year/filter_value/'.$key.'">'.$value.'</a></li>';
-                }
-                ?>
-            </ul>            
-            
-        </div>
 
 
         <div class="grid grid_12">

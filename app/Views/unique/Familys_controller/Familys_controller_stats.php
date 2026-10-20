@@ -18,11 +18,7 @@
 
         <div class="grid grid_8">
             <ul class="nav nav-pills">
-                <?php 
-                foreach($civil_years AS $key=>$value){
-                    echo '<li class="nav-item" ><a  class="nav-link '.(($filter_ec == $key) ? 'active':'').'" href="'.base_url($render_object->_getCi('_controller_name').'/'.$render_object->_getCi('_action')).'/filter/civil_year/filter_value/'.$key.'">'.$value.'</a></li>';
-                }
-                ?>
+                <li class="nav-item"><a class="nav-link <?php echo (($filter_ec != 'resume') ? 'active':'');?>" href="<?php echo base_url($render_object->_getCi('_controller_name').'/'.$render_object->_getCi('_action')).'/filter/civil_year/filter_value/'.service('civilYear')->get();?>"><?php echo service('civilYear')->get();?></a></li>
                 <li class="nav-item"><a class="nav-link <?php echo (($filter_ec == 'resume') ? 'active':'');?>" href="<?php echo base_url($render_object->_getCi('_controller_name').'/'.$render_object->_getCi('_action')).'/filter/civil_year/filter_value/resume';?>">Synthèse</a></li>
                 <li class="nav-item"><a class="nav-link nicdark_bg_red white " href="<?php echo base_url($render_object->_getCi('_controller_name').'/stats_export');?>"><?php echo tr('Export');?></a></li>
             </ul>            

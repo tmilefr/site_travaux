@@ -125,9 +125,9 @@ class Admwork_controller extends CrudController {
 		if ($this->acl->getType() == 'fam') {
 			$id_fam = $this->acl->getUserId();
 			$family = $this->Familys_model->GetFamily($id_fam);
-			$works  = $this->{$this->_model_name}->GetFiltered(config('Travaux')->civilYear, ['B', $family->ecole],['can']);
+			$works  = $this->{$this->_model_name}->GetFiltered(service('civilYear')->get(), ['B', $family->ecole],['can']);
 		} else {
-			$works = $this->{$this->_model_name}->GetFiltered(config('Travaux')->civilYear, ['B','M','L']);
+			$works = $this->{$this->_model_name}->GetFiltered(service('civilYear')->get(), ['B','M','L']);
 		}
 	
 		$today = date('Y-m-d');
