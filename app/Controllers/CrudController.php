@@ -114,7 +114,33 @@ abstract class CrudController extends BaseController
 			$this->request->setLocale($locale);
 		}
 
+		$this->applyCivilYear();
+
 		$this->boot();
+	}
+
+	/**
+	 * Sélecteur d'année du menu : n'importe quelle page accepte ?civil_year=2025-2026 ; l'année est mémorisée en
+	 * session puis l'URL est rechargée sans le paramètre.
+	 */
+	private function applyCivilYear(): void
+	{
+		$param = $this->request->getGet(\App\Libraries\CivilYear::PARAM);
+		if ($param === null || ! $this->acl->Islog()) {
+			return;
+		}
+		if (service('civilYear')->set($param)) {
+			// changer d'année quitte la synthèse multi-années des stats
+			$filter = $this->session->get($this->set_ref_field('filter'));
+			if (is_array($filter) && ($filter['civil_year'] ?? null) === 'resume') {
+				$filter['civil_year'] = $param;
+				$this->session->set($this->set_ref_field('filter'), $filter);
+			}
+		}
+
+		$query = $this->request->getGet();
+		unset($query[\App\Libraries\CivilYear::PARAM]);
+		$this->goTo(site_url($this->request->getPath()) . ($query ? '?' . http_build_query($query) : ''));
 	}
 
 	/** Méthodes publiques de CrudController joignables par URL (CRUD générique). */
@@ -665,7 +691,10 @@ abstract class CrudController extends BaseController
 					break;
 					case 'filter':
 						$filtered = $this->session->get( $this->set_ref_field('filter') );
-						if ($array['filter_value'] == 'all'){
+						if ($value == 'civil_year' && service('civilYear')->set($array['filter_value'])){
+							// sélecteur global : l'année est mémorisée pour tout le site
+							$filtered['civil_year'] = $array['filter_value'];
+						} elseif ($array['filter_value'] == 'all'){
 							unset($filtered[$value]);
 						} else {
 							$filtered[$value] = $array['filter_value'];
@@ -779,14 +808,15 @@ abstract class CrudController extends BaseController
 	//must push out this stuff
 	function set_civil_years($from = null){
 		$filtered = $this->session->get( $this->set_ref_field('filter') );
-
-		if (isset($filtered['civil_year'])){
-			return $filtered['civil_year'];
-		} else {
-			$civil_year = config('Travaux')->civilYear;
-			$this->session->set( $this->set_ref_field('filter') , ['civil_year'=>$civil_year]);
-			return $civil_year;
+		if (!is_array($filtered)){
+			$filtered = [];
 		}
+		// 'resume' (synthèse multi-années des stats) reste propre à l'écran ; sinon l'année de travail globale s'impose.
+		if (($filtered['civil_year'] ?? null) !== 'resume'){
+			$filtered['civil_year'] = service('civilYear')->get();
+			$this->session->set( $this->set_ref_field('filter') , $filtered);
+		}
+		return $filtered['civil_year'];
 	}
 
 	/**

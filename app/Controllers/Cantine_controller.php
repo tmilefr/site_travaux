@@ -81,7 +81,7 @@ class Cantine_controller extends CrudController {
         }
         if (!in_array($ecole, ['M','L'])) $ecole = 'M';
 
-        $civil_year = config('Travaux')->civilYear;
+        $civil_year = service('civilYear')->get();
         $id_fam = $this->acl->getUserId();
 
         // Lundi → vendredi de la semaine demandée
@@ -221,7 +221,7 @@ class Cantine_controller extends CrudController {
     public function config(){
         $ecole = $this->request->getGet('ecole');
         if (!in_array($ecole, ['B','M','L'])) $ecole = 'M';
-        $civil_year = config('Travaux')->civilYear;
+        $civil_year = service('civilYear')->get();
 
         // Mois affiché dans l'agenda (?ym=YYYY-MM), par défaut mois courant
         $ym = $this->request->getGet('ym');
@@ -257,7 +257,7 @@ class Cantine_controller extends CrudController {
     public function save_config(){
         $ecole = $this->request->getPost('ecole');
         if (!in_array($ecole, ['B','M','L'])) $ecole = 'B';
-        $civil_year = config('Travaux')->civilYear;
+        $civil_year = service('civilYear')->get();
 
         $days = [];
         for($d = 1; $d <= 5; $d++){
@@ -284,7 +284,7 @@ class Cantine_controller extends CrudController {
     public function generate(){
         $ecole = $this->request->getPost('ecole');
         if (!in_array($ecole, ['B','M','L'])) $ecole = 'B';
-        $civil_year = config('Travaux')->civilYear;
+        $civil_year = service('civilYear')->get();
 
         $mode = $this->request->getPost('period_mode');
         if ($mode === 'custom'){
