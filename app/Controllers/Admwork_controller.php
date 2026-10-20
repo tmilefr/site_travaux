@@ -122,12 +122,14 @@ class Admwork_controller extends CrudController {
 		$this->_set('view_inprogress','unique/'.$this->_controller_name.'_register');
 		$this->{$this->_model_name}->_set('order','date_travaux');
 	
+		// Inscriptions : toujours l'année en cours (le sélecteur d'année est masqué sur cette vue)
+		$civil_year = config('Travaux')->civilYear;
 		if ($this->acl->getType() == 'fam') {
 			$id_fam = $this->acl->getUserId();
 			$family = $this->Familys_model->GetFamily($id_fam);
-			$works  = $this->{$this->_model_name}->GetFiltered(service('civilYear')->get(), ['B', $family->ecole],['can']);
+			$works  = $this->{$this->_model_name}->GetFiltered($civil_year, ['B', $family->ecole],['can']);
 		} else {
-			$works = $this->{$this->_model_name}->GetFiltered(service('civilYear')->get(), ['B','M','L']);
+			$works = $this->{$this->_model_name}->GetFiltered($civil_year, ['B','M','L']);
 		}
 	
 		$today = date('Y-m-d');

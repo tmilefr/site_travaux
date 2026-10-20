@@ -103,6 +103,12 @@
 									$_work_year   = $_civil_year->get();
 									$_year_query  = service('request')->getGet() ?: array();
 									?>
+									<?php
+									// Vue d'inscription aux travaux : toujours l'année en cours, pas de sélecteur
+									$_segs = array_values(array_filter(explode('/', trim(service('request')->getPath(), '/')), 'strlen'));
+									$_is_register = (strtolower($_segs[0] ?? '') === 'admwork_controller' && stripos($_segs[1] ?? '', 'register') === 0);
+									?>
+									<?php if (!$_is_register) { ?>
 									<li class="nav-item dropdown year-selector">
 										<a class="nav-link dropdown-toggle" href="#" id="yearDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
 										title="<?php echo htmlspecialchars(tr('civil_year'), ENT_QUOTES, 'UTF-8'); ?>">
@@ -118,6 +124,7 @@
 											<?php } ?>
 										</div>
 									</li>
+									<?php } ?>
 									<li class="nav-item dropdown">
 										<a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 											<span class="mr-2 d-none d-lg-inline text-gray-600 small"><?php echo $acl->GetUserName(); ?></span>
