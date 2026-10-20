@@ -320,6 +320,11 @@ abstract class CrudController extends BaseController
 			$this->data_view['_model_name'] = $this->_model_name;// Need ?
 		}
 
+		/* Année civile : le filtre suit toujours le sélecteur du menu (sauf la synthèse des stats) */
+		if (isset($this->{$this->_model_name}->_get('defs')['civil_year'])){
+			$this->set_civil_years('init');
+		}
+
 		/* FIX FILED NOT IN TABLE IN LIST => todo : filter by page */
 		$filter = $this->session->get($this->set_ref_field('filter'));
 		$autorized_fields = $this->{$this->_model_name}->_get('autorized_fields');
@@ -539,7 +544,10 @@ abstract class CrudController extends BaseController
 	 */
 	public function clear_filters()
 	{
-		$this->session->set( $this->set_ref_field('filter')        , array() );
+		// l'année civile est imposée par le sélecteur du menu : elle ne se réinitialise pas ici
+		$filtered = $this->session->get( $this->set_ref_field('filter') );
+		$keep = (is_array($filtered) && isset($filtered['civil_year'])) ? ['civil_year' => $filtered['civil_year']] : array();
+		$this->session->set( $this->set_ref_field('filter')        , $keep );
 		$this->session->set( $this->set_ref_field('global_search') , ''      );
 		$this->session->set( $this->set_ref_field('page')          , 1       );
 		$this->goTo($this->_controller_name . '/list');
@@ -691,7 +699,9 @@ abstract class CrudController extends BaseController
 					break;
 					case 'filter':
 						$filtered = $this->session->get( $this->set_ref_field('filter') );
-						if ($value == 'civil_year' && service('civilYear')->set($array['filter_value'])){
+						if ($value == 'civil_year' && $array['filter_value'] == 'all'){
+							// le filtre d'année civile ne se retire pas
+						} elseif ($value == 'civil_year' && service('civilYear')->set($array['filter_value'])){
 							// sélecteur global : l'année est mémorisée pour tout le site
 							$filtered['civil_year'] = $array['filter_value'];
 						} elseif ($array['filter_value'] == 'all'){
