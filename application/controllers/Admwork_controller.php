@@ -120,9 +120,9 @@ class Admwork_controller extends MY_Controller {
 		if ($this->acl->getType() == 'fam') {
 			$id_fam = $this->acl->getUserId();
 			$family = $this->Familys_model->GetFamily($id_fam);
-			$works  = $this->{$this->_model_name}->GetFiltered($this->config->item('civil_year'), ['B', $family->ecole],['can']);
+			$works  = $this->{$this->_model_name}->GetFiltered($this->get_work_civil_year(), ['B', $family->ecole],['can']);
 		} else {
-			$works = $this->{$this->_model_name}->GetFiltered($this->config->item('civil_year'), ['B','M','L']);
+			$works = $this->{$this->_model_name}->GetFiltered($this->get_work_civil_year(), ['B','M','L']);
 		}
 	
 		$today = date('Y-m-d');

@@ -79,7 +79,7 @@ class Cantine_controller extends MY_Controller {
         }
         if (!in_array($ecole, ['M','L'])) $ecole = 'M';
 
-        $civil_year = $this->config->item('civil_year');
+        $civil_year = $this->get_work_civil_year();
         $id_fam = $this->acl->getUserId();
 
         // Lundi → vendredi de la semaine demandée
@@ -234,7 +234,7 @@ class Cantine_controller extends MY_Controller {
     public function config(){
         $ecole = $this->input->get('ecole');
         if (!in_array($ecole, ['B','M','L'])) $ecole = 'M';
-        $civil_year = $this->config->item('civil_year');
+        $civil_year = $this->get_work_civil_year();
 
         // Mois affiché dans l'agenda (?ym=YYYY-MM), par défaut mois courant
         $ym = $this->input->get('ym');
@@ -270,7 +270,7 @@ class Cantine_controller extends MY_Controller {
     public function save_config(){
         $ecole = $this->input->post('ecole');
         if (!in_array($ecole, ['B','M','L'])) $ecole = 'B';
-        $civil_year = $this->config->item('civil_year');
+        $civil_year = $this->get_work_civil_year();
 
         $days = [];
         for($d = 1; $d <= 5; $d++){
@@ -297,7 +297,7 @@ class Cantine_controller extends MY_Controller {
     public function generate(){
         $ecole = $this->input->post('ecole');
         if (!in_array($ecole, ['B','M','L'])) $ecole = 'B';
-        $civil_year = $this->config->item('civil_year');
+        $civil_year = $this->get_work_civil_year();
 
         $mode = $this->input->post('period_mode');
         if ($mode === 'custom'){

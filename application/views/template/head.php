@@ -94,6 +94,28 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 											</div>
 										</li>
 									<?php } ?>
+									<?php
+									// Sélecteur d'année civile (scolaire) : année de travail mémorisée en session, appliquée aux listes filtrées.
+									$_ci = get_instance();
+									$_work_year = $_ci->get_work_civil_year();
+									$_year_base = current_url();
+									$_year_query = $_ci->input->get() ?: array();
+									?>
+									<li class="nav-item dropdown year-selector">
+										<a class="nav-link dropdown-toggle" href="#" id="yearDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+										title="<?php echo htmlspecialchars($this->lang->line('civil_year'), ENT_QUOTES, 'UTF-8'); ?>">
+											<span class="oi oi-calendar" aria-hidden="true"></span>
+											<span class="small ml-1"><?php echo htmlspecialchars($_work_year, ENT_QUOTES, 'UTF-8'); ?></span>
+										</a>
+										<div class="dropdown-menu dropdown-menu-right" aria-labelledby="yearDropdown">
+											<?php foreach ($_ci->get_civil_years() as $_y_key => $_y_label) { ?>
+												<a class="dropdown-item <?php echo ((string)$_y_key === (string)$_work_year) ? 'active' : ''; ?>"
+												href="<?php echo htmlspecialchars($_year_base.'?'.http_build_query(array_merge($_year_query, array('civil_year' => $_y_key))), ENT_QUOTES, 'UTF-8'); ?>">
+													<?php echo htmlspecialchars($_y_label, ENT_QUOTES, 'UTF-8'); ?>
+												</a>
+											<?php } ?>
+										</div>
+									</li>
 									<li class="nav-item dropdown">
 										<a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 											<span class="mr-2 d-none d-lg-inline text-gray-600 small"><?php echo $this->acl->GetUserName(); ?></span>
