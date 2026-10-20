@@ -18,16 +18,6 @@ defined('BASEPATH') OR exit('No direct script access allowed');
             <div class="nicdark_space10"></div>
             <?php echo Lang('INFO_UNITS_'.$this->acl->getType());?>
         </div>
-        <div class="grid grid_5">
-            <ul class="nav nav-pills">
-                <?php 
-                foreach($civil_year AS $key=>$value){
-                    echo '<li class="nav-item" ><a  class="nav-link '.(($filter_ec == $key) ? 'active':'').'" href="'.base_url($this->render_object->_getCi('_controller_name').'/'.$this->render_object->_getCi('_action')).'/filter/civil_year/filter_value/'.$key.'">'.$value.'</a></li>';
-                }
-                ?>
-            </ul>            
-            
-        </div>
 
 
         <div class="grid grid_12">

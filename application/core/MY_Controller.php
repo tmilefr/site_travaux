@@ -602,6 +602,8 @@ class MY_Controller extends CI_Controller {
 		}
 		$this->_action = $this->uri->segment(2, 0);
 
+		$this->_apply_work_civil_year();
+
 		/* FIX FILED NOT IN TABLE IN LIST */
 		$filter = $this->session->userdata($this->set_ref_field('filter'));
 		if (isset($filter['filter']))
@@ -618,7 +620,10 @@ class MY_Controller extends CI_Controller {
 					break;
 					case 'filter':
 						$filtered = $this->session->userdata( $this->set_ref_field('filter') );
-						if ($array['filter_value'] == 'all'){
+						if ($value == 'civil_year' AND $this->set_work_civil_year($array['filter_value'])){
+							// sélecteur global : l'année est mémorisée pour tout le site
+							$filtered['civil_year'] = $array['filter_value'];
+						} elseif ($array['filter_value'] == 'all'){
 							unset($filtered[$value]);
 						} else {
 							$filtered[$value] = $array['filter_value'];
@@ -734,15 +739,68 @@ class MY_Controller extends CI_Controller {
 	//must push out this stuff
 	function set_civil_years($from = null){
 		$filtered = $this->session->userdata( $this->set_ref_field('filter') );
-	
-		//echo "<p>$from:</p>".debug($this->session->userdata());
-
-		if (isset($filtered['civil_year'])){
-			return $filtered['civil_year'];
-		} else {
-			$this->session->set_userdata( $this->set_ref_field('filter') , ['civil_year'=>$this->config->item('civil_year')]);
-			return $this->config->item('civil_year');
+		if (!is_array($filtered)){
+			$filtered = [];
 		}
+		// 'resume' (synthèse multi-années des stats) reste propre à l'écran ; sinon l'année de travail globale s'impose.
+		if (!(isset($filtered['civil_year']) AND $filtered['civil_year'] == 'resume')){
+			$filtered['civil_year'] = $this->get_work_civil_year();
+			$this->session->set_userdata( $this->set_ref_field('filter') , $filtered);
+		}
+		return $filtered['civil_year'];
+	}
+
+	/**
+	 * Années civiles proposées dans le sélecteur du menu (clé = valeur stockée en base).
+	 */
+	public function get_civil_years(){
+		$years = $this->config->item('civil_years');
+		if (!is_array($years) OR !count($years)){
+			$current = $this->config->item('civil_year');
+			$years = [$current => $current];
+		}
+		return $years;
+	}
+
+	/**
+	 * Année de travail : le choix mémorisé en session depuis le menu, sinon la valeur par défaut de la config.
+	 */
+	public function get_work_civil_year(){
+		$year = $this->session->userdata('work_civil_year');
+		return ($year AND array_key_exists($year, $this->get_civil_years())) ? $year : $this->config->item('civil_year');
+	}
+
+	/**
+	 * Mémorise l'année de travail. Retourne false (sans rien changer) si l'année n'est pas dans la liste.
+	 */
+	public function set_work_civil_year($year){
+		if (!is_scalar($year) OR !array_key_exists((string)$year, $this->get_civil_years())){
+			return false;
+		}
+		$this->session->set_userdata('work_civil_year', (string)$year);
+		return true;
+	}
+
+	/**
+	 * Sélecteur d'année du menu : n'importe quelle page accepte ?civil_year=2025-2026 ; l'année est mémorisée
+	 * en session puis l'URL est rechargée sans le paramètre.
+	 */
+	private function _apply_work_civil_year(){
+		$param = $this->input->get('civil_year');
+		if ($param === NULL OR !$this->acl->Islog()){
+			return;
+		}
+		if ($this->set_work_civil_year($param)){
+			// changer d'année quitte la synthèse multi-années des stats
+			$filtered = $this->session->userdata( $this->set_ref_field('filter') );
+			if (is_array($filtered) AND isset($filtered['civil_year']) AND $filtered['civil_year'] == 'resume'){
+				$filtered['civil_year'] = $param;
+				$this->session->set_userdata( $this->set_ref_field('filter') , $filtered);
+			}
+		}
+		$query = $this->input->get();
+		unset($query['civil_year']);
+		redirect(current_url() . ($query ? '?' . http_build_query($query) : ''));
 	}
 
 	/**
