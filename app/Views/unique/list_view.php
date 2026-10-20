@@ -20,7 +20,8 @@ $action          = $render_object->_getCi('_action');
 $base            = base_url($controller_name . '/' . $action);
 $base_ctrl       = base_url($controller_name);
 
-$has_filters = (is_array($active_filters) && count($active_filters) > 0)
+// l'année civile vient du sélecteur du menu : elle s'affiche mais ne se retire ni ne se réinitialise
+$has_filters = (is_array($active_filters) && count(array_diff_key($active_filters, ['civil_year' => 1])) > 0)
             || (isset($global_search) && $global_search !== '');
 
 $has_sort = is_array($order_stack) && count($order_stack) > 0;
@@ -194,10 +195,12 @@ $has_bulk = is_array($bulk_actions) && count($bulk_actions) > 0;
                         <span class="badge badge-success" style="font-size:0.95em;">
                             <?php echo htmlspecialchars($field_label, ENT_QUOTES, 'UTF-8'); ?> :
                             <?php echo htmlspecialchars($value_label, ENT_QUOTES, 'UTF-8'); ?>
+                            <?php if ($field !== 'civil_year') { ?>
                             <a href="<?php echo $base; ?>/filter/<?php echo urlencode($field); ?>/filter_value/all"
                                class="text-white" style="margin-left:0.4em;">
                                 <span class="oi oi-circle-x"></span>
                             </a>
+                            <?php } ?>
                         </span>
                         <?php
                     }
