@@ -31,8 +31,39 @@
             <div class="nicdark_container nicdark_clearfix">
                 <div class="grid grid_6">
                     <div class="nicdark_focus">
-						<h4 class="white"><?php echo $app_name;?>
+						<h4 class="white" style="display:inline-block; vertical-align:middle;"><?php echo $app_name;?>
 						</h4>
+						<?php if ( $acl->Islog() ) { ?>
+						<?php
+						// Sélecteur d'année civile (scolaire) : année de travail mémorisée en session, appliquée aux listes filtrées.
+						$_civil_year  = service('civilYear');
+						$_work_year   = $_civil_year->get();
+						$_year_query  = service('request')->getGet() ?: array();
+						?>
+						<?php
+						// Vue d'inscription aux travaux : toujours l'année en cours, pas de sélecteur
+						$_segs = array_values(array_filter(explode('/', trim(service('request')->getPath(), '/')), 'strlen'));
+						$_is_register = (strtolower($_segs[0] ?? '') === 'admwork_controller' && stripos($_segs[1] ?? '', 'register') === 0);
+						?>
+						<?php if (!$_is_register) { ?>
+						<div class="dropdown year-selector d-inline-block align-middle ml-3">
+							<a class="btn btn-warning btn-sm dropdown-toggle font-weight-bold" style="color:#212529; white-space:nowrap;" href="#" id="yearDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+							title="<?php echo htmlspecialchars(tr('civil_year'), ENT_QUOTES, 'UTF-8'); ?>">
+								<span class="oi oi-calendar" aria-hidden="true"></span>
+								<?php echo htmlspecialchars(tr('civil_year'), ENT_QUOTES, 'UTF-8'); ?> :
+								<?php echo htmlspecialchars($_work_year, ENT_QUOTES, 'UTF-8'); ?>
+							</a>
+							<div class="dropdown-menu" aria-labelledby="yearDropdown">
+								<?php foreach ($_civil_year->years() as $_y_key => $_y_label) { ?>
+									<a class="dropdown-item <?php echo ((string)$_y_key === $_work_year) ? 'active' : ''; ?>"
+									href="<?php echo htmlspecialchars(current_url().'?'.http_build_query(array_merge($_year_query, array(\App\Libraries\CivilYear::PARAM => $_y_key))), ENT_QUOTES, 'UTF-8'); ?>">
+										<?php echo htmlspecialchars($_y_label, ENT_QUOTES, 'UTF-8'); ?>
+									</a>
+								<?php } ?>
+							</div>
+						</div>
+						<?php } ?>
+						<?php } ?>
                     </div>
                 </div>
                 <div class="grid grid_6 right">
@@ -96,35 +127,6 @@
 												<?php } ?>
 											</div>
 										</li>
-									<?php } ?>
-									<?php
-									// Sélecteur d'année civile (scolaire) : année de travail mémorisée en session, appliquée aux listes filtrées.
-									$_civil_year  = service('civilYear');
-									$_work_year   = $_civil_year->get();
-									$_year_query  = service('request')->getGet() ?: array();
-									?>
-									<?php
-									// Vue d'inscription aux travaux : toujours l'année en cours, pas de sélecteur
-									$_segs = array_values(array_filter(explode('/', trim(service('request')->getPath(), '/')), 'strlen'));
-									$_is_register = (strtolower($_segs[0] ?? '') === 'admwork_controller' && stripos($_segs[1] ?? '', 'register') === 0);
-									?>
-									<?php if (!$_is_register) { ?>
-									<li class="nav-item dropdown year-selector">
-										<a class="btn btn-warning btn-sm dropdown-toggle font-weight-bold mx-2" style="color:#212529;" href="#" id="yearDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
-										title="<?php echo htmlspecialchars(tr('civil_year'), ENT_QUOTES, 'UTF-8'); ?>">
-											<span class="oi oi-calendar" aria-hidden="true"></span>
-											<?php echo htmlspecialchars(tr('civil_year'), ENT_QUOTES, 'UTF-8'); ?> :
-											<?php echo htmlspecialchars($_work_year, ENT_QUOTES, 'UTF-8'); ?>
-										</a>
-										<div class="dropdown-menu dropdown-menu-right" aria-labelledby="yearDropdown">
-											<?php foreach ($_civil_year->years() as $_y_key => $_y_label) { ?>
-												<a class="dropdown-item <?php echo ((string)$_y_key === $_work_year) ? 'active' : ''; ?>"
-												href="<?php echo htmlspecialchars(current_url().'?'.http_build_query(array_merge($_year_query, array(\App\Libraries\CivilYear::PARAM => $_y_key))), ENT_QUOTES, 'UTF-8'); ?>">
-													<?php echo htmlspecialchars($_y_label, ENT_QUOTES, 'UTF-8'); ?>
-												</a>
-											<?php } ?>
-										</div>
-									</li>
 									<?php } ?>
 									<li class="nav-item dropdown">
 										<a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
