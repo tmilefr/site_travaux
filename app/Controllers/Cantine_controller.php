@@ -81,7 +81,7 @@ class Cantine_controller extends CrudController {
         }
         if (!in_array($ecole, ['M','L'])) $ecole = 'M';
 
-        $civil_year = service('civilYear')->get();
+        $civil_year = config('Travaux')->civilYear; // vue parent : toujours l'année en cours
         $id_fam = $this->acl->getUserId();
 
         // Lundi → vendredi de la semaine demandée
@@ -219,6 +219,7 @@ class Cantine_controller extends CrudController {
     // VUE ADMIN : paramétrage des jours + génération
     // ---------------------------------------------------------------
     public function config(){
+        service('civilYear')->show();
         $ecole = $this->request->getGet('ecole');
         if (!in_array($ecole, ['B','M','L'])) $ecole = 'M';
         $civil_year = service('civilYear')->get();

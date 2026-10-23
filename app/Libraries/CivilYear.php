@@ -12,9 +12,23 @@ class CivilYear
 	/** Paramètre d'URL qui change l'année (?civil_year=2025-2026) */
 	public const PARAM = 'civil_year';
 
+	/** La page en cours filtre-t-elle des données par année ? (le sélecteur du menu n'est affiché que dans ce cas) */
+	private bool $relevant = false;
+
 	public function __construct(private ?object $session = null)
 	{
 		$this->session ??= session();
+	}
+
+	/** Déclare que la page en cours est filtrée par l'année civile : le sélecteur du menu s'affiche. */
+	public function show(): void
+	{
+		$this->relevant = true;
+	}
+
+	public function isShown(): bool
+	{
+		return $this->relevant;
 	}
 
 	/** Années proposées dans le sélecteur (clé = valeur stockée en base), de la plus ancienne à la plus récente. */

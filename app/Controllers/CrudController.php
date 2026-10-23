@@ -454,6 +454,9 @@ abstract class CrudController extends BaseController
 	 */
 	public function list()
 	{
+		if (isset($this->{$this->_model_name}->_get('defs')['civil_year'])) {
+			service('civilYear')->show();
+		}
 		if ($this->_search)
 			$this->data_view['search_object']->autorize = true;
 

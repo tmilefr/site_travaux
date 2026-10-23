@@ -40,12 +40,8 @@
 						$_work_year   = $_civil_year->get();
 						$_year_query  = service('request')->getGet() ?: array();
 						?>
-						<?php
-						// Vue d'inscription aux travaux : toujours l'année en cours, pas de sélecteur
-						$_segs = array_values(array_filter(explode('/', trim(service('request')->getPath(), '/')), 'strlen'));
-						$_is_register = (strtolower($_segs[0] ?? '') === 'admwork_controller' && stripos($_segs[1] ?? '', 'register') === 0);
-						?>
-						<?php if (!$_is_register) { ?>
+						<?php /* Sélecteur affiché seulement sur les pages qui filtrent des données par année (CivilYear::show()) */ ?>
+						<?php if ($_civil_year->isShown()) { ?>
 						<div class="dropdown year-selector d-inline-block align-middle ml-3">
 							<a class="btn btn-warning btn-sm dropdown-toggle font-weight-bold" style="color:#212529; white-space:nowrap;" href="#" id="yearDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
 							title="<?php echo htmlspecialchars(tr('civil_year'), ENT_QUOTES, 'UTF-8'); ?>">
