@@ -350,6 +350,7 @@ class Familys_controller extends CrudController {
 	}
 
 	function stats(){
+		service('civilYear')->show();
 		$this->data_view['civil_years'] = $this->Units_model->_get('defs')['civil_year']->_get('values');
 		$this->data_view['filter_ec'] = $this->set_civil_years('stats');
 
